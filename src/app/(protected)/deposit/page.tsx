@@ -185,6 +185,63 @@ const DepositPage: React.FC = () => {
               </div>
             </section>
 
+            {/* Admin Wallet Numbers & Instructions */}
+            {selectedPaymentMethod && (
+              <section className="bg-white rounded-lg shadow-sm p-4 space-y-4">
+                <h2 className="text-lg font-medium text-gray-800">
+                  Send Money to Agent Account
+                </h2>
+                
+                {selectedPaymentMethod.walletsNumber && selectedPaymentMethod.walletsNumber.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Please send money to one of the following numbers:</p>
+                    <div className="grid gap-2">
+                      {selectedPaymentMethod.walletsNumber.map((num: string, idx: number) => (
+                        <div key={idx} className="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <span className="font-mono text-gray-800 font-bold">{num}</span>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(num);
+                              toast.success("Number copied to clipboard!");
+                            }}
+                            className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-md transition-colors"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-red-500 font-medium">
+                    No active receiver number found. Please contact support.
+                  </p>
+                )}
+
+                {selectedPaymentMethod.instructions && (
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                    <h3 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">
+                      Instructions
+                    </h3>
+                    <p className="text-sm text-blue-700 leading-relaxed">
+                      {selectedPaymentMethod.instructions}
+                    </p>
+                  </div>
+                )}
+
+                {selectedPaymentMethod.warning && (
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                    <h3 className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">
+                      Warning
+                    </h3>
+                    <p className="text-sm text-amber-700 leading-relaxed">
+                      {selectedPaymentMethod.warning}
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
+
             {/* Amount Input */}
             <section className="bg-white rounded-lg shadow-sm p-4">
               <h2 className="text-lg font-medium text-gray-800 mb-4">Deposit Amount</h2>

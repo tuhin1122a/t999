@@ -40,6 +40,7 @@ export async function GET() {
         instructions: depositWallet?.instructions || "",
         warning: depositWallet?.warning || "",
         isActive: depositWallet?.isActive ?? true,
+        walletsNumber: depositWallet?.walletsNumber || [],
       };
     });
 
