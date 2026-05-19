@@ -21,20 +21,36 @@ export async function GET() {
       return NextResponse.json({ error: "Failed to fetch payment methods" }, { status: 500 });
     }
 
+    // Get payment wallets and deposit wallets from database
+    const [dbPaymentWallets, dbDepositWallets] = await Promise.all([
+      db.paymentWallet.findMany(),
+      db.depositWallet.findMany(),
+    ]);
+
     // Transform the response to match the existing format
     // The DurantoPay API returns an array of payment method names
     const paymentMethods = paymentSystemsResponse.data || [];
     const wallets = paymentMethods.map((method: string) => {
+      // Find matching payment wallet in database by name (case-insensitive)
+      const matchingPw = dbPaymentWallets.find(
+        (pw) => pw.walletName.toLowerCase() === method.toLowerCase()
+      );
+      
+      const matchingDw = matchingPw 
+        ? dbDepositWallets.find((dw) => dw.paymentWalletId === matchingPw.id) 
+        : null;
+
       return {
-        id: method,
+        id: matchingPw?.id || method,
         name: method,
-        image: getPaymentMethodImage(method),
+        image: matchingPw?.walletLogo || getPaymentMethodImage(method),
         label: getPaymentMethodLabel(method),
-        min_deposit: 100, // Default values, should be configurable
-        max_deposit: 50000, // Default values, should be configurable
-        instructions: `Please use your ${method} account to make the payment`,
-        warning: `Make sure to use an account registered under your name`,
-        isActive: true,
+        min_deposit: matchingDw?.minDeposit ? parseFloat(matchingDw.minDeposit.toString()) : 100,
+        max_deposit: matchingDw?.maximumDeposit ? parseFloat(matchingDw.maximumDeposit.toString()) : 50000,
+        instructions: matchingDw?.instructions || `Please use your ${method} account to make the payment`,
+        warning: matchingDw?.warning || `Make sure to use an account registered under your name`,
+        isActive: matchingDw?.isActive ?? true,
+        walletsNumber: matchingDw?.walletsNumber || [],
       };
     });
 
