@@ -46,8 +46,8 @@ const LoginForm = () => {
     startTransiction(() => {
       login(data).then((res) => {
         if (res && res.success) {
-          redirect(customRedirect || "/");
-        } else if (res.error) {
+          window.location.href = customRedirect || "/";
+        } else if (res && res.error) {
           toast.error(res.error);
         }
       });

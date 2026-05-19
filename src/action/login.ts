@@ -11,8 +11,12 @@ export const login = async (data: zod.infer<typeof loginSchema>) => {
     await signIn("credentials", { phone, password, redirect: false });
 
     return { success: LOGIN_SUCCESS };
-  } catch (error) {
-    const credentialsError = error as CredentialsSignin;
-    return { error: credentialsError?.cause?.err?.message };
+  } catch (error: any) {
+    if (error?.message?.includes("NEXT_REDIRECT")) {
+      throw error;
+    }
+    console.error("Login action error:", error);
+    const errorMessage = error?.cause?.err?.message || error?.message || "Invalid credentials";
+    return { error: errorMessage };
   }
 };

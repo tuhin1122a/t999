@@ -48,8 +48,8 @@ const RegisterForm = () => {
     startTransiction(() => {
       register(data).then((res) => {
         if (res && res.success) {
-          redirect("/");
-        } else if (res.error) {
+          window.location.href = "/";
+        } else if (res && res.error) {
           toast.error(res.error);
         }
       });
