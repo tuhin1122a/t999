@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 /* eslint-disable react/no-unescaped-entities */
-// The exported code uses Tailwind CSS. Install Tailwind CSS in your dev environment to ensure all styles work.
 
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import useCurrentUser from "@/hook/useCurrentUser";
+import toast from "react-hot-toast";
 import {
   Accordion,
   AccordionContent,
@@ -25,7 +25,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Tooltip,
@@ -34,26 +33,65 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+interface ChatMsg {
+  id: string | number;
+  text: string;
+  sender: "player" | "agent";
+  time: string;
+}
+
 const App: React.FC = () => {
   const router = useRouter();
   const user = useCurrentUser();
-  const playerID = user?.playerId || "PLAYER123456789";
+  const playerID = user?.playerId || "Guest User";
   const [isCopied, setIsCopied] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [chatMessages, setChatMessages] = useState<
-    Array<{ id: number; text: string; sender: string; time: string }>
-  >([
+  const [chatMessages, setChatMessages] = useState<ChatMsg[]>([
     {
-      id: 1,
+      id: "welcome",
       text: "Hello! How can I assist you today with your gaming experience?",
       sender: "agent",
-      time: "10:05 AM",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch messages from DB API
+  const fetchMessages = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch("/api/chat");
+      const data = await res.json();
+      if (data.success && data.messages) {
+        const dbMsgs = data.messages.map((m: any) => ({
+          id: m.id,
+          text: m.content,
+          sender: m.senderId === user.id ? "player" : "agent",
+          time: new Date(m.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        }));
+        
+        // Keep welcome message at the top if there is no chat history
+        if (dbMsgs.length > 0) {
+          setChatMessages(dbMsgs);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+    }
+  };
+
+  // Poll for new messages every 3 seconds
+  useEffect(() => {
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const commonMessages = {
     account: [
@@ -127,7 +165,8 @@ const App: React.FC = () => {
 
   const copyMessage = (text: string) => {
     navigator.clipboard.writeText(text);
-    // Show temporary tooltip or notification
+    setMessage(text);
+    toast.success("Copied to input box!");
   };
 
   useEffect(() => {
@@ -141,6 +180,42 @@ const App: React.FC = () => {
       faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !user) return;
+    const textToSend = message.trim();
+    setMessage(""); // clear input box immediately for snappy feel
+
+    // Append locally immediately
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        text: textToSend,
+        sender: "player",
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content: textToSend }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        toast.error(data.error || "Failed to send message");
+      } else {
+        fetchMessages();
+      }
+    } catch (err) {
+      console.error("Error sending message:", err);
+      toast.error("Failed to send message");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -193,7 +268,7 @@ const App: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => copyToClipboard(playerID)}
-                            className="!rounded-button whitespace-nowrap"
+                            className="!rounded-button whitespace-nowrap cursor-pointer"
                           >
                             <i className="fas fa-copy mr-2"></i>
                             {isCopied ? "Copied!" : "Copy ID"}
@@ -209,7 +284,7 @@ const App: React.FC = () => {
 
                 {/* Info Message */}
                 <Alert className="m-4 bg-blue-50 border-blue-200">
-                  <i className="fas fa-info-circle text-blue-500 mr-2"></i>
+                  <i className="fas fa-info-circle text-blue-500 mr-2 text-sm"></i>
                   <AlertTitle>Important Information</AlertTitle>
                   <AlertDescription>
                     Our support team is currently experiencing high volume.
@@ -218,17 +293,80 @@ const App: React.FC = () => {
                   </AlertDescription>
                 </Alert>
 
-                {/* Chat Messages */}
+                {/* Chat Messages Scroll Area */}
+                <ScrollArea className="h-[400px] p-4 bg-gray-50 border-t border-b">
+                  <div className="space-y-4 pr-3">
+                    {chatMessages.map((msg, i) => {
+                      const isMe = msg.sender === "player";
+                      return (
+                        <div
+                          key={msg.id || i}
+                          className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                        >
+                          <div
+                            className={`max-w-[80%] rounded-lg p-3 ${
+                              isMe
+                                ? "bg-indigo-600 text-white rounded-br-none"
+                                : "bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm"
+                            }`}
+                          >
+                            <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>
+                            <span
+                              className={`text-[10px] block mt-1 text-right ${
+                                isMe ? "text-indigo-200" : "text-gray-400"
+                              }`}
+                            >
+                              {msg.time}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {isTyping && (
+                      <div className="flex justify-start">
+                        <div className="bg-white border border-gray-200 rounded-lg rounded-bl-none p-3 shadow-sm">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+
+                {/* Chat Input Section */}
+                <div className="p-4 bg-white border-b flex gap-2">
+                  <Input
+                    placeholder={user ? "Type your message here..." : "Please login to start chat"}
+                    value={message}
+                    disabled={!user}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSendMessage();
+                    }}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!user}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                  >
+                    Send <i className="fas fa-paper-plane ml-2"></i>
+                  </Button>
+                </div>
               </CardContent>
 
-              <CardFooter className="border-t p-4  !flex flex-col md:flex-row">
+              <CardFooter className="border-t p-4 !flex flex-col">
                 <div className="space-y-6 w-full">
                   {/* Common Messages */}
                   <Card className="shadow-lg border-0 !w-full ">
                     <CardHeader>
                       <CardTitle>Common Messages</CardTitle>
                       <CardDescription>
-                        Click to copy these frequently used messages
+                        Click to copy these frequently used messages to input box
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -283,7 +421,7 @@ const App: React.FC = () => {
                                           </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          <p>Copy to clipboard</p>
+                                          <p>Copy to input box</p>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
@@ -298,7 +436,7 @@ const App: React.FC = () => {
                   </Card>
 
                   {/* FAQ Section */}
-                  <Card className="shadow-lg border-0  w-full">
+                  <Card className="shadow-lg border-0 w-full">
                     <CardHeader>
                       <CardTitle>Frequently Asked Questions</CardTitle>
                       <CardDescription>
@@ -344,7 +482,7 @@ const App: React.FC = () => {
                                           </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          <p>Copy to clipboard</p>
+                                          <p>Copy to input box</p>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
@@ -389,8 +527,6 @@ const App: React.FC = () => {
               </CardFooter>
             </Card>
           </div>
-
-          {/* Right Column - Quick Messages and FAQs */}
         </div>
       </div>
     </div>

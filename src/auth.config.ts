@@ -25,6 +25,8 @@ export default {
 
   if (!account) throw new Error("Account not found");
 
+  if (account.isBanned) throw new Error("Your account has been banned by the administrator.");
+
   const passwordIsMatch = await bcrypt.compare(password, account.password);
   if (!passwordIsMatch) throw new Error("Invalid Password");
 

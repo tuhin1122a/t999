@@ -61,6 +61,7 @@ export const { signIn, signOut, auth, handlers } = NextAuth({
               id: user.id,
               email: user.email || "",
               emailVerified: new Date(),
+              isBanned: user.isBanned,
 
               // ✅ GameXA playerId ensure করা হলো
               gameXAPlayerId: user.gameXAPlayerId || user.playerId,

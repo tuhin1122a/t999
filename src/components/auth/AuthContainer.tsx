@@ -12,19 +12,26 @@ interface AuthContainerProps {
   children: React.ReactNode;
 }
 import logo from "@/../public/logo.png";
-import Image from "next/image";
+import { db } from "@/lib/db";
 
-const AuthContainer = ({
+const AuthContainer = async ({
   formRedirectText,
   formRedirectLink,
   formRedirectLinkPlaceholder,
   children,
   title,
 }: AuthContainerProps) => {
+  const siteSettings = await db.siteSetting.findFirst();
+  const promotionsLogo = siteSettings?.promotionsLogo;
+
   return (
     <div className="bg-[url(https://c.animaapp.com/m9drzmnaxdV67z/img/background.png)] bg-[#003e3e] bg-cover bg-[50%_50%] w-h-full h-screen ">
       <div className="flex justify-center py-5 pt-12">
-        <Image src={logo} alt="ck444" className="w-[100px] h-auto" />
+        <img
+          src={typeof promotionsLogo === "string" && promotionsLogo ? promotionsLogo : logo.src}
+          alt="ck444"
+          className="w-[100px] h-auto object-contain"
+        />
       </div>
 
       <div className="flex flex-col items-center mb-2">

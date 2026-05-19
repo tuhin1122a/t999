@@ -24,7 +24,15 @@ import SpinLoader from "../loader/SpinLoader";
 
 const LoginForm = () => {
   const [pending, startTransiction] = useTransition();
-  const customRedirect = useSearchParams().get("redirect") || "";
+  const searchParams = useSearchParams();
+  const customRedirect = searchParams.get("redirect") || "";
+  const errorParam = searchParams.get("error");
+
+  React.useEffect(() => {
+    if (errorParam) {
+      toast.error(decodeURIComponent(errorParam));
+    }
+  }, [errorParam]);
 
   const form = useForm<zod.infer<typeof loginSchema>>({
     defaultValues: {

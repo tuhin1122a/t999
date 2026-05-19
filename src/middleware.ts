@@ -11,6 +11,7 @@ const { auth } = NextAuth({
 export default auth(async (req) => {
   const { nextUrl } = req;
   const session = !!req.auth;
+  const isBanned = req.auth?.user?.isBanned;
 
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
@@ -24,6 +25,18 @@ export default auth(async (req) => {
     req.cookies.has("__Secure-next-auth.session-token");
 
   let response: NextResponse;
+
+  if (isBanned && !isAuthRoute && !isProvider && !nextUrl.pathname.startsWith("/api/auth")) {
+    console.log("🚫 [Middleware] Banned user detected. Logging out and redirecting.");
+    response = NextResponse.redirect(
+      new URL("/login?error=Your%20account%20has%20been%20banned", nextUrl)
+    );
+    response.cookies.set("authjs.session-token", "", { maxAge: 0, path: "/" });
+    response.cookies.set("next-auth.session-token", "", { maxAge: 0, path: "/" });
+    response.cookies.set("__Secure-authjs.session-token", "", { maxAge: 0, path: "/" });
+    response.cookies.set("__Secure-next-auth.session-token", "", { maxAge: 0, path: "/" });
+    return response;
+  }
 
   if (session && isAuthRoute && !isProvider) {
     response = NextResponse.redirect(new URL("/", nextUrl));

@@ -6,11 +6,15 @@ import logo from "@/../public/logo.png";
 import Image from "next/image";
 import Link from "next/link";
 import { findCurrentUser } from "@/data/user";
+import { db } from "@/lib/db";
 import HeaderBalance from "./HeaderBalance";
 import AppSideCanva from "./AppSideCanva";
 
 const Header = async () => {
   const user: any = await findCurrentUser();
+  const siteSettings = await db.siteSetting.findFirst();
+  const promotionsLogo = siteSettings?.promotionsLogo;
+
   return (
     <header
       className="flex items-center justify-between px-3 py-2"
@@ -47,12 +51,13 @@ const Header = async () => {
             />
           </div>
         </div>
-        <Image
+        <img
           style={{
             width: 89.98,
             height: 28.08,
+            objectFit: "contain",
           }}
-          src={logo}
+          src={typeof promotionsLogo === "string" && promotionsLogo ? promotionsLogo : logo.src}
           alt="logo"
         />
       </div>

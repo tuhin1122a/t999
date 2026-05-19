@@ -3,9 +3,12 @@ import Link from "next/link";
 import React from "react";
 
 import logo_sq from "@/../public/logo-sq.jpg";
-import Image from "next/image";
+import { db } from "@/lib/db";
 
-const Footer = () => {
+const Footer = async () => {
+  const siteSettings = await db.siteSetting.findFirst();
+  const promotionsLogo = siteSettings?.promotionsLogo;
+
   return (
     <div className="w-full bg-[#000000] pt-4 pb-[100px] px-4">
       <div className="relative w-full md:w-[70%] mx-auto">
@@ -71,8 +74,8 @@ const Footer = () => {
         <div className="flex gap-4 mb-6">
           {/* <div className="w-[72px] h-[72px] flex-shrink-0 bg-[url(https://res.cloudinary.com/dxs9u7pqc/image/upload/v1750485945/logo-sq_fe0b6y.jpg)] bg-cover bg-[50%_50%]" /> */}
 
-          <Image
-            src={logo_sq}
+          <img
+            src={typeof promotionsLogo === "string" && promotionsLogo ? promotionsLogo : logo_sq.src}
             alt="tk1111"
             className="w-[72px] h-[72px] rounded-full object-cover"
           />

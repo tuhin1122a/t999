@@ -19,14 +19,16 @@ import "swiper/css/autoplay"; // (optional but good for future updates)
 import { Pagination, Autoplay } from "swiper/modules";
 import Image from "next/image";
 
-const HeroSlider = () => {
-  const sliders = [
-    { image: slider_1 },
-    { image: slider_2 },
-    { image: slider_3 },
-    { image: slider_4 },
-    { image: slider_5 },
-  ];
+const HeroSlider = ({ sliderImages }: { sliderImages?: string[] }) => {
+  const sliders = sliderImages && sliderImages.length > 0
+    ? sliderImages.map((img) => ({ image: img, isStatic: false }))
+    : [
+        { image: slider_1, isStatic: true },
+        { image: slider_2, isStatic: true },
+        { image: slider_3, isStatic: true },
+        { image: slider_4, isStatic: true },
+        { image: slider_5, isStatic: true },
+      ];
 
   return (
     <div className="my-4">
@@ -43,12 +45,20 @@ const HeroSlider = () => {
       >
         {sliders.map((slider, i) => (
           <SwiperSlide key={i}>
-            <Image
-              src={slider.image}
-              alt={`slider-${i}`}
-              placeholder="blur"
-              className="w-full aspect-auto md:aspect-[9/3] object-cover rounded-2xl"
-            />
+            {slider.isStatic ? (
+              <Image
+                src={slider.image}
+                alt={`slider-${i}`}
+                placeholder="blur"
+                className="w-full aspect-auto md:aspect-[9/3] object-cover rounded-2xl"
+              />
+            ) : (
+              <img
+                src={slider.image as string}
+                alt={`slider-${i}`}
+                className="w-full aspect-auto md:aspect-[9/3] object-cover rounded-2xl"
+              />
+            )}
           </SwiperSlide>
         ))}
       </Swiper>
