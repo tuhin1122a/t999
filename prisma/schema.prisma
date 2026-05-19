@@ -3,33 +3,35 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model User {
-  id                  String   @id @default(cuid())
-  phone               String   @unique
-  name                String   @default("Pro User")
-  email               String?   //
+  id                  String                @id @default(cuid())
+  phone               String                @unique
+  name                String                @default("Pro User")
+  email               String?
   password            String
   withdrawPassword    String?
-  playerId            String   @unique
-  gameXAPlayerId      String   @unique
-  facebook            String?  @default("")
+  playerId            String                @unique
+  gameXAPlayerId      String?               @unique
+  facebook            String?               @default("")
   isBanned            Boolean
-  referId             String   @unique
-  wallet              Wallet?  @relation("UserWallet")
+  referId             String                @unique
+  wallet              Wallet?               @relation("UserWallet")
+  apayDeposits        APayDeposit[]
   deposit             Deposit[]
-  createdAt           DateTime @default(now())
+  createdAt           DateTime              @default(now())
   cardContainer       CardContainer?
+  apayWithdraws       APayWithdraw[]
   withdraws           Withdraw[]
   inviationBonus      InvitationBonus?
   invitedById         String?
   notifications       Notification[]
   Invitation          Invitation?
-  invitedBy           Invitation? @relation("ReferredUsers", fields: [invitedById], references: [id])
+  invitedBy           Invitation?           @relation("ReferredUsers", fields: [invitedById], references: [id])
   signinBonus         ClaimedSigninReward[]
   durantoPayDeposits  DurantoPayDeposit[]
   durantoPayWithdraws DurantoPayWithdraw[]
@@ -42,8 +44,8 @@ model User {
 
 model BettingRecord {
   id       String  @id @default(cuid())
-  totalBet Decimal @db.Decimal(18,2) @default(0)
-  totalWin Decimal @db.Decimal(18,2) @default(0)
+  totalBet Decimal @db.Decimal(18, 2) @default(0)
+  totalWin Decimal @db.Decimal(18, 2) @default(0)
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
@@ -69,7 +71,7 @@ model InvitationRewards {
   id             String                    @id @default(cuid())
   rewardImg      String
   targetReferral Int
-  prize          Decimal @db.Decimal(10,2)
+  prize          Decimal                   @db.Decimal(10, 2)
   claimedUsers   ClaimedInvitationReward[]
 }
 
@@ -77,7 +79,7 @@ model SigninBonusRewards {
   id           String                @id @default(cuid())
   day          String
   prize        Int
-  deposit      Decimal @db.Decimal(10,2)
+  deposit      Decimal               @db.Decimal(10, 2)
   claimedUsers ClaimedSigninReward[]
 }
 
@@ -94,27 +96,27 @@ model ClaimedSigninReward {
 }
 
 model ClaimedInvitationReward {
-  id                String             @id @default(cuid())
+  id                String            @id @default(cuid())
   invitationBonusId String
   rewardId          String
-  claimedAt         DateTime           @default(now())
-  createdAt         DateTime           @default(now())
-  invitationBonus   InvitationBonus    @relation(fields: [invitationBonusId], references: [id])
-  reward            InvitationRewards  @relation(fields: [rewardId], references: [id])
+  claimedAt         DateTime          @default(now())
+  createdAt         DateTime          @default(now())
+  invitationBonus   InvitationBonus   @relation(fields: [invitationBonusId], references: [id])
+  reward            InvitationRewards @relation(fields: [rewardId], references: [id])
 
-  @@unique([invitationBonusId, rewardId]) // prevent duplicate claims
+  @@unique([invitationBonusId, rewardId])
 }
 
 model Wallet {
   id            String  @id @default(cuid())
-  balance       Decimal @db.Decimal(18,2) @default(0)
+  balance       Decimal @db.Decimal(18, 2) @default(0)
   signinBonus   Boolean @default(false)
   referralBonus Boolean @default(false)
   currency      String  @default("BDT")
-  turnOver      Decimal @db.Decimal(18,2) @default(0)
+  turnOver      Decimal @db.Decimal(18, 2) @default(0)
 
-  userId  String? @unique
-  user    User?   @relation("UserWallet", fields: [userId], references: [id])
+  userId   String? @unique
+  user     User?   @relation("UserWallet", fields: [userId], references: [id])
   playerId String? @unique
   player   Player? @relation("PlayerWallet", fields: [playerId], references: [id])
 }
@@ -146,8 +148,8 @@ model DepositWallet {
   instructions    String
   warning         String?
   trxType         String
-  minDeposit      Decimal @db.Decimal(10,2)
-  maximumDeposit  Decimal @db.Decimal(10,2)
+  minDeposit      Decimal   @db.Decimal(10, 2)
+  maximumDeposit  Decimal   @db.Decimal(10, 2)
   isActive        Boolean   @default(true)
   deposits        Deposit[] @relation("WalletDeposits")
 }
@@ -158,11 +160,31 @@ enum DepositStatus {
   REJECTED
 }
 
+model APayDeposit {
+  id        String   @id @default(cuid())
+  orderId   String
+  trxId     String
+  ps        String
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model APayWithdraw {
+  id        String   @id @default(cuid())
+  orderId   String
+  ps        String
+  trxId     String
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
 model DurantoPayDeposit {
   id                String   @id @default(cuid())
   invoice_no        String   @unique
   dp_transaction_id String
-  amount            Decimal @db.Decimal(10,2)
+  amount            Decimal  @db.Decimal(10, 2)
   paymentType       String
   status            String
   createdAt         DateTime @default(now())
@@ -175,7 +197,7 @@ model DurantoPayWithdraw {
   id                String   @id @default(cuid())
   invoice_no        String   @unique
   dp_transaction_id String
-  amount            Decimal @db.Decimal(10,2)
+  amount            Decimal  @db.Decimal(10, 2)
   pay_type          String
   wallet_number     String
   status            String
@@ -187,8 +209,8 @@ model DurantoPayWithdraw {
 
 model Deposit {
   id                  String               @id @default(cuid())
-  amount              Decimal @db.Decimal(10,2)
-  bonus               Decimal? @db.Decimal(10,2)
+  amount              Decimal              @db.Decimal(10, 2)
+  bonus               Decimal?             @db.Decimal(10, 2)
   bonusFor            String
   senderNumber        String
   trxID               String?
@@ -199,7 +221,7 @@ model Deposit {
   status              DepositStatus        @default(PENDING)
   wallet              DepositWallet        @relation("WalletDeposits", fields: [walletId], references: [id], onDelete: Cascade)
   userId              String
-  user                User                 @relation(fields: [userId], references: [id])
+  user                 User                 @relation(fields: [userId], references: [id])
   createdAt           DateTime             @default(now())
   ClaimedSigninReward ClaimedSigninReward?
 }
@@ -234,7 +256,7 @@ enum WithdrawStatus {
 
 model Withdraw {
   id        String         @id @default(cuid())
-  amount    Decimal @db.Decimal(10,2)
+  amount    Decimal        @db.Decimal(10, 2)
   expire    DateTime
   status    WithdrawStatus @default(PENDING)
   createdAt DateTime       @default(now())
@@ -265,10 +287,12 @@ model EmailVerificationToken {
 }
 
 model SiteSetting {
-  id          String   @id @default(cuid())
-  maxWithdraw Decimal? @db.Decimal(10,2) @default(0)
-  minWithdraw Decimal? @db.Decimal(10,2) @default(0)
-  dpTurnover  Decimal? @db.Decimal(10,2) @default(0)
+  id             String   @id @default(cuid())
+  maxWithdraw    Decimal? @db.Decimal(10, 2) @default(0)
+  minWithdraw    Decimal? @db.Decimal(10, 2) @default(0)
+  dpTurnover     Decimal? @db.Decimal(10, 2) @default(0)
+  sliderImages   String[]
+  promotionsLogo String?
 }
 
 enum NotificationIcon {
@@ -288,12 +312,23 @@ model Notification {
   description String?
   icon        NotificationIcon @default(INFO)
   userId      String
-  user        User             @relation(fields: [userId], references: [id])
+  user             User             @relation(fields: [userId], references: [id])
   isRead      Boolean          @default(false)
   createdAt   DateTime         @default(now())
   metadata    Json?
 
   @@index([userId])
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  senderId    String
+  receiverId  String
+  content     String
+  createdAt   DateTime @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
 }
 
 // ====================== Affiliate System ======================
@@ -303,11 +338,11 @@ model Affiliate {
   user            User          @relation(fields: [userId], references: [id])
   affiliateCode   String        @unique
   isActive        Boolean       @default(true)
-  totalEarnings   Decimal       @db.Decimal(18,2) @default(0)
-  pendingEarnings Decimal       @db.Decimal(18,2) @default(0)
+  totalEarnings   Decimal       @db.Decimal(18, 2) @default(0)
+  pendingEarnings Decimal       @db.Decimal(18, 2) @default(0)
   totalReferrals  Int           @default(0)
   activeReferrals Int           @default(0)
-  commissionRate  Decimal       @db.Decimal(5,2) @default(0.05)
+  commissionRate  Decimal       @db.Decimal(5, 2) @default(0.05)
   tier            AffiliateTier @default(BRONZE)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -336,13 +371,13 @@ model AffiliateReferral {
   referredUserId     String
   referredUser       User           @relation("AffiliateReferrals", fields: [referredUserId], references: [id])
   status             ReferralStatus @default(PENDING)
-  firstDepositAmount Decimal? @db.Decimal(10,2)
+  firstDepositAmount Decimal?       @db.Decimal(10, 2)
   firstDepositDate   DateTime?
-  totalDeposits      Decimal @db.Decimal(18,2) @default(0)
-  totalBets          Decimal @db.Decimal(18,2) @default(0)
-  isActive           Boolean @default(true)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  totalDeposits      Decimal        @db.Decimal(18, 2) @default(0)
+  totalBets          Decimal        @db.Decimal(18, 2) @default(0)
+  isActive           Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
   commissions AffiliateCommission[]
 
@@ -363,10 +398,10 @@ model AffiliateCommission {
   affiliate      Affiliate          @relation(fields: [affiliateId], references: [id])
   referralId     String?
   referral       AffiliateReferral? @relation(fields: [referralId], references: [id])
-  amount         Decimal @db.Decimal(18,2)
+  amount         Decimal            @db.Decimal(18, 2)
   commissionType CommissionType
-  sourceAmount   Decimal @db.Decimal(18,2)
-  commissionRate Decimal @db.Decimal(5,2)
+  sourceAmount   Decimal            @db.Decimal(18, 2)
+  commissionRate Decimal            @db.Decimal(5, 2)
   status         CommissionStatus   @default(PENDING)
   description    String?
   createdAt      DateTime           @default(now())
@@ -395,7 +430,7 @@ model AffiliatePayout {
   id             String       @id @default(cuid())
   affiliateId    String
   affiliate      Affiliate    @relation(fields: [affiliateId], references: [id])
-  amount         Decimal @db.Decimal(18,2)
+  amount         Decimal      @db.Decimal(18, 2)
   paymentMethod  String
   paymentDetails Json
   status         PayoutStatus @default(PENDING)
@@ -437,7 +472,7 @@ model Player {
   id           String        @id @default(cuid())
   playerId     String        @unique
   name         String?
-  email        String?       //nullable
+  email        String?
   status       String?
   currency     String        @default("BDT")
   wallet       Wallet?       @relation("PlayerWallet")
@@ -451,7 +486,7 @@ model Transaction {
   transactionId String   @unique
   playerId      String
   player        Player   @relation(fields: [playerId], references: [id])
-  amount        Decimal  @db.Decimal(10,2)
+  amount        Decimal  @db.Decimal(10, 2)
   status        String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
