@@ -14,7 +14,12 @@ export default auth(async (req) => {
   const isBanned = req.auth?.user?.isBanned;
 
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
+  const isPublicRoute =
+    publicRoutes.includes(nextUrl.pathname) ||
+    nextUrl.pathname.startsWith("/api/softapi/games") ||
+    nextUrl.pathname.startsWith("/api/softapi/providers") ||
+    nextUrl.pathname.startsWith("/api/softapi/callback") ||
+    nextUrl.pathname.startsWith("/api/gamexa/games/providers");
   const isProvider = nextUrl.pathname.startsWith(providerApiPrefix);
 
   // Check if any NextAuth session cookies are present in the request
