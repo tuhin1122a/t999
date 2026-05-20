@@ -107,12 +107,6 @@ const DepositPage: React.FC = () => {
       return;
     }
 
-    if (!walletNumber) {
-      setError("Please enter your wallet number");
-      setPending(false);
-      return;
-    }
-
     if (!trxId) {
       setError("Please enter the Transaction ID (TrxID)");
       setPending(false);

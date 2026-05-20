@@ -2,8 +2,8 @@
 import { findCurrentUser } from "@/data/user";
 import { INTERNAL_SERVER_ERROR } from "@/error";
 import { db } from "@/lib/db";
-import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -11,8 +11,8 @@ export const POST = async (req: NextRequest) => {
 
     const amount = parseFloat(inputAmount);
 
-    if (!amount || amount <= 0 || !senderNumber || !trxID || !walletId || !walletNumber) {
-      return NextResponse.json({ success: false, message: "Missing required fields: amount, senderNumber, trxID, walletId, and walletNumber are required." }, { status: 400 });
+    if (!amount || amount <= 0 || !trxID || !walletId || !walletNumber) {
+      return NextResponse.json({ success: false, message: "Missing required fields: amount, trxID, walletId, and walletNumber are required." }, { status: 400 });
     }
 
     const user: any = await findCurrentUser();
@@ -84,7 +84,7 @@ export const POST = async (req: NextRequest) => {
         amount: new Prisma.Decimal(amount),
         bonus: new Prisma.Decimal(bonusAmount),
         bonusFor: bonusFor || "none",
-        senderNumber: senderNumber,
+        senderNumber: senderNumber || "",
         trxID: trxID,
         walletId: walletId,
         walletNumber: walletNumber,

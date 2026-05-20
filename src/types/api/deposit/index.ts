@@ -7,7 +7,7 @@ export interface MakeDepositRequestInput {
   walletId: string;
   walletNumber: string;
   bonusFor: string;
-  senderNumber: string;
+  senderNumber?: string;
 }
 export interface MakeDepositRequestOutput {
   success: boolean;
