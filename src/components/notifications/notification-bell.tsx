@@ -1,10 +1,10 @@
 // components/notification-bell.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Bell } from "lucide-react";
+import Link from "next/link";
 import Pusher from "pusher-js";
+import { useEffect, useState } from "react";
 
 interface NotificationBellProps {
   userId: string;
@@ -18,8 +18,22 @@ export function NotificationBell({
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
 
   useEffect(() => {
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+
+    if (!pusherKey || !pusherCluster) {
+      console.warn(
+        "Pusher is not initialized because NEXT_PUBLIC_PUSHER_KEY or NEXT_PUBLIC_PUSHER_CLUSTER is missing."
+      );
+      return;
+    }
+
+    if (!process.env.NEXT_PUBLIC_PUSHER_KEY || !process.env.NEXT_PUBLIC_PUSHER_CLUSTER) {
+      return;
+    }
+
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
     });
 
     const channel = pusher.subscribe(`user-${userId}`);

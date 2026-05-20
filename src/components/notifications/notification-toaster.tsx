@@ -32,8 +32,13 @@ export function NotificationToaster({ userId }: { userId: string }) {
       return container;
     };
 
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    // Only initialize Pusher if credentials are configured
+    if (!process.env.NEXT_PUBLIC_PUSHER_KEY || !process.env.NEXT_PUBLIC_PUSHER_CLUSTER) {
+      return;
+    }
+
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
     });
 
     const channel = pusher.subscribe(`user-${userId}`);

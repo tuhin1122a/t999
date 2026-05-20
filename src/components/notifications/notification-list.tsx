@@ -2,13 +2,13 @@
 // components/notifications/notification-list.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import Pusher from "pusher-js";
-import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { deleteNotification, markAsRead } from "@/action/notifications";
+import { Button } from "@/components/ui/button";
+import { formatDistanceToNow } from "date-fns";
+import { ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
+import Link from "next/link";
+import Pusher from "pusher-js";
+import { useEffect, useState } from "react";
 
 type Notification = {
   id: string;
@@ -48,8 +48,18 @@ export function NotificationList({
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   useEffect(() => {
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+
+    if (!pusherKey || !pusherCluster) {
+      console.warn(
+        "Pusher is not initialized because NEXT_PUBLIC_PUSHER_KEY or NEXT_PUBLIC_PUSHER_CLUSTER is missing."
+      );
+      return;
+    }
+
+    const pusher = new Pusher(pusherKey, {
+      cluster: pusherCluster,
     });
 
     const channel = pusher.subscribe(`user-${userId}`);
