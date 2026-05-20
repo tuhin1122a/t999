@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
- typescript: {
+  output: "standalone",
+  typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {

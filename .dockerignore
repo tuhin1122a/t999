@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.env
+.env.*
+dist
+coverage
+*.tsbuildinfo
+npm-debug.log*
+scratch
+test-encryption.js
+test_softapi.js
+test-sports-api.ps1
+setup-prisma-wrapper.js
