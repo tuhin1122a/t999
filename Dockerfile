@@ -6,6 +6,7 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
+# Use npm install (not npm ci) to avoid EBUSY cache lock issues
 RUN npm install --legacy-peer-deps
 
 # ---- Builder ----
