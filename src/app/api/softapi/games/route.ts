@@ -1,9 +1,44 @@
 // src/app/api/softapi/games/route.ts
 // Fetches games for a specific brand from igamingapis.com
+import { promises as fs } from "fs";
 import { NextRequest, NextResponse } from "next/server";
+import path from "path";
 
 const IGAMING_PRIMARY = "https://igamingapis.com/provider/brands.php";
 const IGAMING_FALLBACK = "https://igamingapis.live/provider/brands.php";
+const SOFTAPI_CACHE_DIR = path.join(process.cwd(), "data", "softapi-brand-cache");
+
+async function ensureCacheDir() {
+  try {
+    await fs.mkdir(SOFTAPI_CACHE_DIR, { recursive: true });
+  } catch (err) {
+    console.warn("[SoftAPI] Failed to ensure cache directory:", err);
+  }
+}
+
+async function getCacheFilePath(brandId: string) {
+  await ensureCacheDir();
+  return path.join(SOFTAPI_CACHE_DIR, `${brandId}.json`);
+}
+
+async function readLocalCache(brandId: string) {
+  try {
+    const cachePath = await getCacheFilePath(brandId);
+    const json = await fs.readFile(cachePath, "utf8");
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+async function writeLocalCache(brandId: string, payload: any) {
+  try {
+    const cachePath = await getCacheFilePath(brandId);
+    await fs.writeFile(cachePath, JSON.stringify(payload, null, 2), "utf8");
+  } catch (err) {
+    console.warn(`[SoftAPI] Failed to write local cache for brand_id=${brandId}:`, err);
+  }
+}
 
 // Map igamingapis category → our app category
 function mapCategory(cat: string): string {
@@ -143,14 +178,17 @@ export async function GET(req: NextRequest) {
         }
 
         const { games, providerTitle } = parseGames(data, brand_id, category);
-
-        return NextResponse.json({
+        const responsePayload = {
           success: true,
           brand_id,
           provider_title: providerTitle,
           total_games: games.length,
           games,
-        }, {
+        };
+
+        await writeLocalCache(brand_id, responsePayload);
+
+        return NextResponse.json(responsePayload, {
           status: 200,
           headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
         });
@@ -159,6 +197,15 @@ export async function GET(req: NextRequest) {
         lastError = err;
         console.error(`[SoftAPI] Fetch failed from ${baseUrl} for brand ${brand_id}:`, err);
       }
+    }
+
+    const cachedPayload = await readLocalCache(brand_id);
+    if (cachedPayload) {
+      console.warn(`[SoftAPI] Using local cache for brand_id=${brand_id} after remote fetch failed.`);
+      return NextResponse.json(cachedPayload, {
+        status: 200,
+        headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
+      });
     }
 
     // Both URLs failed (likely Cloudflare block) — return empty games gracefully
