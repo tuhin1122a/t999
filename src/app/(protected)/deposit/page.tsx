@@ -2,6 +2,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
+import PageLoader from "@/components/loader/PageLoader";
+import PaymentMethod from "@/components/PaymentMethod";
+import SiteHeader from "@/components/SiteHeader";
 import useGetCurrentUser from "@/hook/useCurrentUser";
 import {
   useGetDepositPaymentDataQuery,
@@ -9,13 +12,10 @@ import {
 } from "@/lib/features/depositApiSlice";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { MdOutlineSupportAgent, MdHistory } from "react-icons/md";
-import { FaChevronLeft, FaCheck } from "react-icons/fa";
-import { PulseLoader } from "react-spinners";
-import PageLoader from "@/components/loader/PageLoader";
 import toast from "react-hot-toast";
-import SiteHeader from "@/components/SiteHeader";
-import PaymentMethod from "@/components/PaymentMethod";
+import { FaCheck, FaChevronLeft } from "react-icons/fa";
+import { MdHistory, MdOutlineSupportAgent } from "react-icons/md";
+import { PulseLoader } from "react-spinners";
 
 type BonusOption = {
   id: string;
@@ -317,24 +317,6 @@ const DepositPage: React.FC = () => {
                         {amount} BDT
                       </button>
                     ))}
-                  </div>
-                </section>
-
-                {/* Sender Wallet Number */}
-                <section className="bg-white rounded-lg shadow-sm p-4">
-                  <h2 className="text-lg font-medium text-gray-800 mb-4">Sender Account</h2>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <span className="text-gray-500 font-bold">+88</span>
-                    </div>
-                    <input
-                      disabled={pending}
-                      type="text"
-                      className="block w-full pl-16 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-semibold text-lg text-gray-800"
-                      placeholder="Your Sender Wallet Number"
-                      value={walletNumber}
-                      onChange={handleWalletNumberChange}
-                    />
                   </div>
                 </section>
 
