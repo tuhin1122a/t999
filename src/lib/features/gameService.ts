@@ -92,6 +92,32 @@ export const launchGameService = async (player_id: string, game_id: string) => {
   }
 };
 
+// ==================== Launch SoftAPI Game ====================
+export const launchSoftAPIGameService = async (game_id: string) => {
+  try {
+    console.log("Launching SoftAPI game with game_id:", game_id);
+    const res = await fetch("/api/softapi/launch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gameId: game_id }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Launch SoftAPI game HTTP error:", res.status, errorText);
+      throw new Error(`HTTP ${res.status}: ${errorText}`);
+    }
+
+    const data = await res.json();
+    console.log("🎯 launchSoftAPIGame response:", data);
+
+    return data;
+  } catch (error) {
+    console.error("Launch SoftAPI game error:", error);
+    throw error;
+  }
+};
+
 // ==================== Helper ====================
 export const isGameXAGameCheck = (gameId: string) => {
   return gameId.includes("_") || /^[A-Z]+_/.test(gameId);
@@ -128,6 +154,29 @@ export const launchGameFromAnyAPI = async (
 
       throw new Error("Failed to launch GameXA game: " + (response.message || "Unknown error"));
     } else if (openGameMutation) {
+      // For now, let's test SoftAPI by routing non-GameXA games to it, 
+      // or if we have a specific prefix we can check. 
+      // Let's assume numeric IDs or specific formats are SoftAPI.
+      // As a test, we will route to SoftAPI first for non-GameXA games.
+      try {
+        console.log("Attempting to launch via SoftAPI with gameId:", gameId);
+        const softApiResponse = await launchSoftAPIGameService(gameId);
+        
+        if (softApiResponse && softApiResponse.success && softApiResponse.game_launch_url) {
+          return {
+            content: {
+              game: {
+                url: softApiResponse.game_launch_url,
+                iframe: "1",
+                sessionId: softApiResponse.session_id,
+              },
+            },
+          };
+        }
+      } catch (e) {
+        console.log("SoftAPI launch failed, falling back to openGameMutation...", e);
+      }
+
       console.log("Launching non-GameXA game with gameId:", gameId);
       const response = await openGameMutation({ gameId }).unwrap();
       console.log("Non-GameXA launch response:", response);

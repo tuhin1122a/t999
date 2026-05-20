@@ -29,22 +29,23 @@ async function getAuthToken(): Promise<string | null> {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { playerId: string } }
+  { params }: { params: Promise<{ playerId: string }> }
 ) {
   try {
+    const { playerId } = await params;
     const token = await getAuthToken();
     if (!token) {
       return Response.json({ success: false, error: "Authentication failed" }, { status: 401 });
     }
 
     // Map local database ID to GameXA player ID if needed
-    let gameXAPlayerId = params.playerId;
+    let gameXAPlayerId = playerId;
     
     // Check if the provided player_id is a local database ID (CUID format)
     // If so, look up the GameXA player ID in the database
-    if (!/^\d+$/.test(params.playerId)) {
+    if (!/^\d+$/.test(playerId)) {
       const user = await db.user.findUnique({
-        where: { id: params.playerId },
+        where: { id: playerId },
         select: { gameXAPlayerId: true }
       });
       

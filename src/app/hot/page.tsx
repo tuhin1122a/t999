@@ -32,7 +32,7 @@ const HotGamesPage = () => {
                 <GameCardWithProvider game={game} key={i} />
               ))}
 
-            <GameLoader lenght={20} loading={!!!gamesList} />
+            <GameLoader length={20} loading={!!!gamesList} />
           </div>
           {gamesList && gamesList.length == 0 && (
             <p className="block text-center w-full uppercase text-lg font-semibold text-[#23FFC8]">

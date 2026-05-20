@@ -23,9 +23,9 @@ async function getAuthToken(): Promise<string> {
   return data.token;
 }
 
-export async function GET(req: NextRequest, { params }: { params: { providerCode: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ providerCode: string }> }) {
   try {
-    const { providerCode } = params;
+    const { providerCode } = await params;
     
     if (!providerCode) {
       return new Response(

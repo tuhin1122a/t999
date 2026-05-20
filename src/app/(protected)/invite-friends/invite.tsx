@@ -10,7 +10,7 @@ import { useFindInvitationRewardDataQuery } from "@/lib/features/rewardApiSlice"
 const Invite = () => {
   const { data, isLoading } = useFindInvitationRewardDataQuery();
   const rewards = data?.rewards;
-  const statictic = data?.statictic;
+  const statictic = data?.statistic;
   return (
     <div>
       {(!data || isLoading) && (

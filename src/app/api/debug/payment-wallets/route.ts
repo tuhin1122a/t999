@@ -4,11 +4,7 @@ import { NextRequest } from "next/server";
 export const GET = async (req: NextRequest) => {
   try {
     // Get all payment wallets
-    const paymentWallets = await db.paymentWallet.findMany({
-      include: {
-        depositWallets: true
-      }
-    });
+    const paymentWallets = await db.paymentWallet.findMany();
 
     return Response.json({ 
       success: true, 

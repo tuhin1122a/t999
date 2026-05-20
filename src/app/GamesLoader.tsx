@@ -4,7 +4,7 @@ import { GameXAGamesResponse } from "@/lib/api/gamexaApi";
 import { useFetchGamesListMutation } from "@/lib/features/gamesApiSlice";
 import { useGames } from "@/lib/store.zustond";
 import { useEffect, useState } from "react";
-import { fetchAllGames as fetchAllGames, convertGameXAToAppFormat } from "@/lib/api/gamexaApi";
+import { fetchAllGames, convertGameXAToAppFormat } from "@/lib/api/gamexaApi";
 import { GamesList, NetEnt } from "@/types/game";
 import { AppGameFormat } from "@/lib/api/gamexaApi";
 
@@ -13,6 +13,9 @@ const GamesLoader = () => {
   const [gamexaGames, setGamexaGames] = useState<GameXAGamesResponse | null>(null);
   const [gamexaLoading, setGamexaLoading] = useState(true);
   const [gamexaError, setGamexaError] = useState<Error | null>(null);
+  
+  const [softApiGames, setSoftApiGames] = useState<any[]>([]);
+  const [softLoading, setSoftLoading] = useState(true);
 
   const { setLoading, setGames } = useGames((state) => state);
 
@@ -41,96 +44,93 @@ const GamesLoader = () => {
     getGamexaGames();
   }, []);
 
-  // Combine games from both APIs or use just GameXA games if original API fails
+  // Fetch popular games from SoftAPI
   useEffect(() => {
-    // If GameXA games are loaded
-    if (gamexaGames && !gamexaLoading && !gamexaError) {
+    const getSoftGames = async () => {
       try {
-        // Convert GameXA games to app format
-        const formattedGamexaGames = convertGameXAToAppFormat(gamexaGames);
-        console.log(`Converted ${formattedGamexaGames.length} GameXA games to app format`);
+        console.log("Fetching SoftAPI popular games...");
+        const popularBrands = ["49", "45", "58", "67", "51", "53", "52", "65"]; // Jili, PGSoft, Evolution, Spribe, Tada, Pragmatic, CQ9, Bgaming
         
-        // Create provider categories from GameXA games
-        const providerGames: Record<string, AppGameFormat[]> = {};
-        
-        formattedGamexaGames.forEach(game => {
-          const provider = game.title;
-          if (!providerGames[provider]) {
-            providerGames[provider] = [];
-          }
-          providerGames[provider].push(game);
-        });
-        
-        // Also group by categories for easier filtering
-        const categoryGames: Record<string, AppGameFormat[]> = {};
-        
-        formattedGamexaGames.forEach(game => {
-          const category = game.categories;
-          if (!categoryGames[category]) {
-            categoryGames[category] = [];
-          }
-          categoryGames[category].push(game);
-        });
-        
-        // Combine provider and category groups
-        const combinedProviderAndCategoryGames = {
-          ...providerGames,
-          ...categoryGames
-        };
-        
-        // Log category counts for debugging
-        Object.keys(combinedProviderAndCategoryGames).forEach(category => {
-          console.log(`Category/Provider ${category}: ${combinedProviderAndCategoryGames[category].length} games`);
-        });
-        
-        // Log all categories for debugging
-        console.log("All categories/providers:", Object.keys(combinedProviderAndCategoryGames));
-        
-        // If original API data is available, combine them
-        if (data && !isLoading) {
-          const combinedGames: GamesList = {
-            ...data.gamesList,
-            ...combinedProviderAndCategoryGames
-          } as GamesList;
-          
-          // Ensure fishing and video_poker categories are included
-          if (combinedProviderAndCategoryGames.fishing && !combinedGames.fishing) {
-            combinedGames.fishing = combinedProviderAndCategoryGames.fishing as unknown as NetEnt[];
-          }
-          
-          if (combinedProviderAndCategoryGames.video_poker && !combinedGames.video_poker) {
-            combinedGames.video_poker = combinedProviderAndCategoryGames.video_poker as unknown as NetEnt[];
-          }
-          
-          console.log("Setting combined games:", Object.keys(combinedGames).length, "providers/categories");
-          setLoading(false);
-          setGames(combinedGames);
-        }
-        // If original API failed but we have GameXA games, use only GameXA games
-        else if (apiError || (!data && !isLoading)) {
-          console.log("Original API failed, using only GameXA games:", Object.keys(combinedProviderAndCategoryGames).length, "providers/categories");
-          setLoading(false);
-          setGames(combinedProviderAndCategoryGames as unknown as GamesList);
-        }
+        const results = await Promise.all(
+          popularBrands.map(async (brandId) => {
+            try {
+              const res = await fetch(`/api/softapi/games?brand_id=${brandId}`);
+              if (!res.ok) return [];
+              const json = await res.json();
+              return json.success ? json.games : [];
+            } catch (err) {
+              console.error(`Failed to fetch SoftAPI brand ${brandId}:`, err);
+              return [];
+            }
+          })
+        );
+
+        const merged = results.flat();
+        console.log(`Successfully loaded ${merged.length} SoftAPI games`);
+        setSoftApiGames(merged);
       } catch (error) {
-        console.error("Error processing GameXA games:", error);
+        console.error("Error fetching SoftAPI games:", error);
+      } finally {
+        setSoftLoading(false);
       }
-    }
-    // If original API data is available but no GameXA games
-    else if (data && !isLoading) {
-      console.log("Setting only original API games");
+    };
+
+    getSoftGames();
+  }, []);
+
+  // Combine games from all APIs
+  useEffect(() => {
+    if (gamexaLoading || softLoading) return;
+
+    try {
+      // Formatted GameXA games
+      const formattedGamexa = gamexaGames && !gamexaError ? convertGameXAToAppFormat(gamexaGames) : [];
+      
+      // Combine GameXA and SoftAPI games
+      const combinedList = [...softApiGames, ...formattedGamexa];
+      console.log(`Total combined games to load into UI: ${combinedList.length}`);
+
+      // Create provider categories
+      const providerGames: Record<string, AppGameFormat[]> = {};
+      combinedList.forEach(game => {
+        const provider = game.title;
+        if (!providerGames[provider]) {
+          providerGames[provider] = [];
+        }
+        providerGames[provider].push(game);
+      });
+
+      // Group by categories
+      const categoryGames: Record<string, AppGameFormat[]> = {};
+      combinedList.forEach(game => {
+        const category = game.categories;
+        if (!categoryGames[category]) {
+          categoryGames[category] = [];
+        }
+        categoryGames[category].push(game);
+      });
+
+      const combinedProviderAndCategoryGames = {
+        ...providerGames,
+        ...categoryGames
+      };
+
+      // Set games into the store
+      if (data && !isLoading) {
+        const finalGames: GamesList = {
+          ...data.gamesList,
+          ...combinedProviderAndCategoryGames
+        } as GamesList;
+        setGames(finalGames);
+      } else {
+        setGames(combinedProviderAndCategoryGames as unknown as GamesList);
+      }
       setLoading(false);
-      setGames(data.gamesList);
-    }
-    // If both APIs failed
-    else if ((apiError || (!data && !isLoading)) && (gamexaError || (!gamexaGames && !gamexaLoading))) {
-      console.log("Both APIs failed, setting empty games list");
-      console.error("Original API error:", apiError);
-      console.error("GameXA API error:", gamexaError);
+    } catch (error) {
+      console.error("Error combined loading games:", error);
       setLoading(false);
-      setGames({} as GamesList);
     }
-  }, [data, isLoading, apiError, gamexaGames, gamexaLoading, gamexaError]);
+  }, [data, isLoading, gamexaGames, gamexaLoading, gamexaError, softApiGames, softLoading]);
 
   return null;
 };

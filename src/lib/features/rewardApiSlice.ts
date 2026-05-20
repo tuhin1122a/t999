@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { InviationRewardGetOutput } from "@/types/api/reward";
+import { InvitationRewardGetOutput } from "@/types/api/reward";
 import { apiSlice } from "./apiSlice";
 
 const rewardApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    findInvitationRewardData: builder.query<InviationRewardGetOutput, void>({
+    findInvitationRewardData: builder.query<InvitationRewardGetOutput, void>({
       query: () => ({
         url: "api/invitation-bonus",
         method: "GET",

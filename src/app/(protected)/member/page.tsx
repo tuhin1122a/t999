@@ -1,36 +1,36 @@
-
-// export default App;
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-// The exported code uses Tailwind CSS. Install Tailwind CSS in your dev environment to ensure all styles work.
 import { UserAvatar } from "@/components/HeaderBalance";
-import React, { useState, useEffect } from "react";
-import { PiHandDepositFill } from "react-icons/pi";
-import { FiRefreshCw } from "react-icons/fi";
-import { FaCopy } from "react-icons/fa6";
-import { IoLogOut } from "react-icons/io5";
-import { FaCreditCard } from "react-icons/fa6";
-import { PiHandWithdrawFill } from "react-icons/pi";
-import { FaGift } from "react-icons/fa";
-import { LuHistory } from "react-icons/lu";
-import { FaChartLine } from "react-icons/fa6";
-import { FaFileInvoiceDollar } from "react-icons/fa";
-import { LuNotebookText } from "react-icons/lu";
-import { FaCircleUser } from "react-icons/fa6";
-import { MdSecurity } from "react-icons/md";
-import { TiUserAdd } from "react-icons/ti";
-import { FiDownload } from "react-icons/fi";
-import { MdOutlineSupportAgent } from "react-icons/md";
-import { GiFishMonster } from "react-icons/gi";
-import Link from "next/link";
+import TabNav from "@/components/TabNav";
+import { Skeleton } from "@/components/ui/skeleton";
+import useCurrentUser from "@/hook/useCurrentUser";
 import { useFetchWalletQuery } from "@/lib/features/walletApiSlice";
 import { getCurrencySymbol } from "@/lib/utils";
-import useCurrentUser from "@/hook/useCurrentUser";
-import { Skeleton } from "@/components/ui/skeleton";
-import AuthModal from "@/components/logout-modal";
-import LogOutModal from "@/components/logout-modal";
-import TabNav from "@/components/TabNav";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import { FaFileInvoiceDollar, FaGift } from "react-icons/fa";
+import { FaChartLine, FaCircleUser, FaCopy, FaCreditCard } from "react-icons/fa6";
+import { FiCheck, FiDownload, FiRefreshCw } from "react-icons/fi";
+import { GiFishMonster } from "react-icons/gi";
+import { LuNotebookText } from "react-icons/lu";
+import { MdOutlineSupportAgent, MdSecurity } from "react-icons/md";
+import { PiHandDepositFill, PiHandWithdrawFill } from "react-icons/pi";
+import { TiUserAdd } from "react-icons/ti";
+
+const menuItems = [
+  { href: "/rewardCenter", icon: FaGift, label: "Reward" },
+  { href: "/profitandloss", icon: FaChartLine, label: "Profit/Loss" },
+  { href: "/history?type=deposit", icon: FaFileInvoiceDollar, label: "Deposit Record" },
+  { href: "/history?type=withdraw", icon: LuNotebookText, label: "Withdraw Record" },
+  { href: "/my-account", icon: FaCircleUser, label: "My Account" },
+  { href: "/security", icon: MdSecurity, label: "Security Center" },
+  { href: "/invite-friends", icon: TiUserAdd, label: "Invite Friend" },
+  { href: "#", icon: FiDownload, label: "Download App" },
+  { href: "/support", icon: MdOutlineSupportAgent, label: "Customer Center" },
+  { href: "/fish", icon: GiFishMonster, label: "Fish Games" },
+];
+
 const App: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -48,18 +48,17 @@ const App: React.FC = () => {
   const balance = data?.payload ? Number(data.payload.balance) : 0;
 
   const handleCopyPlayerId = () => {
-    navigator.clipboard.writeText("BT78945612");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (user?.playerId) {
+      navigator.clipboard.writeText(user.playerId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleRefreshBalance = async () => {
     if (isRefreshing) return;
-
     setIsRefreshing(true);
-
-    refetch();
-
+    await refetch();
     setLastUpdateTime(new Date());
     setShowToast(true);
     setIsRefreshing(false);
@@ -67,277 +66,179 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (showToast) {
-      const timer = setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
+      const timer = setTimeout(() => setShowToast(false), 3000);
       return () => clearTimeout(timer);
     }
   }, [showToast]);
 
   return (
-    <div className="bg-[url(https://c.animaapp.com/m9drzmnaxdV67z/img/background.png)] bg-cover bg-[50%_50%] w-full min-h-screen px-2 py-3 text-gray-800 pb-16 md:pb-4 md:flex md:flex-col md:items-center">
-      {/* Main Container for Desktop */}
-      <div className="md:max-w-4xl md:w-full">
-        {/* Toast Notification */}
+    <div className="relative overflow-hidden w-full min-h-screen px-3 py-3 text-white pb-20 md:pb-4 md:flex md:flex-col md:items-center bg-[#02080f]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.18),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(245,158,11,0.12),_transparent_20%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#0a1820] to-transparent" />
+      <div className="relative md:max-w-4xl md:w-full">
+
+        {/* Toast */}
         <div
-          className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-300 z-50 ${
-            showToast ? "opacity-100" : "opacity-0 pointer-events-none"
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-[#002632] border border-teal-700/50 text-white px-4 py-2 rounded-xl shadow-lg z-50 transition-all duration-300 ${
+            showToast ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3 pointer-events-none"
           }`}
         >
-          <div className="text-sm font-medium">
-            Balance updated successfully
+          <div className="text-sm font-medium text-[#23FFC8] flex items-center gap-1.5">
+            <FiCheck /> Balance updated
           </div>
-          <div className="text-xs mt-1" suppressHydrationWarning>
+          <div className="text-[11px] text-gray-400 mt-0.5" suppressHydrationWarning>
             {lastUpdateTime.toLocaleTimeString()}
           </div>
         </div>
 
         {/* Profile Section */}
-        <div
-          className="text-white px-4 py-5 rounded-b-xl wallet-bg md:rounded-xl md:mt-4"
-          style={{
-            borderRadius: 36.4,
-            borderBlockEnd: "1px var(--color-cyan-53,rgb(10, 104, 81)) solid",
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <UserAvatar imageUrl="https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png" />
-              <div className="ml-3">
-                <h2 className="font-medium text-lg md:text-xl">{user?.name}</h2>
-                <div className="flex items-center mt-1">
-                  <span className="text-sm text-gray-200 md:text-base">
-                    Player ID: {user?.playerId}
+        <div className="relative overflow-hidden text-white px-5 py-6 rounded-[28px] border border-white/10 bg-gradient-to-br from-[#06222c] via-[#03111a] to-[#0c1f2f] shadow-[0_30px_80px_rgba(0,0,0,0.35)] md:rounded-[32px] md:mt-4">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_22%),radial-gradient(circle_at_bottom_right,_rgba(245,158,11,0.14),_transparent_20%)]" />
+          <div className="relative">
+            {/* User row */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <UserAvatar imageUrl="https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#22d3ee] border-2 border-[#06222c] rounded-full" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-semibold text-xl md:text-2xl leading-tight">{user?.name}</h2>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#f9d66b] font-semibold shadow-sm shadow-[#f9d66b]/10">
+                    Premium Member
                   </span>
+                </div>
+                <div className="flex flex-wrap items-center mt-2 gap-2 text-sm text-slate-300 md:text-base">
+                  <span>ID: {user?.playerId}</span>
                   <button
                     onClick={handleCopyPlayerId}
-                    className="ml-2 text-xs bg-gray-700 hover:bg-gray-600 p-1 rounded cursor-pointer md:text-sm"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-100 transition hover:border-[#22d3ee]/50 hover:bg-[#22d3ee]/10"
                   >
-                    <FaCopy />
+                    {copied ? <FiCheck className="text-[#22d3ee]" /> : <FaCopy className="text-slate-100" />}
+                    Copy
                   </button>
                 </div>
               </div>
             </div>
-            <LogOutModal>
-              <button className="text-white p-2 rounded-full hover:bg-[#00292f] cursor-pointer">
-                <IoLogOut className="w-5 h-5 md:w-6 md:h-6" />
-              </button>
-            </LogOutModal>
           </div>
-          <div className="flex items-center justify-between rounded-lg p-3">
-            <div>
-              <span className="text-xs text-[#23FFC8] md:text-sm">Balance</span>
-              <div className="flex items-center">
-                <span
-                  className="text-xl font-semibold text-[#23FFC8] transition-all duration-300 transform md:text-2xl"
-                  style={{
-                    animation: isRefreshing
-                      ? "none"
-                      : "balancePulse 0.5s ease-out",
-                  }}
-                >
-                  {(walletLoading || walletRetching) && (
-                    <Skeleton className="w-[80px] h-[30px] rounded-md bg-[#124A46]"></Skeleton>
-                  )}
-                  {!walletLoading && !walletRetching && data && (
-                    <>
-                      {getCurrencySymbol("BDT")}
-                      {balance.toFixed(2)}
-                    </>
-                  )}
+
+          {/* Balance */}
+          <div className="rounded-[20px] p-3 bg-white/5 border border-white/10 shadow-[0_12px_32px_rgba(0,0,0,0.14)]">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <span className="text-[10px] text-[#fcd34d]/80 font-semibold uppercase tracking-[0.24em]">
+                  Available Balance
                 </span>
-                <style>
-                  {`
-                    @keyframes balancePulse {
-                      0% { transform: scale(1); }
-                      50% { transform: scale(1.05); }
-                      100% { transform: scale(1); }
-                    }
-                  `}
-                </style>
-                <button
-                  onClick={handleRefreshBalance}
-                  className="ml-2 text-xs bg-gray-700 hover:bg-gray-600 p-1.5 rounded cursor-pointer relative md:text-sm"
-                  disabled={isRefreshing}
-                >
-                  <FiRefreshCw
-                    className={`${isRefreshing ? "animate-spin" : ""}`}
-                  />
-                </button>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span
+                    className="text-2xl font-bold text-white md:text-3xl"
+                    style={{
+                      animation: isRefreshing ? "none" : "balancePulse 0.5s ease-out",
+                    }}
+                  >
+                    {(walletLoading || walletRetching) && (
+                      <Skeleton className="w-[120px] h-[36px] rounded-md bg-slate-800" />
+                    )}
+                    {!walletLoading && !walletRetching && data && (
+                      <>
+                        {getCurrencySymbol("BDT")}
+                        {balance.toFixed(2)}
+                      </>
+                    )}
+                  </span>
+                  <div className="text-xs text-slate-300">
+                    <div>Updated {lastUpdateTime.toLocaleTimeString()}</div>
+                    <div className="text-[10px] text-slate-500">Live premium balance</div>
+                  </div>
+                </div>
               </div>
+              <button
+                onClick={handleRefreshBalance}
+                className="inline-flex items-center gap-2 rounded-full bg-[#22d3ee]/10 px-4 py-3 text-sm font-semibold text-[#c7f9ff] shadow-[0_15px_40px_rgba(34,211,238,0.18)] transition hover:bg-[#22d3ee]/20"
+                disabled={isRefreshing}
+              >
+                <FiRefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                Refresh
+              </button>
             </div>
+            <style>{`
+              @keyframes balancePulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.04); }
+                100% { transform: scale(1); }
+              }
+            `}</style>
           </div>
         </div>
+      </div>
 
-        {/* Main Action Buttons */}
-        <div className="grid grid-cols-3 gap-2 px-4 py-2 md:gap-4 md:py-4">
-          <Link href="/deposit">
-            <button className="font-bold text-center text-orange-700 bg-teal-900 rounded-3xl border border-solid bg-[linear-gradient(rgb(255,230,0),rgb(255,184,0))] border-orange-200 border-opacity-50 leading-[50px] w-full shadow-[rgb(255,242,166)_0px_3.64267px_0px_1px_inset,rgb(182,65,0)_0px_3.64267px_0px_0px] flex justify-center items-center h-[60px] md:h-[70px]">
-              <PiHandDepositFill className="text-xl mb-1 w-6 h-6 gap-3 md:w-7 md:h-7" />
-              <span className="text-lg font-medium md:text-xl pb-1">
-                Deposit
-              </span>
-            </button>
-          </Link>
-          <Link href="/withdraw">
-            <button className="font-bold text-center text-orange-700 bg-teal-900 rounded-3xl border border-solid bg-[linear-gradient(rgb(255,230,0),rgb(255,184,0))] border-orange-200 border-opacity-50 leading-[50px] w-full shadow-[rgb(255,242,166)_0px_3.64267px_0px_1px_inset,rgb(182,65,0)_0px_3.64267px_0px_0px] flex justify-center items-center  h-[60px] gap-1 md:gap-2 md:h-[70px]">
-              <PiHandWithdrawFill className="text-xl mb-1 w-6 h-6 md:w-7 md:h-7" />
-              <span className="text-lg font-medium md:text-xl pb-1">
-                Withdraw
-              </span>
-            </button>
-          </Link>
-          <Link href="/my-cards">
-            <button className="font-bold text-center text-orange-700 bg-teal-900 rounded-3xl border border-solid bg-[linear-gradient(rgb(255,230,0),rgb(255,184,0))] border-orange-200 border-opacity-50 leading-[50px] w-full shadow-[rgb(255,242,166)_0px_3.64267px_0px_1px_inset,rgb(182,65,0)_0px_3.64267px_0px_0px] flex justify-center items-center gap-1 md:gap-2 h-[60px] md:h-[70px]">
-              <FaCreditCard className="text-xl mb-1 w-5 h-5 md:w-6 md:h-6" />
-              <span className="text-lg font-medium md:text-xl pb-1">
-                My Card
-              </span>
-            </button>
-          </Link>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-4 gap-2 px-4 py-3 md:gap-3 md:py-4">
+          {[
+            { href: "/deposit", icon: PiHandDepositFill, label: "Deposit" },
+            { href: "/withdraw", icon: PiHandWithdrawFill, label: "Withdraw" },
+            { href: "/my-cards", icon: FaCreditCard, label: "My Card" },
+            { href: "/rewardCenter", icon: FaGift, label: "Reward" },
+          ].map((btn) => (
+            <Link href={btn.href} key={btn.label}>
+              <button className="w-full rounded-[28px] border border-white/10 bg-gradient-to-br from-[#0f172a] via-[#07121f] to-[#082334] px-3 py-3 text-center shadow-[0_18px_40px_rgba(0,0,0,0.20)] transition hover:-translate-y-0.5 hover:border-[#22d3ee]/30 active:scale-[0.98]">
+                <div className="flex flex-col items-center gap-2">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-[24px] bg-[#22d3ee]/10 text-[#22d3ee] shadow-[0_10px_24px_rgba(34,211,238,0.14)]">
+                    <btn.icon className="h-5 w-5" />
+                  </span>
+                  <p className="text-[11px] font-semibold text-white">{btn.label}</p>
+                </div>
+              </button>
+            </Link>
+          ))}
         </div>
 
-        {/* Menu Section */}
-        <div className="flex-1 px-4 py-3 pb-8 md:py-6">
-          <h3 className="text-lg font-medium mb-3 text-white md:text-xl md:mb-6">
-            Member Menu
-          </h3>
-          <div className="grid grid-cols-4 gap-y-6 gap-x-2 md:gap-y-8 md:gap-x-4">
-            {/* Row 1 */}
-            <Link
-              href="/rewardCenter"
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <FaGift className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                Reward
-              </span>
-            </Link>
+        {/* Member Menu Grid */}
+        <div className="px-4 py-3 pb-10 md:py-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <h3 className="text-xl font-semibold text-white">Premium Member Menu</h3>
+            <span className="rounded-full bg-white/10 px-3 py-1 text-sm text-slate-200 uppercase tracking-[0.18em] shadow-sm shadow-slate-900/20">
+              Elite Access
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-2 md:grid-cols-4 md:gap-3">
+            {menuItems.map((item) => (
+              <Link
+                href={item.href}
+                key={item.label}
+                className="group flex flex-col items-center rounded-[24px] border border-white/10 bg-[#07151f]/80 p-4 text-center shadow-[0_14px_60px_rgba(0,0,0,0.20)] transition hover:-translate-y-0.5 hover:bg-[#0b1b2a]/90"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-[#22d3ee]/20 to-[#facc15]/10 text-[#38bdf8] shadow-[0_10px_30px_rgba(34,211,238,0.14)] group-hover:from-[#22d3ee]/30 group-hover:to-[#facc15]/20">
+                  <item.icon className="h-6 w-6 md:h-7 md:w-7" />
+                </div>
+                <span className="mt-3 text-sm font-medium text-slate-200 transition group-hover:text-white leading-tight">
+                  {item.label}
+                </span>
+              </Link>
+            ))}
 
-            <Link
-              href="/profitandloss"
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <FaChartLine className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                Profit/Loss
-              </span>
-            </Link>
-
-            {/* Row 2 */}
-            <Link
-              href="/history?type=deposit"
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <FaFileInvoiceDollar className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                Deposit Record
-              </span>
-            </Link>
-
-            <Link
-              href={"/history?type=withdraw"}
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border-x-teal-600 flex items-center justify-center mb-1 shadow-sm md:w-14 md:h-14">
-                <LuNotebookText className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                Withdraw Record
-              </span>
-            </Link>
-            <Link
-              href="/my-account"
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <FaCircleUser className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                My Account
-              </span>
-            </Link>
-
-            {/* Row 3 */}
-            <Link
-              href="/security"
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <MdSecurity className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                Security Center
-              </span>
-            </Link>
-            <Link
-              href="/invite-friends"
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <TiUserAdd className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                Invite Friend
-              </span>
-            </Link>
-            <Link
-              href="#"
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <FiDownload className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                Download App
-              </span>
-            </Link>
-
-            {/* Row 4 */}
-            <Link
-              href="/support"
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <MdOutlineSupportAgent className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                Customer Center
-              </span>
-            </Link>
-            
-            {/* Fishing Games Link */}
-            <Link
-              href="/fish"
-              className="flex flex-col items-center cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <GiFishMonster className="text-xl text-white md:text-2xl" />
-              </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
-                Fish Games
-              </span>
-            </Link>
-            
-            {/* Poker Games Link */}
             <Link
               href="/poker"
-              className="flex flex-col items-center cursor-pointer"
+              className="group flex flex-col items-center rounded-[24px] border border-white/10 bg-[#07151f]/80 p-4 text-center shadow-[0_14px_60px_rgba(0,0,0,0.20)] transition hover:-translate-y-0.5 hover:bg-[#0b1b2a]/90"
             >
-              <div className="w-12 h-12 rounded-full bg-teal-900/75 border border-x-teal-600 flex items-center justify-center shadow-sm md:w-14 md:h-14">
-                <svg xmlns="http://www.w3.org/2000/svg" className="text-xl text-white md:text-2xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 12c3-2 6-2 6 2s-3 2-6 2-6-2-6-2 3-2 6-2z"/>
-                  <path d="M4 12h16"/>
-                  <path d="M12 4v16"/>
+              <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-[#fbbf24]/20 to-[#ec4899]/10 text-[#fbbf24] shadow-[0_10px_30px_rgba(251,191,36,0.14)] group-hover:from-[#fbbf24]/30 group-hover:to-[#ec4899]/20">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 md:h-7 md:w-7"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 12c3-2 6-2 6 2s-3 2-6 2-6-2-6-2 3-2 6-2z" />
+                  <path d="M4 12h16" />
+                  <path d="M12 4v16" />
                 </svg>
               </div>
-              <span className="text-xs text-center text-white mt-1 md:text-sm">
+              <span className="mt-3 text-sm font-medium text-slate-200 transition group-hover:text-white leading-tight">
                 Poker Games
               </span>
             </Link>

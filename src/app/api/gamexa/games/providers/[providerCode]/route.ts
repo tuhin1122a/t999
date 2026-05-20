@@ -25,10 +25,10 @@ async function getAuthToken(): Promise<string> {
 // ==================== GET Handler ====================
 export async function GET(
   req: NextRequest,
-  context: { params: { providerCode: string } }
+  context: { params: Promise<{ providerCode: string }> }
 ) {
   try {
-    const providerCode = context.params.providerCode; // ✅ direct use
+    const { providerCode } = await context.params;
     if (!providerCode) {
       return new Response(
         JSON.stringify({ success: false, error: 'Provider code is required' }),

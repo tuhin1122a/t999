@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 
 export const POST = async (req: NextRequest) => {
   try {
-    await db.invitationRewareds.createMany({
+    await db.invitationRewards.createMany({
       data: [
         {
           rewardImg:

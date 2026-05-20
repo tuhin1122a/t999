@@ -246,4 +246,9 @@ export const providers = [
     imageBlack: zitro_black,
     imageWhite: zitro_white,
   },
+  {
+    name: "softapi" as any, // SoftAPI Mock Provider
+    imageBlack: evo_black, // using a fallback image
+    imageWhite: evo_white,
+  },
 ];

@@ -202,7 +202,7 @@ export function convertGameXAToAppFormat(gamexaGames: GameXAGamesResponse): AppG
     ONGAMING: "ongaming",
   };
 
-  return gamexaGames.games.map((game: GameXAGame) => {
+  const convertedGames = gamexaGames.games.map((game: GameXAGame) => {
     let category: string;
     switch (game.game_type) {
       case "slot": category = "slots"; break;
@@ -231,6 +231,22 @@ export function convertGameXAToAppFormat(gamexaGames: GameXAGamesResponse): AppG
       exitButton: "1",
     };
   });
+
+  // Inject SoftAPI Test Game
+  convertedGames.push({
+    id: "3978", // SoftAPI test game ID
+    name: "SoftAPI Test Game",
+    img: "https://igamingapis.live/assets/images/placeholder.png", // fallback image
+    device: "mobile,desktop",
+    title: "softapi",
+    categories: "slots",
+    bm: "0",
+    demo: "1",
+    rewriterule: "0",
+    exitButton: "1",
+  });
+
+  return convertedGames;
 }
 
 // ==================== Player Management ====================

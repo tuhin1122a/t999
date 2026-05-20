@@ -16,11 +16,11 @@ import reward_4 from "@/../public/icons/rewards/reward-4.png";
 import Image from "next/image";
 
 import { FaLink } from "react-icons/fa6";
-import { StaticticType } from "@/types/api/reward";
+import { StatisticType } from "@/types/api/reward";
 import useCurrentUser from "@/hook/useCurrentUser";
 
 interface OverviewProps {
-  statictic: StaticticType;
+  statictic: StatisticType;
 }
 const Overview = ({ statictic }: OverviewProps) => {
   const user: any = useCurrentUser();
@@ -55,7 +55,7 @@ const Statictic = ({
   todayIncome,
   validReferral,
   totalIncome,
-}: StaticticType) => {
+}: StatisticType) => {
   return (
     <div className="grid grid-cols-2 gap-2">
       <div className="bg-[linear-gradient(108deg,_#abdcff,_#0396ff)]  p-3 rounded-sm">

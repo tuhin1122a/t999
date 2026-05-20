@@ -16,7 +16,7 @@ export const PUT = async (
     if (!user)
       return Response.json({ error: "Refresh the page" }, { status: 401 });
 
-    const reward = await db.invitationRewareds.findUnique({ where: { id } });
+    const reward = await db.invitationRewards.findUnique({ where: { id } });
 
     if (!reward) return Response.json({ error: "Reward is not available yet" });
 

@@ -16,7 +16,7 @@ const Rewards = ({ rewards }: RewardsProps) => {
   const [clamRewardApi, { isLoading }] = useClamInvitationRewardMutation();
 
   const handleClamReward = (reward: ExtendedWithUserRewards) => {
-    if (reward.isClamed) {
+    if (reward.isClaimed) {
       toast.success("You already clamed this reward");
       return;
     }
@@ -79,19 +79,19 @@ const Rewards = ({ rewards }: RewardsProps) => {
                 <button
                   onClick={() => handleClamReward(reward)}
                   disabled={
-                    reward.isClamed ||
+                    reward.isClaimed ||
                     reward.targetReferral !== reward.completedReferral ||
                     isLoading
                   }
                   className={`text-xs font-bold px-3 py-1.5 rounded-full shadow-sm transition-all duration-300 cursor-pointer ${
-                    reward.isClamed
+                    reward.isClaimed
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                       : reward.targetReferral === reward.completedReferral
                       ? "bg-[linear-gradient(135deg,_#6b73ff,_#000dff)] text-white hover:brightness-110 active:scale-95"
                       : "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
                   }`}
                 >
-                  {reward.isClamed
+                  {reward.isClaimed
                     ? "Claimed"
                     : reward.targetReferral === reward.completedReferral
                     ? "Claim Now"
