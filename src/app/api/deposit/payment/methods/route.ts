@@ -1,6 +1,5 @@
 import { findCurrentUser } from "@/data/user";
 import { NextResponse } from "next/server";
-import { getAvailablePaymentSystems } from "@/lib/api/durantoPayApi";
 import { db } from "@/lib/db";
 import { getPaymentMethodImage, getPaymentMethodLabel } from "@/lib/utils/paymentMethodUtils";
 
@@ -11,46 +10,35 @@ export async function GET() {
       return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
     }
 
-    // Get available payment systems from DurantoPay
-    const paymentSystemsResponse = await getAvailablePaymentSystems();
-    
-    console.log("Payment systems response:", paymentSystemsResponse);
-    
-    if (!paymentSystemsResponse.status) {
-      console.error("Failed to fetch payment methods from Durantopay API");
-      return NextResponse.json({ error: "Failed to fetch payment methods" }, { status: 500 });
-    }
-
-    // Get payment wallets and deposit wallets from database
+    // Get payment wallets and active deposit wallets directly from database
     const [dbPaymentWallets, dbDepositWallets] = await Promise.all([
       db.paymentWallet.findMany(),
-      db.depositWallet.findMany(),
+      db.depositWallet.findMany({
+        where: {
+          isActive: true,
+        },
+      }),
     ]);
 
-    // Transform the response to match the existing format
-    // The DurantoPay API returns an array of payment method names
-    const paymentMethods = paymentSystemsResponse.data || [];
-    const wallets = paymentMethods.map((method: string) => {
-      // Find matching payment wallet in database by name (case-insensitive)
+    // Map deposit wallets to UI payment method objects
+    const wallets = dbDepositWallets.map((dw) => {
       const matchingPw = dbPaymentWallets.find(
-        (pw) => pw.walletName.toLowerCase() === method.toLowerCase()
+        (pw) => pw.id === dw.paymentWalletId
       );
-      
-      const matchingDw = matchingPw 
-        ? dbDepositWallets.find((dw) => dw.paymentWalletId === matchingPw.id) 
-        : null;
+      const name = matchingPw?.walletName || "Unknown";
 
       return {
-        id: matchingPw?.id || method,
-        name: method,
-        image: matchingPw?.walletLogo || getPaymentMethodImage(method),
-        label: getPaymentMethodLabel(method),
-        min_deposit: matchingDw?.minDeposit ? parseFloat(matchingDw.minDeposit.toString()) : 100,
-        max_deposit: matchingDw?.maximumDeposit ? parseFloat(matchingDw.maximumDeposit.toString()) : 50000,
-        instructions: matchingDw?.instructions || `Please use your ${method} account to make the payment`,
-        warning: matchingDw?.warning || `Make sure to use an account registered under your name`,
-        isActive: matchingDw?.isActive ?? true,
-        walletsNumber: matchingDw?.walletsNumber || [],
+        id: dw.id,
+        paymentWalletId: dw.paymentWalletId,
+        name: name,
+        image: matchingPw?.walletLogo || getPaymentMethodImage(name),
+        label: matchingPw?.walletName || getPaymentMethodLabel(name),
+        min_deposit: parseFloat(dw.minDeposit.toString()),
+        max_deposit: parseFloat(dw.maximumDeposit.toString()),
+        instructions: dw.instructions,
+        warning: dw.warning,
+        isActive: dw.isActive,
+        walletsNumber: dw.walletsNumber,
       };
     });
 

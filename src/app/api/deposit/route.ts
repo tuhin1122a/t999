@@ -4,14 +4,15 @@ import { INTERNAL_SERVER_ERROR } from "@/error";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { createPayment, generateInvoiceNumber } from "@/lib/api/durantoPayApi";
 
 export const POST = async (req: NextRequest) => {
   try {
-    const { amount, ps } = await req.json();
+    const { amount: inputAmount, bonusFor, senderNumber, trxID, walletId, walletNumber } = await req.json();
 
-    if (!amount || !ps) {
-      return NextResponse.json({ success: false, message: "Missing required fields: amount and ps are required" }, { status: 400 });
+    const amount = parseFloat(inputAmount);
+
+    if (!amount || amount <= 0 || !senderNumber || !trxID || !walletId || !walletNumber) {
+      return NextResponse.json({ success: false, message: "Missing required fields: amount, senderNumber, trxID, walletId, and walletNumber are required." }, { status: 400 });
     }
 
     const user: any = await findCurrentUser();
@@ -19,78 +20,92 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ success: false, message: "Authentication failed" }, { status: 401 });
     }
 
-    const invoice_no = generateInvoiceNumber();
+    // 1️⃣ Validate deposit wallet and limits
+    const wallet = await db.depositWallet.findUnique({
+      where: { id: walletId },
+    });
 
-    // 1️⃣ Create Durantopay payment
-    const isMock = !process.env.DURANTOPAY_APP_KEY || process.env.DURANTOPAY_APP_KEY.trim() === "";
-    let paymentResponse;
+    if (!wallet) {
+      return NextResponse.json({ success: false, message: "Invalid payment method wallet selected." }, { status: 400 });
+    }
 
-    if (isMock) {
-      const mockTxId = `MOCK_TX_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      paymentResponse = {
-        status: 0,
-        message: "Mock payment initiated",
-        data: {
-          dp_transaction_id: mockTxId,
-          payment_url: `/mock-payment?invoice_no=${invoice_no}&amount=${amount}&ps=${ps}`,
-          transaction_status: "PENDING"
+    const minDeposit = parseFloat(wallet.minDeposit.toString());
+    const maxDeposit = parseFloat(wallet.maximumDeposit.toString());
+
+    if (amount < minDeposit || amount > maxDeposit) {
+      return NextResponse.json({ success: false, message: `Deposit amount must be between ${minDeposit} BDT and ${maxDeposit} BDT.` }, { status: 400 });
+    }
+
+    // 2️⃣ Check for duplicate Transaction ID (TrxID)
+    const existingDeposit = await db.deposit.findFirst({
+      where: { trxID },
+    });
+
+    if (existingDeposit) {
+      return NextResponse.json({ success: false, message: "This Transaction ID (TrxID) has already been submitted." }, { status: 400 });
+    }
+
+    // 3️⃣ Securely calculate bonus amount in backend and verify eligibility
+    let bonusAmount = 0;
+    if (bonusFor && bonusFor !== "none") {
+      if (bonusFor === "signinBonus") {
+        const userWallet = await db.wallet.findUnique({
+          where: { userId: user.id },
+        });
+        const approvedDepositsCount = await db.deposit.count({
+          where: {
+            userId: user.id,
+            status: "APPROVED",
+          },
+        });
+        const isSigninBonusActive = userWallet?.signinBonus || approvedDepositsCount === 0;
+        if (!isSigninBonusActive) {
+          return NextResponse.json({ success: false, message: "You are not eligible for the First Deposit (Sign-in) bonus." }, { status: 400 });
         }
-      };
-    } else {
+      }
+
       try {
-        paymentResponse = await createPayment({ invoice_no, paymentType: ps, amount: amount.toString() });
-      } catch (apiError: any) {
-        console.error("Durantopay API call failed:", apiError);
-        return NextResponse.json({ success: false, message: `Payment service error: ${apiError.message}` }, { status: 500 });
+        const bonusSettings = await db.bonus.findFirst();
+        if (bonusSettings) {
+          const percent = bonusFor === "signinBonus" ? bonusSettings.signinBonus : bonusFor === "referralBonus" ? bonusSettings.referralBonus : 0;
+          bonusAmount = Math.round((amount * percent) / 100);
+        }
+      } catch (err) {
+        console.error("Failed to query bonus settings:", err);
       }
     }
 
-    if (!paymentResponse || paymentResponse.status !== 0) {
-      return NextResponse.json({ success: false, message: "Deposit Failed: " + (paymentResponse?.message || "Payment service error") }, { status: 500 });
-    }
+    // 4️⃣ Generate unique tracking number
+    const trackingNumber = "DEP" + Date.now().toString().slice(-8) + Math.floor(1000 + Math.random() * 9000);
 
-    // 2️⃣ Save pending deposit
-    await db.durantoPayDeposit.create({
+    // 5️⃣ Create manual deposit record in database
+    const newDeposit = await db.deposit.create({
       data: {
-        invoice_no,
-        dp_transaction_id: String(paymentResponse.data?.dp_transaction_id || paymentResponse.dp_transaction_id || ""),
         amount: new Prisma.Decimal(amount),
-        paymentType: ps,
+        bonus: new Prisma.Decimal(bonusAmount),
+        bonusFor: bonusFor || "none",
+        senderNumber: senderNumber,
+        trxID: trxID,
+        walletId: walletId,
+        walletNumber: walletNumber,
+        trackingNumber: trackingNumber,
+        expire: new Date(Date.now() + 2 * 60 * 60 * 1000), // Expires in 2 hours
         status: "PENDING",
-        user: { connect: { id: user.id } },
+        userId: user.id,
       },
     });
 
-    // 3️⃣ Return payment URL for frontend
-    const paymentUrl =
-      paymentResponse.data?.payment_url ||
-      paymentResponse.data?.paymentUrl ||
-      paymentResponse.payment_url ||
-      null;
-
-    const transactionId = String(paymentResponse.data?.dp_transaction_id || paymentResponse.dp_transaction_id || "");
-    const transactionStatus = paymentResponse.data?.transaction_status || paymentResponse.data?.status || paymentResponse.transaction_status || "unverified";
-
-    if (!paymentUrl) {
-      console.error("No payment URL found. Full response:", paymentResponse);
-      return NextResponse.json({
-        success: false,
-        message: "Payment request created but payment URL is not available. Contact support.",
-        debug: {
-          hasData: !!paymentResponse.data,
-          dataKeys: paymentResponse.data ? Object.keys(paymentResponse.data) : [],
-          responseKeys: Object.keys(paymentResponse),
-        },
-      }, { status: 500 });
-    }
-
     return NextResponse.json({
       success: true,
-      payload: { dp_transaction_id: transactionId, payment_url: paymentUrl, transaction_status: transactionStatus, invoice_no },
+      payload: {
+        message: "Deposit submitted successfully! Waiting for Admin approval.",
+        depositId: newDeposit.id,
+        trackingNumber: newDeposit.trackingNumber,
+      },
     }, { status: 200 });
 
   } catch (error: any) {
-    console.error("Deposit error:", error);
+    console.error("Manual deposit submission error:", error);
     return NextResponse.json({ message: INTERNAL_SERVER_ERROR }, { status: 500 });
   }
 };

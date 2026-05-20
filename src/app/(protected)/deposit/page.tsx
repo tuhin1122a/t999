@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { MdOutlineSupportAgent, MdHistory } from "react-icons/md";
+import { FaChevronLeft, FaCheck } from "react-icons/fa";
 import { PulseLoader } from "react-spinners";
 import PageLoader from "@/components/loader/PageLoader";
 import toast from "react-hot-toast";
@@ -30,9 +31,12 @@ const DepositPage: React.FC = () => {
 
   const user: any = useGetCurrentUser();
 
+  const [step, setStep] = useState<number>(1);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<any>();
+  const [selectedAgentNumber, setSelectedAgentNumber] = useState<string>("");
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [walletNumber, setWalletNumber] = useState("");
+  const [trxId, setTrxId] = useState("");
   const [selectedBonus, setSelectedBonus] = useState<BonusOption>({
     id: "none",
     label: "No Bonus",
@@ -72,25 +76,38 @@ const DepositPage: React.FC = () => {
     return selectedBonus ? Math.round((amount * selectedBonus.value) / 100) : 0;
   };
 
-  const handleSubmit = () => {
-    setPending(true);
+  const handleNextStep = () => {
     const amount = parseFloat(depositAmount);
-    const bonusAmount = calculateBonus(amount);
-
     if (!amount || amount <= 0) {
       setError("Please enter a valid amount");
-      setPending(false);
       return;
     }
 
     if (amount < selectedPaymentMethod.min_deposit) {
-      setError(`Minimum deposit is ${selectedPaymentMethod.min_deposit}`);
-      setPending(false);
+      setError(`Minimum deposit is ${selectedPaymentMethod.min_deposit} BDT`);
       return;
     }
 
     if (amount > selectedPaymentMethod.max_deposit) {
-      setError(`Maximum deposit is ${selectedPaymentMethod.max_deposit}`);
+      setError(`Maximum deposit is ${selectedPaymentMethod.max_deposit} BDT`);
+      return;
+    }
+
+    if (!walletNumber.trim()) {
+      setError("Please enter your sender wallet number");
+      return;
+    }
+
+    setError("");
+    setStep(2);
+  };
+
+  const handleSubmit = () => {
+    setPending(true);
+    const amount = parseFloat(depositAmount);
+
+    if (!amount || amount <= 0) {
+      setError("Please enter a valid amount");
       setPending(false);
       return;
     }
@@ -101,27 +118,43 @@ const DepositPage: React.FC = () => {
       return;
     }
 
-    // Call Deposit API
+    if (!trxId) {
+      setError("Please enter the Transaction ID (TrxID)");
+      setPending(false);
+      return;
+    }
+
+    if (!selectedAgentNumber) {
+      setError("Please select an Agent Account number");
+      setPending(false);
+      return;
+    }
+
+    // Call manual Deposit API
     makeDeposit({
-      amount: amount + bonusAmount,
-      ps: selectedPaymentMethod.name,
+      amount: amount,
+      bonusFor: selectedBonus.id,
+      senderNumber: walletNumber,
+      trxID: trxId,
+      walletId: selectedPaymentMethod.id,
+      walletNumber: selectedAgentNumber,
     })
       .unwrap()
       .then((res) => {
-        if (res && res.success && res.payload?.payment_url) {
+        if (res && res.success) {
           setPending(false);
           setRedirecting(true);
-          toast.success("Redirecting to E-Wallet Payment Gateway...");
+          toast.success(res.payload?.message || "Deposit submitted successfully! Waiting for Admin approval.");
           setTimeout(() => {
-            window.location.href = res.payload.payment_url;
-          }, 1000);
+            window.location.href = "/history";
+          }, 1500);
         } else {
-          toast.error("Failed to initiate deposit. Please try again.");
+          toast.error("Failed to submit deposit. Please try again.");
           setPending(false);
         }
       })
       .catch((err: any) => {
-        toast.error(err?.data?.error || err?.data?.message || "Deposit failed");
+        toast.error(err?.data?.message || err?.data?.error || "Deposit failed");
         setPending(false);
       });
   };
@@ -129,12 +162,26 @@ const DepositPage: React.FC = () => {
   const totalAmount = parseFloat(depositAmount) || 0;
   const bonusAmount = calculateBonus(totalAmount);
   const grandTotal = totalAmount + bonusAmount;
-  const isValidAmount = totalAmount >= 100 && totalAmount <= 50000;
+  
+  // Validation checks for UI steps
+  const isValidAmount = totalAmount >= (selectedPaymentMethod?.min_deposit || 100) && 
+                        totalAmount <= (selectedPaymentMethod?.max_deposit || 50000);
+  
+  const isStep1Valid = selectedPaymentMethod && isValidAmount && walletNumber.trim() !== "";
+  const isFormValid = isStep1Valid && trxId.trim() !== "" && selectedAgentNumber !== "";
 
   // --- Effects ---
   useEffect(() => {
     if (wallets.length) setSelectedPaymentMethod(wallets[0]);
   }, [wallets]);
+
+  useEffect(() => {
+    if (selectedPaymentMethod && selectedPaymentMethod.walletsNumber?.length > 0) {
+      setSelectedAgentNumber(selectedPaymentMethod.walletsNumber[0]);
+    } else {
+      setSelectedAgentNumber("");
+    }
+  }, [selectedPaymentMethod]);
 
   useEffect(() => {
     if (bonus && user) {
@@ -154,7 +201,7 @@ const DepositPage: React.FC = () => {
 
   useEffect(() => {
     if (error) setError("");
-  }, [depositAmount]);
+  }, [depositAmount, walletNumber, trxId, selectedAgentNumber]);
 
   return (
     <>
@@ -169,218 +216,346 @@ const DepositPage: React.FC = () => {
             </Link>
           </SiteHeader>
 
+          {/* Premium Step Progress Indicator */}
+          <div className="bg-white border-b border-gray-100 py-4 px-6 shadow-sm">
+            <div className="max-w-md mx-auto flex items-center justify-between">
+              {/* Step 1 Indicator */}
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                  step === 1 
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-200 ring-4 ring-blue-50" 
+                    : "bg-green-500 text-white shadow-md shadow-green-200"
+                }`}>
+                  {step > 1 ? <FaCheck size={10} /> : "1"}
+                </div>
+                <span className={`text-xs font-bold uppercase tracking-wider ${
+                  step === 1 ? "text-blue-600 font-extrabold" : "text-gray-400"
+                }`}>Method & Amount</span>
+              </div>
+
+              {/* Step Connection Bar */}
+              <div className={`flex-1 h-0.5 mx-3 rounded transition-all duration-500 ${
+                step > 1 ? "bg-green-400" : "bg-gray-200"
+              }`} />
+
+              {/* Step 2 Indicator */}
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                  step === 2 
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-200 ring-4 ring-blue-50" 
+                    : "bg-gray-200 text-gray-400"
+                }`}>
+                  "2"
+                </div>
+                <span className={`text-xs font-bold uppercase tracking-wider ${
+                  step === 2 ? "text-blue-600 font-extrabold" : "text-gray-400"
+                }`}>Transfer Details</span>
+              </div>
+            </div>
+          </div>
+
           <main className="w-full px-4 py-6 space-y-6">
-            {/* Payment Methods */}
-            <section className="bg-white rounded-lg shadow-sm p-4">
-              <h2 className="text-lg font-medium text-gray-800 mb-4">Payment Method</h2>
-              <div className="flex overflow-x-auto pb-2 -mx-1 hide-scrollbar">
-                {wallets.map((wallet, i) => (
-                  <PaymentMethod
-                    key={i}
-                    method={wallet}
-                    selectedPaymentMethod={selectedPaymentMethod}
-                    onClick={() => setSelectedPaymentMethod(wallet)}
-                  />
-                ))}
-              </div>
-            </section>
-
-            {/* Admin Wallet Numbers & Instructions */}
-            {selectedPaymentMethod && (
-              <section className="bg-white rounded-lg shadow-sm p-4 space-y-4">
-                <h2 className="text-lg font-medium text-gray-800">
-                  Send Money to Agent Account
-                </h2>
-                
-                {selectedPaymentMethod.walletsNumber && selectedPaymentMethod.walletsNumber.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Please send money to one of the following numbers:</p>
-                    <div className="grid gap-2">
-                      {selectedPaymentMethod.walletsNumber.map((num: string, idx: number) => (
-                        <div key={idx} className="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg p-3">
-                          <span className="font-mono text-gray-800 font-bold">{num}</span>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(num);
-                              toast.success("Number copied to clipboard!");
-                            }}
-                            className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-md transition-colors"
-                          >
-                            Copy
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+            
+            {/* STEP 1: Select Method and Enter Amount */}
+            {step === 1 && (
+              <div className="space-y-6 animate-fade-in">
+                {/* Payment Methods */}
+                <section className="bg-white rounded-lg shadow-sm p-4">
+                  <h2 className="text-lg font-medium text-gray-800 mb-4">Select Payment Method</h2>
+                  <div className="flex overflow-x-auto pb-2 -mx-1 hide-scrollbar">
+                    {wallets.map((wallet, i) => (
+                      <PaymentMethod
+                        key={i}
+                        method={wallet}
+                        selectedPaymentMethod={selectedPaymentMethod}
+                        onClick={() => setSelectedPaymentMethod(wallet)}
+                      />
+                    ))}
                   </div>
-                ) : (
-                  <p className="text-sm text-red-500 font-medium">
-                    No active receiver number found. Please contact support.
-                  </p>
-                )}
+                </section>
 
-                {selectedPaymentMethod.instructions && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                    <h3 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">
-                      Instructions
-                    </h3>
-                    <p className="text-sm text-blue-700 leading-relaxed">
-                      {selectedPaymentMethod.instructions}
-                    </p>
-                  </div>
-                )}
-
-                {selectedPaymentMethod.warning && (
-                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                    <h3 className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">
-                      Warning
-                    </h3>
-                    <p className="text-sm text-amber-700 leading-relaxed">
-                      {selectedPaymentMethod.warning}
-                    </p>
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* Amount Input */}
-            <section className="bg-white rounded-lg shadow-sm p-4">
-              <h2 className="text-lg font-medium text-gray-800 mb-4">Deposit Amount</h2>
-              <div className="relative mb-4">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500">BDT</span>
-                </div>
-                <input
-                  disabled={pending}
-                  type="text"
-                  className="block w-full pl-12 pr-4 py-3 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                  placeholder="Deposit amount"
-                  value={depositAmount}
-                  onChange={handleAmountChange}
-                />
-              </div>
-
-              <div className="relative mb-4">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500">+88</span>
-                </div>
-                <input
-                  disabled={pending}
-                  type="text"
-                  className="block w-full pl-12 pr-4 py-3 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                  placeholder="Wallet Number"
-                  value={walletNumber}
-                  onChange={handleWalletNumberChange}
-                />
-              </div>
-
-              {error && <span className="text-sm text-red-700">{error}</span>}
-
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-4">
-                {quickAmounts.map((amount) => (
-                  <button
-                    key={amount}
-                    disabled={pending}
-                    onClick={() => handleAmountButtonClick(amount)}
-                    className={`py-1 px-3 border rounded-lg text-center whitespace-nowrap ${
-                      selectedAmountButton === amount
-                        ? "bg-blue-50 border-blue-500 text-blue-700"
-                        : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    {amount} BDT
-                    {selectedBonus.value > 0 && (
-                      <div className="absolute -top-2 -right-2 bg-blue-700 text-white text-xs font-medium rounded-full px-1">
-                        +{Math.round((amount * selectedBonus.value) / 100)}
-                      </div>
+                {/* Amount Input */}
+                <section className="bg-white rounded-lg shadow-sm p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-medium text-gray-800">Deposit Amount</h2>
+                    {selectedPaymentMethod && (
+                      <span className="text-xs text-gray-500 font-semibold bg-gray-100 px-2.5 py-1 rounded-full">
+                        Min: {selectedPaymentMethod.min_deposit} BDT | Max: {selectedPaymentMethod.max_deposit} BDT
+                      </span>
                     )}
-                  </button>
-                ))}
-              </div>
-            </section>
+                  </div>
+                  
+                  {/* Deposit Amount Input */}
+                  <div className="relative mb-4">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <span className="text-gray-500 font-bold">BDT</span>
+                    </div>
+                    <input
+                      disabled={pending}
+                      type="number"
+                      className="block w-full pl-16 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-semibold text-lg text-gray-800"
+                      placeholder="Enter amount"
+                      value={depositAmount}
+                      onChange={handleAmountChange}
+                    />
+                  </div>
 
-            {/* Bonus Selection */}
-            <section className="bg-white rounded-lg shadow-sm p-4">
-              <h2 className="text-lg font-medium text-gray-800 mb-4">Select Bonus</h2>
-              <div className="space-y-3">
-                {bonusOptions.map((option) => (
-                  <div
-                    key={option.id}
-                    className={`flex items-start p-3 border rounded-lg cursor-pointer ${
-                      option.disable
-                        ? "opacity-50 cursor-not-allowed"
-                        : selectedBonus.id === option.id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => !option.disable && !pending && setSelectedBonus(option)}
-                  >
-                    <div className="flex-shrink-0 mt-0.5">
-                      <div
-                        className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                          selectedBonus.id === option.id ? "border-blue-500" : "border-gray-400"
+                  {error && <div className="text-sm text-red-600 font-medium mb-3">{error}</div>}
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {quickAmounts.map((amount) => (
+                      <button
+                        key={amount}
+                        disabled={pending}
+                        onClick={() => handleAmountButtonClick(amount)}
+                        className={`py-2.5 px-3 border rounded-lg text-center whitespace-nowrap text-sm font-semibold transition-all ${
+                          selectedAmountButton === amount
+                            ? "bg-blue-50 border-blue-500 text-blue-700"
+                            : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
                         }`}
                       >
-                        {selectedBonus.id === option.id && (
-                          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        )}
-                      </div>
+                        {amount} BDT
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Sender Wallet Number */}
+                <section className="bg-white rounded-lg shadow-sm p-4">
+                  <h2 className="text-lg font-medium text-gray-800 mb-4">Sender Account</h2>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <span className="text-gray-500 font-bold">+88</span>
                     </div>
-                    <div className="ml-3 flex-1">
-                      <div className="font-medium text-gray-800">{option.label}</div>
-                      <div className="text-sm text-gray-600">
-                        {option.id === "signinBonus" && `Get ${option.value}% extra on first deposit`}
-                        {option.id === "referralBonus" && `${option.value}% Bonus from referral`}
-                        {option.id === "none" && `Proceed without any bonus`}
+                    <input
+                      disabled={pending}
+                      type="text"
+                      className="block w-full pl-16 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-semibold text-lg text-gray-800"
+                      placeholder="Your Sender Wallet Number"
+                      value={walletNumber}
+                      onChange={handleWalletNumberChange}
+                    />
+                  </div>
+                </section>
+
+                {/* Bonus Selection */}
+                <section className="bg-white rounded-lg shadow-sm p-4">
+                  <h2 className="text-lg font-medium text-gray-800 mb-4">Select Bonus</h2>
+                  <div className="space-y-3">
+                    {bonusOptions.map((option) => (
+                      <div
+                        key={option.id}
+                        className={`flex items-start p-3 border rounded-lg cursor-pointer ${
+                          option.disable
+                            ? "opacity-50 cursor-not-allowed"
+                            : selectedBonus.id === option.id
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        onClick={() => !option.disable && !pending && setSelectedBonus(option)}
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          <div
+                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                              selectedBonus.id === option.id ? "border-blue-500" : "border-gray-400"
+                            }`}
+                          >
+                            {selectedBonus.id === option.id && (
+                              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <div className="font-medium text-gray-800">{option.label}</div>
+                          <div className="text-sm text-gray-600">
+                            {option.id === "signinBonus" && `Get ${option.value}% extra on first deposit`}
+                            {option.id === "referralBonus" && `${option.value}% Bonus from referral`}
+                            {option.id === "none" && `Proceed without any bonus`}
+                          </div>
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Next Button */}
+                <button
+                  className={`w-full py-4 px-6 rounded-lg font-bold text-white text-lg shadow-sm transition-all ${
+                    isStep1Valid ? "bg-blue-600 hover:bg-blue-700 active:scale-[0.99]" : "bg-gray-400 cursor-not-allowed"
+                  }`}
+                  disabled={!isStep1Valid}
+                  onClick={handleNextStep}
+                >
+                  Next Step
+                </button>
+              </div>
+            )}
+
+            {/* STEP 2: Transfer Details & Transaction ID */}
+            {step === 2 && (
+              <div className="space-y-6 animate-fade-in">
+                {/* Back Button */}
+                <button 
+                  onClick={() => setStep(1)}
+                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-semibold bg-white border border-gray-200 rounded-lg py-2 px-4 shadow-sm w-fit transition-all hover:bg-gray-50"
+                >
+                  <FaChevronLeft className="text-xs" />
+                  Back to Step 1
+                </button>
+
+                {/* Admin Wallet Numbers & Instructions */}
+                {selectedPaymentMethod && (
+                  <section className="bg-white rounded-lg shadow-sm p-4 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-lg font-medium text-gray-800">
+                        Send Money to Agent Account
+                      </h2>
+                      <span className="text-xs text-blue-600 font-bold bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full uppercase">
+                        {selectedPaymentMethod.name}
+                      </span>
+                    </div>
+                    
+                    {selectedPaymentMethod.walletsNumber && selectedPaymentMethod.walletsNumber.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600">Please select and send money to one of the following numbers:</p>
+                        <div className="grid gap-2">
+                          {selectedPaymentMethod.walletsNumber.map((num: string, idx: number) => (
+                            <div 
+                              key={idx} 
+                              onClick={() => setSelectedAgentNumber(num)}
+                              className={`flex justify-between items-center border rounded-lg p-3 cursor-pointer transition-all ${
+                                selectedAgentNumber === num
+                                  ? "bg-blue-50 border-blue-500 shadow-sm"
+                                  : "bg-gray-50 border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center ${
+                                  selectedAgentNumber === num ? "border-blue-500" : "border-gray-400"
+                                }`}>
+                                  {selectedAgentNumber === num && <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>}
+                                </div>
+                                <span className="font-mono text-gray-800 font-bold">{num}</span>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(num);
+                                  toast.success("Number copied to clipboard!");
+                                }}
+                                className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-3 rounded-md transition-colors"
+                              >
+                                Copy
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-red-500 font-medium">
+                        No active receiver number found. Please contact support.
+                      </p>
+                    )}
+
+                    {selectedPaymentMethod.instructions && (
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                        <h3 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">
+                          Instructions
+                        </h3>
+                        <p className="text-sm text-blue-700 leading-relaxed">
+                          {selectedPaymentMethod.instructions}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedPaymentMethod.warning && (
+                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                        <h3 className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">
+                          Warning
+                        </h3>
+                        <p className="text-sm text-amber-700 leading-relaxed">
+                          {selectedPaymentMethod.warning}
+                        </p>
+                      </div>
+                    )}
+                  </section>
+                )}
+
+                {/* Transfer Details Form */}
+                <section className="bg-white rounded-lg shadow-sm p-4">
+                  <h2 className="text-lg font-medium text-gray-800 mb-4">Submit Payment Details</h2>
+                  
+                  {/* Transaction ID */}
+                  <div className="relative mb-4">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <span className="text-gray-500 font-bold">TRX</span>
+                    </div>
+                    <input
+                      disabled={pending}
+                      type="text"
+                      className="block w-full pl-16 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-mono font-bold uppercase placeholder-gray-400"
+                      placeholder="Transaction ID (TrxID)"
+                      value={trxId}
+                      onChange={(e) => setTrxId(e.target.value)}
+                    />
+                  </div>
+
+                  {error && <div className="text-sm text-red-600 font-medium mb-3">{error}</div>}
+                </section>
+
+                {/* Summary */}
+                <section className="bg-white rounded-lg shadow-sm p-4 animate-fade-in">
+                  <h2 className="text-lg font-medium text-gray-800 mb-4">Summary</h2>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Selected Method:</span>
+                      <span className="font-semibold text-gray-800 capitalize">{selectedPaymentMethod?.name || "None"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Agent Number:</span>
+                      <span className="font-mono font-bold text-gray-800">{selectedAgentNumber || "Not Selected"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Deposit Amount:</span>
+                      <span className="font-semibold text-gray-800">{totalAmount.toLocaleString()} BDT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Bonus Amount:</span>
+                      <span className="font-semibold text-green-600">
+                        +{bonusAmount.toLocaleString()} BDT
+                      </span>
+                    </div>
+                    <div className="border-t pt-2 mt-2 flex justify-between">
+                      <span className="text-gray-800 font-bold">Total:</span>
+                      <span className="font-bold text-lg text-blue-600">{grandTotal.toLocaleString()} BDT</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </section>
+                </section>
 
-            {/* Summary */}
-            <section className="bg-white rounded-lg shadow-sm p-4">
-              <h2 className="text-lg font-medium text-gray-800 mb-4">Summary</h2>
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Deposit Amount:</span>
-                  <span className="font-medium">{totalAmount.toLocaleString()} BDT</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Bonus Amount:</span>
-                  <span className="font-medium text-green-600">
-                    +{bonusAmount.toLocaleString()} BDT
-                  </span>
-                </div>
-                <div className="border-t pt-2 mt-2 flex justify-between">
-                  <span className="text-gray-800 font-medium">Total:</span>
-                  <span className="font-bold text-lg">{grandTotal.toLocaleString()} BDT</span>
-                </div>
+                {/* Action Button */}
+                <button
+                  className={`w-full py-4 px-6 rounded-lg font-bold text-white text-lg shadow-sm transition-all ${
+                    isFormValid && !redirecting ? "bg-blue-600 hover:bg-blue-700 active:scale-[0.99]" : "bg-gray-400 cursor-not-allowed"
+                  }`}
+                  disabled={!isFormValid || pending || redirecting}
+                  onClick={handleSubmit}
+                >
+                  {redirecting ? (
+                    <div className="flex items-center justify-center">
+                      <PulseLoader size={12} color="#fff" />
+                      <span className="ml-2">Submitting request...</span>
+                    </div>
+                  ) : pending ? (
+                    <div className="flex items-center justify-center">
+                      <PulseLoader size={12} color="#fff" />
+                      <span className="ml-2">Processing Submission...</span>
+                    </div>
+                  ) : (
+                    "Submit Deposit Request"
+                  )}
+                </button>
               </div>
-            </section>
-
-            {/* Action Button */}
-            <button
-              className={`w-full py-4 px-6 rounded-lg font-medium text-white text-lg shadow-sm ${
-                isValidAmount && !redirecting ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
-              }`}
-              disabled={!isValidAmount || pending || redirecting}
-              onClick={handleSubmit}
-            >
-              {redirecting ? (
-                <div className="flex items-center justify-center">
-                  <PulseLoader size={12} color="#fff" />
-                  <span className="ml-2">Redirecting to Payment Gateway...</span>
-                </div>
-              ) : pending ? (
-                <div className="flex items-center justify-center">
-                  <PulseLoader size={12} color="#fff" />
-                  <span className="ml-2">Processing...</span>
-                </div>
-              ) : (
-                "Continue to E-Wallet Payment"
-              )}
-            </button>
+            )}
           </main>
         </div>
       ) : (

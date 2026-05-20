@@ -18,6 +18,16 @@ export async function GET() {
       return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
     }
 
+    // Check if sign-in bonus is active for this user
+    // It's active if they have 0 approved deposits, or if admin explicitly reactivated it (wallet.signinBonus === true)
+    const approvedDepositsCount = await db.deposit.count({
+      where: {
+        userId: user.id,
+        status: "APPROVED",
+      },
+    });
+    const isSigninBonusActive = wallet.signinBonus || approvedDepositsCount === 0;
+
     // Get payment wallets from database
     const paymentWallets = await db.paymentWallet.findMany();
 
@@ -48,7 +58,7 @@ export async function GET() {
       payload: {
         wallets,
         bonus: {
-          signinBonus: bonus?.signinBonus || 5,
+          signinBonus: isSigninBonusActive ? (bonus?.signinBonus || 5) : 0,
           referralBonus: bonus?.referralBonus || 5,
         }
       }
