@@ -2,7 +2,9 @@
 import axios from "axios";
 
 // ==================== Config ====================
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+// Use relative URL so requests always go to the same origin (localhost in dev, rk444.site in prod)
+// Absolute localhost URL would cause CORS errors on the production domain
+const BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000");
 
 const api = axios.create({
   baseURL: BASE_URL,

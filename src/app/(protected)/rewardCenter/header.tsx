@@ -17,7 +17,11 @@ const RewardHeader = () => {
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setLastUpdateTime(new Date());
+  }, []);
 
   const { data, refetch, error } = useFetchWalletQuery();
 
@@ -71,7 +75,7 @@ const RewardHeader = () => {
       >
         <div className="text-sm font-medium">Balance updated successfully</div>
         <div className="text-xs mt-1" suppressHydrationWarning>
-          {lastUpdateTime.toLocaleTimeString()}
+          {lastUpdateTime?.toLocaleTimeString() || ""}
         </div>
       </div>
 

@@ -35,7 +35,11 @@ const App: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setLastUpdateTime(new Date());
+  }, []);
 
   const user: any = useCurrentUser();
   const {
@@ -87,7 +91,7 @@ const App: React.FC = () => {
             <FiCheck /> Balance updated
           </div>
           <div className="text-[11px] text-gray-400 mt-0.5" suppressHydrationWarning>
-            {lastUpdateTime.toLocaleTimeString()}
+            {lastUpdateTime?.toLocaleTimeString() || ""}
           </div>
         </div>
 
@@ -148,7 +152,7 @@ const App: React.FC = () => {
                     )}
                   </span>
                   <div className="text-xs text-slate-300">
-                    <div>Updated {lastUpdateTime.toLocaleTimeString()}</div>
+                    <div>Updated {lastUpdateTime?.toLocaleTimeString() || ""}</div>
                     <div className="text-[10px] text-slate-500">Live premium balance</div>
                   </div>
                 </div>
