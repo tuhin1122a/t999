@@ -3,12 +3,35 @@ node_modules
 .git
 .env
 .env.*
+.env.local
+.env.production
 dist
 coverage
 *.tsbuildinfo
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test files
 scratch
 test-encryption.js
 test_softapi.js
 test-sports-api.ps1
 setup-prisma-wrapper.js
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+
+# Dev tools
+.vscode
+.idea
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+README.md
+*.md
