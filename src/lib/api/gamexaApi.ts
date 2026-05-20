@@ -13,6 +13,27 @@ const api = axios.create({
   },
 });
 
+const GAMEXA_ENABLED = false;
+
+const mockGameXAGamesResponse: GameXAGamesResponse = {
+  success: true,
+  games: [],
+  pagination: {
+    page: 1,
+    limit: 100,
+    total: 0,
+    pages: 0,
+    hasNext: false,
+    hasPrev: false,
+  },
+  filters: {
+    search: null,
+    provider: null,
+    type: null,
+    status: "active",
+  },
+};
+
 // ==================== Interfaces ====================
 export interface GameXAAuthResponse {
   token: string;
@@ -88,6 +109,13 @@ let cachedToken: string | null = null;
 let tokenExpiry: number | null = null;
 
 export async function loginToGameXA(): Promise<string> {
+  if (!GAMEXA_ENABLED) {
+    if (cachedToken && tokenExpiry && Date.now() < tokenExpiry) return cachedToken;
+    cachedToken = "MOCK_GAMEXA_TOKEN";
+    tokenExpiry = Date.now() + 3600 * 1000;
+    return cachedToken;
+  }
+
   const now = Date.now();
   if (cachedToken && tokenExpiry && now < tokenExpiry) return cachedToken;
 
@@ -109,6 +137,10 @@ export async function loginToGameXA(): Promise<string> {
 
 // ==================== Games ====================
 export async function fetchAllGames(params: { search?: string } = {}): Promise<GameXAGamesResponse> {
+  if (!GAMEXA_ENABLED) {
+    return mockGameXAGamesResponse;
+  }
+
   const response = await api.get("/api/gamexa/games", {
     params: { limit: 6648, status: "active", ...params },
   });
@@ -262,6 +294,11 @@ export async function createPlayer(data: {
   password: string;
   currency?: string;
 }) {
+  if (!GAMEXA_ENABLED) {
+    const playerId = data.phone || data.username || `LOCAL_PLAYER_${Date.now()}`;
+    return { success: true, player_id: playerId, player: { id: playerId } };
+  }
+
   try {
     // Build payload properly - don't overwrite full_name if it's already provided
     const payload = { 
@@ -282,6 +319,10 @@ export async function createPlayer(data: {
 }
 
 export async function getAllPlayers(query?: { page?: number; limit?: number; search?: string; status?: string }) {
+  if (!GAMEXA_ENABLED) {
+    return { success: true, data: [] };
+  }
+
   const params = new URLSearchParams();
   if (query?.page) params.append('page', query.page.toString());
   if (query?.limit) params.append('limit', query.limit.toString());
@@ -294,6 +335,10 @@ export async function getAllPlayers(query?: { page?: number; limit?: number; sea
 
 // ==================== Transactions ====================
 export async function depositToPlayer(playerId: string, amount: number, referenceId: string) {
+  if (!GAMEXA_ENABLED) {
+    return { success: true, status: "SKIPPED", player_id: playerId, amount, reference_id: referenceId };
+  }
+
   try {
     const response = await api.post(`api/gamexa/players/${playerId}/deposit`, { amount, reference_id: referenceId });
     return response.data;
@@ -304,6 +349,10 @@ export async function depositToPlayer(playerId: string, amount: number, referenc
 }
 
 export async function withdrawFromPlayer(playerId: string, amount: number) {
+  if (!GAMEXA_ENABLED) {
+    return { success: true, status: "SKIPPED", player_id: playerId, amount };
+  }
+
   try {
     const response = await api.post(`api/gamexa/players/${playerId}/withdraw`, { amount });
     return response.data;
@@ -321,6 +370,15 @@ export function convertBDTToIDR(amount: number): number {
 
 // ==================== Game Launch ====================
 export async function launchGame(playerId: string, gameUid: string, lobbyUrl?: string) {
+  if (!GAMEXA_ENABLED) {
+    return {
+      success: true,
+      game_launch_url: "",
+      session_id: Date.now().toString(),
+      message: "GameXA disabled. No launch URL available."
+    };
+  }
+
   try {
     const response = await api.post("/api/gamexa/games/launch", {
       player_id: playerId,

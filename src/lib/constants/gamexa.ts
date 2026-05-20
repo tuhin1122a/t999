@@ -1,3 +1,5 @@
+export const GAMEXA_ENABLED = false;
+
 export const GAMEXA_CONFIG = {
   BASE_URL: process.env.GAMEXA_BASE_URL || "https://api.gamexaglobal.com",
   OPEN_GAME_URL: process.env.GAMEXA_OPEN_GAME_URL || "https://jsgame.live/game/launch",

@@ -62,6 +62,16 @@ function parseGames(data: any, brand_id: string, category: string) {
   return { games, providerTitle };
 }
 
+function isCloudflareChallenge(text: string): boolean {
+  return (
+    text.includes("Just a moment") ||
+    text.includes("cf-ray") ||
+    text.includes("_cf_chl_opt") ||
+    text.includes("challenge-platform") ||
+    text.includes("Enable JavaScript and cookies to continue")
+  );
+}
+
 async function fetchWithTimeout(url: string, timeoutMs = 10000) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -70,9 +80,11 @@ async function fetchWithTimeout(url: string, timeoutMs = 10000) {
       signal: controller.signal,
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
       },
-      next: { revalidate: 3600 }, // cache 1 hour
+      next: { revalidate: 3600 },
     });
     clearTimeout(timeoutId);
     return res;
@@ -95,24 +107,41 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Try primary URL
     let lastError: any = null;
+
     for (const baseUrl of [IGAMING_PRIMARY, IGAMING_FALLBACK]) {
       try {
         const res = await fetchWithTimeout(`${baseUrl}?brand_id=${brand_id}`, 10000);
+        const contentType = res.headers.get("content-type") || "";
+
+        // Read body once
+        const text = await res.text();
+
+        // Detect Cloudflare bot-challenge page
+        if (isCloudflareChallenge(text)) {
+          console.warn(`[SoftAPI] Cloudflare challenge detected from ${baseUrl} for brand_id=${brand_id}. Skipping.`);
+          lastError = new Error(`Cloudflare challenge from ${baseUrl}`);
+          continue;
+        }
 
         if (!res.ok) {
           lastError = new Error(`HTTP ${res.status} from ${baseUrl}`);
           continue;
         }
 
-        const contentType = res.headers.get("content-type") || "";
-        if (!contentType.includes("json")) {
-          lastError = new Error(`Non-JSON from ${baseUrl}: ${contentType}`);
+        if (!contentType.includes("json") && !text.trim().startsWith("{") && !text.trim().startsWith("[")) {
+          lastError = new Error(`Non-JSON response from ${baseUrl}`);
           continue;
         }
 
-        const data = await res.json();
+        let data: any;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          lastError = new Error(`JSON parse failed from ${baseUrl}`);
+          continue;
+        }
+
         const { games, providerTitle } = parseGames(data, brand_id, category);
 
         return NextResponse.json({
@@ -128,19 +157,27 @@ export async function GET(req: NextRequest) {
 
       } catch (err) {
         lastError = err;
-        console.error(`Fetch failed from ${baseUrl} for brand ${brand_id}:`, err);
+        console.error(`[SoftAPI] Fetch failed from ${baseUrl} for brand ${brand_id}:`, err);
       }
     }
 
-    // Both URLs failed
-    const errMsg = lastError instanceof Error ? lastError.message : String(lastError);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch games from all providers", details: errMsg },
-      { status: 502 }
-    );
+    // Both URLs failed (likely Cloudflare block) — return empty games gracefully
+    // so the UI doesn't break. Server IP needs to be whitelisted by igamingapis.com.
+    console.warn(`[SoftAPI] All providers failed for brand_id=${brand_id}. Returning empty games.`);
+    return NextResponse.json({
+      success: true,
+      brand_id,
+      provider_title: mapBrandToTitle(brand_id),
+      total_games: 0,
+      games: [],
+      warning: "Games temporarily unavailable from provider",
+    }, {
+      status: 200,
+      headers: { "Cache-Control": "no-store" },
+    });
 
   } catch (error: any) {
-    console.error("SoftAPI Games Error:", error);
+    console.error("[SoftAPI] Games Error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Unexpected error" },
       { status: 500 }

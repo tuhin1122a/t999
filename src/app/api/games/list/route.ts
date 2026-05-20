@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchAllGames, convertGameXAToAppFormat } from "@/lib/api/gamexaApi";
+
+type GameInfo = {
+  id: string;
+  name: string;
+  img: string;
+  device: string;
+  title: string;
+  categories: string;
+  bm: string;
+  demo: string;
+  rewriterule: string;
+  exitButton: string;
+};
 
 export async function POST(request: NextRequest) {
   try {
-    // Remove authentication requirement for games list - games should be publicly accessible
     const body = await request.json();
     const { game_type, search } = body;
 
-    // Define mock games list for fallback
     const mockGamesList = {
       slots: [
         {
@@ -117,126 +127,31 @@ export async function POST(request: NextRequest) {
       ]
     };
 
-    try {
-      // Fetch games from GameXA API
-      console.log("Fetching games from GameXA API...");
-      const gamexaGames = await fetchAllGames({ search: search || undefined });
-      console.log("Raw GameXA response:", gamexaGames);
-      
-      if (gamexaGames && gamexaGames.games && gamexaGames.games.length > 0) {
-        // Log game types for debugging
-        const gameTypes = [...new Set(gamexaGames.games.map(game => game.game_type))];
-        console.log("Available game types from GameXA API:", gameTypes);
-        
-        // Convert GameXA games to app format
-        const formattedGames = convertGameXAToAppFormat(gamexaGames);
-        console.log(`Converted ${formattedGames.length} GameXA games to app format`);
-        
-        // Group games by provider (title field contains provider code)
-        const gamesByProvider: Record<string, unknown[]> = {};
-        
-        formattedGames.forEach(game => {
-          const provider = game.title;
-          if (!gamesByProvider[provider]) {
-            gamesByProvider[provider] = [];
-          }
-          gamesByProvider[provider].push(game);
-        });
-        
-        // Also group by categories for easier filtering
-        const gamesByCategory: Record<string, unknown[]> = {};
-        
-        formattedGames.forEach(game => {
-          const category = game.categories;
-          if (!gamesByCategory[category]) {
-            gamesByCategory[category] = [];
-          }
-          gamesByCategory[category].push(game);
-        });
-        
-        // Log categories for debugging
-        console.log("Categories created from games:", Object.keys(gamesByCategory));
-        
-        // Combine both groupings
-        const gamesList = {
-          ...gamesByProvider,
-          ...gamesByCategory
-        };
-        
-        console.log(`Organized games into ${Object.keys(gamesList).length} categories/providers`);
-        console.log("Available categories/providers:", Object.keys(gamesList));
-        
-        // Return games based on game_type or all games if "all"
-        let filteredGamesList;
-        if (game_type === "all") {
-          filteredGamesList = gamesList;
-        } else if (gamesList[game_type]) {
-          console.log(`Found ${gamesList[game_type].length} games for category ${game_type}`);
-          filteredGamesList = { [game_type]: gamesList[game_type] };
-        } else if (game_type === "fishing" && (!gamesList.fishing || gamesList.fishing.length === 0)) {
-          // Special case for fishing games - use mock data if no fishing games from API
-          console.log("No fishing games from API, using mock fishing games");
-          filteredGamesList = { fishing: mockGamesList.fishing };
-        } else {
-          console.log(`No games found for category ${game_type}`);
-          filteredGamesList = {};
-        }
+    const normalizedSearch = typeof search === "string" ? search.trim().toLowerCase() : null;
+    const filteredMockGamesList = normalizedSearch
+      ? (Object.fromEntries(
+          Object.entries(mockGamesList).map(([category, games]) => [
+            category,
+            (games as GameInfo[]).filter((game) => game.name.toLowerCase().includes(normalizedSearch))
+          ])
+        ) as typeof mockGamesList)
+      : mockGamesList;
 
-        return NextResponse.json({
-          success: true,
-          gamesList: filteredGamesList
-        });
-      } else {
-        console.log("No games received from GameXA API, falling back to mock data");
-        throw new Error("No games received from GameXA API");
-      }
-    } catch (gamexaError) {
-      console.log("GameXA API failed, falling back to mock data:", gamexaError);
-      
-      // Fallback to mock games if GameXA API fails
-
-      // Filter games by search term if provided
-      let filteredMockGamesList: typeof mockGamesList = mockGamesList;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredMockGamesList = {
-          slots: [],
-          live_dealers: [],
-          sport: [],
-          fishing: [],
-          video_poker: []
-        };
-        
-        Object.keys(mockGamesList).forEach(category => {
-          const games = mockGamesList[category as keyof typeof mockGamesList];
-          const filteredGames = games.filter(game =>
-            game.name.toLowerCase().includes(searchLower)
-          );
-          
-          if (filteredGames.length > 0) {
-            filteredMockGamesList[category as keyof typeof filteredMockGamesList] = filteredGames;
-          }
-        });
-      }
-
-      // Return games based on game_type or all games if "all"
-      let gamesList;
-      if (game_type === "all") {
-        gamesList = filteredMockGamesList;
-      } else if (filteredMockGamesList[game_type as keyof typeof filteredMockGamesList]) {
-        gamesList = { [game_type]: filteredMockGamesList[game_type as keyof typeof filteredMockGamesList] };
-      } else {
-        gamesList = {};
-      }
-
-      console.log("Using mock data for games list");
-      return NextResponse.json({
-        success: true,
-        gamesList
-      });
+    let gamesList;
+    if (game_type === "all" || !game_type) {
+      gamesList = filteredMockGamesList;
+    } else if (filteredMockGamesList[game_type as keyof typeof filteredMockGamesList]) {
+      gamesList = { [game_type]: filteredMockGamesList[game_type as keyof typeof filteredMockGamesList] };
+    } else {
+      gamesList = {};
     }
+
+    return NextResponse.json({
+      success: true,
+      gamesList
+    });
   } catch (error) {
-    console.error("Error fetching games list:", error);
+    console.error("Error fetching mock games list:", error);
     return NextResponse.json(
       {
         success: false,

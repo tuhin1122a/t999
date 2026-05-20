@@ -4,8 +4,19 @@ const GAMEXA_BASE_URL = process.env.GAMEXA_BASE_URL || "https://api.gamexaglobal
 const AGENT_CODE = process.env.GAMEXA_AGENT_CODE || "AG1756047904571CVP8";
 const PASSWORD = process.env.GAMEXA_PASSWORD || "123456";
 
+const BEARER_TOKEN = process.env.GAMEXA_BEARER_TOKEN || "";
+
 // Helper → Auth token
+// Priority 1: Use pre-configured GAMEXA_BEARER_TOKEN from .env (if set and not placeholder)
+// Priority 2: Login with agent_code + password to get a fresh token
 async function getAuthToken(): Promise<string | null> {
+  // Use direct bearer token if it's configured and not a placeholder
+  if (BEARER_TOKEN && BEARER_TOKEN !== "YOUR_BEARER_TOKEN" && BEARER_TOKEN.length > 10) {
+    console.log("Using pre-configured GAMEXA_BEARER_TOKEN");
+    return BEARER_TOKEN;
+  }
+
+  // Fall back to login
   try {
     const res = await fetch(`${GAMEXA_BASE_URL}/api/auth/login`, {
       method: "POST",
