@@ -1,10 +1,7 @@
 // src/app/api/deposit/callback/route.ts
 import { NextResponse } from "next/server";
-import axios from "axios";
 import { db } from "@/lib/db";
-import { GAMEXA_HEADERS, GAMEXA_CONFIG } from "@/lib/constants/gamexa";
 import { createNotification } from "@/action/notifications";
-import { convertBDTToIDR } from "@/lib/utils/currency";
 
 export async function POST(req: Request) {
   try {
@@ -28,34 +25,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Transaction failed" });
     }
 
-    // Check if user has GameXA player ID
-    if (!depositRecord.user.gameXAPlayerId) {
-      console.log("User doesn't have GameXA player ID, skipping GameXA deposit");
-      await db.durantoPayDeposit.update({
-        where: { invoice_no },
-        data: { status: "COMPLETED" },
-      });
-      return NextResponse.json({ message: "Deposit completed (no GameXA player)" });
-    }
-
-    // GameXA deposit
-    const tokenResp = await axios.post(
-      `${GAMEXA_CONFIG.BASE_URL}/api/auth/login`,
-      { agent_code: GAMEXA_CONFIG.AGENT_CODE, password: GAMEXA_CONFIG.PASSWORD },
-      { headers: GAMEXA_HEADERS }
-    );
-    const token = tokenResp.data.token;
-
-    await axios.post(
-      `${GAMEXA_CONFIG.BASE_URL}/api/players/${depositRecord.user.gameXAPlayerId}/deposit`,
-      { amount: convertBDTToIDR(Number(amount)), reference_id: invoice_no },
-      { headers: { ...GAMEXA_HEADERS, Authorization: `Bearer ${token}` } }
-    );
-
     await db.durantoPayDeposit.update({
-       where: { invoice_no },
-       data: { status: "COMPLETED" },
-     });
+      where: { invoice_no },
+      data: { status: "COMPLETED" },
+    });
 
     await createNotification({
       title: "Deposit Successful",

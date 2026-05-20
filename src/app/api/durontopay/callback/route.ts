@@ -3,9 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import * as crypto from "crypto";
-import axios from "axios";
-import { GAMEXA_CONFIG, GAMEXA_HEADERS } from "@/lib/constants/gamexa";
-import { convertBDTToIDR } from "@/lib/utils/currency";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -82,26 +79,7 @@ export const POST = async (req: NextRequest) => {
 
       console.log(`Wallet updated and transaction recorded for user: ${depositRecord.userId}`);
 
-      // 1️⃣ GameXA deposit (convert BDT → IDR)
-      try {
-        const gameXAAmount = convertBDTToIDR(depositRecord.amount.toNumber());
-
-        if (depositRecord.user.gameXAPlayerId) {
-          await axios.post(
-            `${GAMEXA_CONFIG.BASE_URL}/api/wallet/deposit`,
-            {
-              player_id: depositRecord.user.gameXAPlayerId,
-              amount: gameXAAmount.toFixed(2),
-            },
-            { headers: GAMEXA_HEADERS }
-          );
-          console.log(`GameXA deposit successful for player: ${depositRecord.user.gameXAPlayerId}`);
-        } else {
-          console.warn(`No GameXA playerId found for user: ${depositRecord.userId}`);
-        }
-      } catch (err) {
-        console.error("GameXA deposit error:", err);
-      }
+      // GameXA deposit skipped (disabled)
     }
 
     console.log(`Callback processed successfully for invoice: ${invoice_no}`);

@@ -1,38 +1,6 @@
 // src/lib/api/gamexaApi.ts
-import axios from "axios";
 
-// ==================== Config ====================
-// Use relative URL so requests always go to the same origin (localhost in dev, rk444.site in prod)
-// Absolute localhost URL would cause CORS errors on the production domain
-const BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000");
-
-const api = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const GAMEXA_ENABLED = false;
-
-const mockGameXAGamesResponse: GameXAGamesResponse = {
-  success: true,
-  games: [],
-  pagination: {
-    page: 1,
-    limit: 100,
-    total: 0,
-    pages: 0,
-    hasNext: false,
-    hasPrev: false,
-  },
-  filters: {
-    search: null,
-    provider: null,
-    type: null,
-    status: "active",
-  },
-};
+export const GAMEXA_ENABLED = false;
 
 // ==================== Interfaces ====================
 export interface GameXAAuthResponse {
@@ -104,290 +72,78 @@ export interface AppGameFormat {
   exitButton: string;
 }
 
+const mockGameXAGamesResponse: GameXAGamesResponse = {
+  success: true,
+  games: [],
+  pagination: {
+    page: 1,
+    limit: 100,
+    total: 0,
+    pages: 0,
+    hasNext: false,
+    hasPrev: false,
+  },
+  filters: {
+    search: null,
+    provider: null,
+    type: null,
+    status: "active",
+  },
+};
+
 // ==================== Auth ====================
-let cachedToken: string | null = null;
-let tokenExpiry: number | null = null;
-
 export async function loginToGameXA(): Promise<string> {
-  if (!GAMEXA_ENABLED) {
-    if (cachedToken && tokenExpiry && Date.now() < tokenExpiry) return cachedToken;
-    cachedToken = "MOCK_GAMEXA_TOKEN";
-    tokenExpiry = Date.now() + 3600 * 1000;
-    return cachedToken;
-  }
-
-  const now = Date.now();
-  if (cachedToken && tokenExpiry && now < tokenExpiry) return cachedToken;
-
-  try {
-    const response = await api.post("api/gamexa/auth", {
-      agent_code: process.env.GAMEXA_AGENT_CODE,
-      password: process.env.GAMEXA_PASSWORD,
-    });
-
-    const token = response.data.token;
-    cachedToken = token;
-    tokenExpiry = now + 3600 * 1000; // 1 ঘন্টা cache
-    return token;
-  } catch (err: any) {
-    console.error("Login failed:", err.message);
-    throw new Error("Failed to login to GameXA");
-  }
+  return "MOCK_GAMEXA_TOKEN";
 }
 
 // ==================== Games ====================
 export async function fetchAllGames(params: { search?: string } = {}): Promise<GameXAGamesResponse> {
-  if (!GAMEXA_ENABLED) {
-    return mockGameXAGamesResponse;
-  }
-
-  const response = await api.get("/api/gamexa/games", {
-    params: { limit: 6648, status: "active", ...params },
-  });
-  return response.data;
+  return mockGameXAGamesResponse;
 }
 
 export function convertGameXAToAppFormat(gamexaGames: GameXAGamesResponse): AppGameFormat[] {
-  if (!gamexaGames?.games) return [];
-
-  const providerCodeMap: Record<string, string> = {
-    EVOLUTION: "evolution",
-    FAST_GAMES: "fast_games",
-    JILI: "jili_gaming",
-    MICROGAMING: "microgaming_slot",
-    NETENT: "NetEnt",
-    PGSOFT: "pgsoft_slot",
-    PLAYNGO: "playngo",
-    REDTIGER: "red_tiger",
-    SPORT_BETTING: "sport_betting",
-    AINSWORTH: "ainsworth",
-    AMATIC: "amatic",
-    AMIGO_GAMING: "amigo_gaming",
-    APEX: "apex",
-    APOLLO: "apollo",
-    ARISTOCRAT: "aristocrat",
-    BINGO: "bingo",
-    BOOMING: "booming",
-    EGAMING: "egaming",
-    EGT: "egt",
-    FIREKIRIN: "firekirin",
-    FISH: "fish",
-    GOLDENRACE: "goldenrace",
-    HABANERO: "habanero_slot",
-    IGROSOFT: "igrosoft",
-    IGT: "igt",
-    KAJOT: "kajot",
-    KENO: "keno",
-    MANCALA: "mancala",
-    MERKUR: "merkur",
-    NOVOMATIC: "novomatic",
-    PRAGMATIC: "pragmatiplay_slot",
-    QUICKSPIN: "quickspin",
-    ROULETTE: "roulette",
-    RUBYPLAY: "rubyplay",
-    SCIENTIFIC_GAMES: "scientific_games",
-    TABLE_GAMES: "table_games",
-    VEGAS: "vegas",
-    WAZDAN: "wazdan",
-    ZITRO: "zitro",
-    CQ9: "cq9_slot",
-    SEXYGAMING: "sexygaming",
-    PLAYTECH: "playtech_slot",
-    EPICWIN: "epicwin",
-    RELAX_GAMING: "relax_gaming",
-    TURBOGAMES: "turbogames",
-    SKYWIND: "skywind",
-    HACKSAW: "hacksaw",
-    TADA_GAMING: "tada_gaming",
-    B_GAMING: "bgaming",
-    KM: "km",
-    EZUGI: "ezugi",
-    SMARTSOFT: "smartsoft",
-    BTGAMING: "btgaming",
-    "2J": "2j",
-    "5G": "5g",
-    PGSGAMING: "pgsgaming",
-    GAME_ART: "game_art",
-    ONEGAMING: "onegaming",
-    INOUT: "inout",
-    AG: "ag",
-    EAZY_GAMING: "eazy_gaming",
-    IDEAL: "ideal",
-    KOOLBET: "koolbet",
-    FACHAI: "fachai",
-    NOLIMITCITY: "nolimitcity",
-    BIG_TIME_GAMING: "big_time_gaming",
-    ASTAR: "astar",
-    MINI: "mini",
-    GALAXSYS: "galaxsys",
-    SPRIBE: "spribe",
-    V8: "v8",
-    JDB_GAMING: "jdb_gaming",
-    T1: "t1",
-    YEEBET: "yeebet",
-    WONWON: "wonwon",
-    PIX: "pix",
-    B_FLOTTOBIIT: "bflottobiit",
-    BTI: "bti",
-    DPESPORTSGAMING: "dpesportsgaming",
-    DPSPORTSGAMING: "dpsportsgaming",
-    DREAMGAMING: "dreamgaming",
-    LUCKYSPORTGAMING: "luckysportgaming",
-    ONGAMING: "ongaming",
-  };
-
-  const convertedGames = gamexaGames.games.map((game: GameXAGame) => {
-    let category: string;
-    switch (game.game_type) {
-      case "slot": category = "slots"; break;
-      case "table":
-      case "card": category = "live_dealers"; break;
-      case "lottery": category = "lottery"; break;
-      case "sports": category = "sport"; break;
-      case "poker":  
-      case "video_poker": category = "video_poker"; break;
-      case "fishing": category = "fishing"; break;
-      default: category = "slots";
-    }
-
-    const title = providerCodeMap[game.provider_code.toUpperCase()] || game.provider_code.toLowerCase();
-
-    return {
-      id: game.game_uid,
-      name: game.game_name,
-      img: game.image_url,
-      device: "mobile,desktop",
-      title: title,
-      categories: category,
-      bm: "0",
-      demo: "1",
-      rewriterule: "0",
-      exitButton: "1",
-    };
-  });
-
-  // Inject SoftAPI Test Game
-  convertedGames.push({
-    id: "3978", // SoftAPI test game ID
-    name: "SoftAPI Test Game",
-    img: "https://igamingapis.live/assets/images/placeholder.png", // fallback image
-    device: "mobile,desktop",
-    title: "softapi",
-    categories: "slots",
-    bm: "0",
-    demo: "1",
-    rewriterule: "0",
-    exitButton: "1",
-  });
-
-  return convertedGames;
+  return [];
 }
 
 // ==================== Player Management ====================
 export async function createPlayer(data: {
   username: string;
   email?: string;
-  full_name : string; // ✅ full_name directly support
-  first_name?: string; // optional
-  last_name?: string;  // optional
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
   phone: string;
   password: string;
   currency?: string;
 }) {
-  if (!GAMEXA_ENABLED) {
-    const playerId = data.phone || data.username || `LOCAL_PLAYER_${Date.now()}`;
-    return { success: true, player_id: playerId, player: { id: playerId } };
-  }
-
-  try {
-    // Build payload properly - don't overwrite full_name if it's already provided
-    const payload = { 
-      ...data,
-      // Only construct full_name from first_name + last_name if full_name is not provided
-      full_name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim()
-    };
-    
-    console.log("GameXA createPlayer payload:", payload); // ✅ debug payload
-    const response = await api.post("api/gamexa/players", payload);
-    console.log("GameXA createPlayer response:", response.data); // ✅ debug response
-
-    return response.data;
-  } catch (error: any) {
-    console.error("Error creating player in GameXA API:", error.response?.data || error.message);
-    throw error;
-  }
+  const playerId = data.phone || data.username || `LOCAL_PLAYER_${Date.now()}`;
+  return { success: true, player_id: playerId, player: { id: playerId } };
 }
 
 export async function getAllPlayers(query?: { page?: number; limit?: number; search?: string; status?: string }) {
-  if (!GAMEXA_ENABLED) {
-    return { success: true, data: [] };
-  }
-
-  const params = new URLSearchParams();
-  if (query?.page) params.append('page', query.page.toString());
-  if (query?.limit) params.append('limit', query.limit.toString());
-  if (query?.search) params.append('search', query.search);
-  if (query?.status) params.append('status', query.status);
-
-  const response = await api.get(`api/gamexa/players?${params.toString()}`);
-  return response.data;
+  return { success: true, data: [] };
 }
 
 // ==================== Transactions ====================
 export async function depositToPlayer(playerId: string, amount: number, referenceId: string) {
-  if (!GAMEXA_ENABLED) {
-    return { success: true, status: "SKIPPED", player_id: playerId, amount, reference_id: referenceId };
-  }
-
-  try {
-    const response = await api.post(`api/gamexa/players/${playerId}/deposit`, { amount, reference_id: referenceId });
-    return response.data;
-  } catch (error: any) {
-    console.error("Error depositing to player:", error.response?.data || error.message);
-    throw error;
-  }
+  return { success: true, status: "SKIPPED", player_id: playerId, amount, reference_id: referenceId };
 }
 
 export async function withdrawFromPlayer(playerId: string, amount: number) {
-  if (!GAMEXA_ENABLED) {
-    return { success: true, status: "SKIPPED", player_id: playerId, amount };
-  }
-
-  try {
-    const response = await api.post(`api/gamexa/players/${playerId}/withdraw`, { amount });
-    return response.data;
-  } catch (error: any) {
-    console.error("Error withdrawing from player:", error.response?.data || error.message);
-    throw error;
-  }
+  return { success: true, status: "SKIPPED", player_id: playerId, amount };
 }
 
 // ==================== Converter ====================
 export function convertBDTToIDR(amount: number): number {
-  const rate = 230; // 1 BDT = 230 IDR (example)
-  return amount * rate;
+  return amount * 230; // Mock rate
 }
 
 // ==================== Game Launch ====================
 export async function launchGame(playerId: string, gameUid: string, lobbyUrl?: string) {
-  if (!GAMEXA_ENABLED) {
-    return {
-      success: true,
-      game_launch_url: "",
-      session_id: Date.now().toString(),
-      message: "GameXA disabled. No launch URL available."
-    };
-  }
-
-  try {
-    const response = await api.post("/api/gamexa/games/launch", {
-      player_id: playerId,
-      game_uid: gameUid,
-      lobby_url: lobbyUrl
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error("Error launching game in GameXA API:", error.response?.data || error.message);
-    throw error;
-  }
+  return {
+    success: true,
+    game_launch_url: "",
+    session_id: Date.now().toString(),
+    message: "GameXA disabled. No launch URL available."
+  };
 }

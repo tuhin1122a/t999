@@ -6,7 +6,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { createPayout, generateInvoiceNumber } from "@/lib/api/durantoPayApi";
 import { createNotification } from "@/action/notifications";
-import { withdrawFromPlayer } from "@/lib/api/gamexaApi";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -49,13 +48,7 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ success: false, message: "DurantoPay Withdraw Failed: " + (payoutResponse?.message || "Unknown error") }, { status: 500 });
     }
   
- // GameXA withdraw
-    const gamexaResponse = await withdrawFromPlayer(user.gameXAPlayerId, Number(amount));
-
-    if (!gamexaResponse?.success) {
-      console.error("GameXA Withdraw Failed:", gamexaResponse?.message);
-      return NextResponse.json({ success: false, message: "GameXA Withdraw Failed: " + gamexaResponse?.message }, { status: 500 });
-    }
+    // GameXA withdraw skipped (disabled)
 
     // DB update
     await db.durantoPayWithdraw.create({
@@ -83,7 +76,7 @@ export const POST = async (req: NextRequest) => {
       success: true,
       payload: {
         dp_transaction_id: payoutResponse.data?.dp_transaction_id || payoutResponse.dp_transaction_id || "",
-        gamexa_status: gamexaResponse.status,
+        gamexa_status: "SKIPPED",
         invoice_no,
       },
     }, { status: 200 });
