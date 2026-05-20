@@ -1,4 +1,4 @@
-import { PrismaClient, PaymentWalletType, ManagementRole, DepositStatus, WithdrawStatus, NotificationIcon } from "@prisma/client";
+import { DepositStatus, ManagementRole, NotificationIcon, PaymentWalletType, PrismaClient, WithdrawStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -459,8 +459,10 @@ async function main() {
   
   const depositExists = await prisma.deposit.findFirst({ where: { userId: user1.id } });
   if (!depositExists && bkashDepositWalletId && nagadDepositWalletId) {
-    await prisma.deposit.create({
-      data: {
+    await prisma.deposit.upsert({
+      where: { trackingNumber: "DEP-TRACK-10001" },
+      update: {},
+      create: {
         amount: 1000.00,
         bonus: 10.00,
         bonusFor: "First Deposit Bonus",
@@ -472,12 +474,14 @@ async function main() {
         expire: new Date(Date.now() + 60 * 60 * 1000),
         status: DepositStatus.APPROVED,
         userId: user1.id,
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-      }
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
     });
 
-    await prisma.deposit.create({
-      data: {
+    await prisma.deposit.upsert({
+      where: { trackingNumber: "DEP-TRACK-10002" },
+      update: {},
+      create: {
         amount: 500.00,
         bonus: 0.00,
         bonusFor: "",
@@ -489,8 +493,8 @@ async function main() {
         expire: new Date(Date.now() + 60 * 60 * 1000),
         status: DepositStatus.PENDING,
         userId: user2.id,
-        createdAt: new Date()
-      }
+        createdAt: new Date(),
+      },
     });
   }
 
