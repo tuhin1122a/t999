@@ -1,0 +1,50 @@
+{
+  "success": true,
+  "brand_id": "122",
+  "provider_title": "softapi_122",
+  "total_games": 3,
+  "games": [
+    {
+      "id": "7005",
+      "name": "wcc",
+      "img": "https://igamingapis.com/img/7005.png",
+      "device": "mobile,desktop",
+      "title": "softapi_122",
+      "categories": "fishing",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "122",
+      "raw_category": "Fishing"
+    },
+    {
+      "id": "7006",
+      "name": "wgc",
+      "img": "https://igamingapis.com/img/7006.png",
+      "device": "mobile,desktop",
+      "title": "softapi_122",
+      "categories": "fishing",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "122",
+      "raw_category": "Fishing"
+    },
+    {
+      "id": "7007",
+      "name": "wgb",
+      "img": "https://igamingapis.com/img/7007.png",
+      "device": "mobile,desktop",
+      "title": "softapi_122",
+      "categories": "fishing",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "122",
+      "raw_category": "Fishing"
+    }
+  ]
+}

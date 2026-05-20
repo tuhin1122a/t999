@@ -1,0 +1,92 @@
+{
+  "success": true,
+  "brand_id": "138",
+  "provider_title": "softapi_138",
+  "total_games": 6,
+  "games": [
+    {
+      "id": "10022",
+      "name": "暗夜骑士",
+      "img": "https://igamingapis.com/img/10022.png",
+      "device": "mobile,desktop",
+      "title": "softapi_138",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "138",
+      "raw_category": "Marbles"
+    },
+    {
+      "id": "10023",
+      "name": "奇迹",
+      "img": "https://igamingapis.com/img/10023.png",
+      "device": "mobile,desktop",
+      "title": "softapi_138",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "138",
+      "raw_category": "Marbles"
+    },
+    {
+      "id": "10024",
+      "name": "龙之梦",
+      "img": "https://igamingapis.com/img/10024.png",
+      "device": "mobile,desktop",
+      "title": "softapi_138",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "138",
+      "raw_category": "Marbles"
+    },
+    {
+      "id": "10025",
+      "name": "弹珠28",
+      "img": "https://igamingapis.com/img/10025.png",
+      "device": "mobile,desktop",
+      "title": "softapi_138",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "138",
+      "raw_category": "Marbles"
+    },
+    {
+      "id": "10026",
+      "name": "风云六合",
+      "img": "https://igamingapis.com/img/10026.png",
+      "device": "mobile,desktop",
+      "title": "softapi_138",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "138",
+      "raw_category": "Marbles"
+    },
+    {
+      "id": "10027",
+      "name": "梵光之战",
+      "img": "https://igamingapis.com/img/10027.png",
+      "device": "mobile,desktop",
+      "title": "softapi_138",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "138",
+      "raw_category": "Marbles"
+    }
+  ]
+}

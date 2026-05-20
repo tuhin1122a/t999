@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "brand_id": "82",
+  "provider_title": "softapi_82",
+  "total_games": 1,
+  "games": [
+    {
+      "id": "7003",
+      "name": "AstarGaming",
+      "img": "https://igamingapis.com/img/7003.png",
+      "device": "mobile,desktop",
+      "title": "softapi_82",
+      "categories": "live_dealers",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "82",
+      "raw_category": "CasinoLive"
+    }
+  ]
+}

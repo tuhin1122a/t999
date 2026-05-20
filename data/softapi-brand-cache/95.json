@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "brand_id": "95",
+  "provider_title": "softapi_95",
+  "total_games": 1,
+  "games": [
+    {
+      "id": "8541",
+      "name": "DPSportsGaming",
+      "img": "https://igamingapis.com/img/8541.png",
+      "device": "mobile,desktop",
+      "title": "softapi_95",
+      "categories": "sport",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "95",
+      "raw_category": "Sports"
+    }
+  ]
+}

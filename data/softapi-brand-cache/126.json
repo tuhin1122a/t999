@@ -1,0 +1,50 @@
+{
+  "success": true,
+  "brand_id": "126",
+  "provider_title": "softapi_126",
+  "total_games": 3,
+  "games": [
+    {
+      "id": "7462",
+      "name": "SBO VirtualSports (VS)",
+      "img": "https://igamingapis.com/img/7462.png",
+      "device": "mobile,desktop",
+      "title": "softapi_126",
+      "categories": "sport",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "126",
+      "raw_category": "Sports"
+    },
+    {
+      "id": "7463",
+      "name": "SBO Sportsbook",
+      "img": "https://igamingapis.com/img/7463.png",
+      "device": "mobile,desktop",
+      "title": "softapi_126",
+      "categories": "sport",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "126",
+      "raw_category": "Sports"
+    },
+    {
+      "id": "7464",
+      "name": "568win Sportsbook",
+      "img": "https://igamingapis.com/img/7464.png",
+      "device": "mobile,desktop",
+      "title": "softapi_126",
+      "categories": "sport",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "126",
+      "raw_category": "Sports"
+    }
+  ]
+}

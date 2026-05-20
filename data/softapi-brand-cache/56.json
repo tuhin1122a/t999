@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "brand_id": "56",
+  "provider_title": "softapi_56",
+  "total_games": 1,
+  "games": [
+    {
+      "id": "5807",
+      "name": "Live Casino Lobby",
+      "img": "https://igamingapis.com/img/5807.png",
+      "device": "mobile,desktop",
+      "title": "softapi_56",
+      "categories": "live_dealers",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "56",
+      "raw_category": "CasinoLive"
+    }
+  ]
+}

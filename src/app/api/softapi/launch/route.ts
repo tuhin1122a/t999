@@ -53,10 +53,8 @@ export async function POST(request: NextRequest) {
     // We use the user's unique phone number. If not available, we extract all digits from their CUID.
     const playerId = session.user.phone || session.user.id.replace(/\D/g, "");
     const balance = session.user.wallet?.balance ?? 0;
-    let appUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    let appUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SERVER_URL || "https://payment.betbeng.site";
     if (appUrl.includes("localhost")) {
-      // SoftAPI strictly rejects 'localhost' inside return/callback URLs.
-      // We fallback to the valid public server URL (https://payment.betbeng.site) for successful launch.
       appUrl = process.env.NEXT_PUBLIC_SERVER_URL || "https://payment.betbeng.site";
     }
 

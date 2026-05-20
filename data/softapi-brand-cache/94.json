@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "brand_id": "94",
+  "provider_title": "softapi_94",
+  "total_games": 1,
+  "games": [
+    {
+      "id": "1991",
+      "name": "DPEsportsGaming",
+      "img": "https://igamingapis.com/img/1991.png",
+      "device": "mobile,desktop",
+      "title": "softapi_94",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "94",
+      "raw_category": "flash"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 
 // Schema for link generation
@@ -21,7 +21,7 @@ export async function GET() {
 
     // For now, return mock affiliate links data
     const mockAffiliateCode = "AFF" + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SERVER_URL || "https://payment.betbeng.site";
     
     const mockLinks = {
       affiliateCode: mockAffiliateCode,
@@ -153,7 +153,7 @@ export async function POST(request: Request) {
 
     // For now, return mock custom link
     const mockAffiliateCode = "AFF" + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SERVER_URL || "https://payment.betbeng.site";
     
     // Build custom link with parameters
     const params = new URLSearchParams();

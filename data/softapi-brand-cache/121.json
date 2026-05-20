@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "brand_id": "121",
+  "provider_title": "softapi_121",
+  "total_games": 1,
+  "games": [
+    {
+      "id": "7002",
+      "name": "OnGaming",
+      "img": "https://igamingapis.com/img/7002.png",
+      "device": "mobile,desktop",
+      "title": "softapi_121",
+      "categories": "live_dealers",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "121",
+      "raw_category": "Casino"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "success": true,
+  "brand_id": "88",
+  "provider_title": "softapi_88",
+  "total_games": 6,
+  "games": [
+    {
+      "id": "1181",
+      "name": "2020 Teen Patti",
+      "img": "https://igamingapis.com/img/1181.png",
+      "device": "mobile,desktop",
+      "title": "softapi_88",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "88",
+      "raw_category": "flash"
+    },
+    {
+      "id": "1403",
+      "name": "Baccarat Classic",
+      "img": "https://igamingapis.com/img/1403.png",
+      "device": "mobile,desktop",
+      "title": "softapi_88",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "88",
+      "raw_category": "flash"
+    },
+    {
+      "id": "2034",
+      "name": "DragonTiger",
+      "img": "https://igamingapis.com/img/2034.png",
+      "device": "mobile,desktop",
+      "title": "softapi_88",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "88",
+      "raw_category": "flash"
+    },
+    {
+      "id": "2126",
+      "name": "Extra Andar Bahar",
+      "img": "https://igamingapis.com/img/2126.png",
+      "device": "mobile,desktop",
+      "title": "softapi_88",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "88",
+      "raw_category": "flash"
+    },
+    {
+      "id": "3766",
+      "name": "Sedie",
+      "img": "https://igamingapis.com/img/3766.png",
+      "device": "mobile,desktop",
+      "title": "softapi_88",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "88",
+      "raw_category": "flash"
+    },
+    {
+      "id": "4028",
+      "name": "Thai Hi Lo",
+      "img": "https://igamingapis.com/img/4028.png",
+      "device": "mobile,desktop",
+      "title": "softapi_88",
+      "categories": "slots",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "88",
+      "raw_category": "flash"
+    }
+  ]
+}

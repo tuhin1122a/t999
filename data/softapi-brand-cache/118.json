@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "brand_id": "118",
+  "provider_title": "softapi_118",
+  "total_games": 1,
+  "games": [
+    {
+      "id": "6260",
+      "name": "BtiGaming",
+      "img": "https://igamingapis.com/img/6260.png",
+      "device": "mobile,desktop",
+      "title": "softapi_118",
+      "categories": "sport",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "118",
+      "raw_category": "Sports"
+    }
+  ]
+}

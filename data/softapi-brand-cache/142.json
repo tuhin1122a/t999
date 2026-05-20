@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "brand_id": "142",
+  "provider_title": "softapi_142",
+  "total_games": 1,
+  "games": [
+    {
+      "id": "11540",
+      "name": "CMD",
+      "img": "https://igamingapis.com/img/11540.png",
+      "device": "mobile,desktop",
+      "title": "softapi_142",
+      "categories": "sport",
+      "bm": "0",
+      "demo": "1",
+      "rewriterule": "0",
+      "exitButton": "1",
+      "brand_id": "142",
+      "raw_category": "Sports"
+    }
+  ]
+}

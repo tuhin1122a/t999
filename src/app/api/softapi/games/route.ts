@@ -142,85 +142,42 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    let lastError: any = null;
-
-    for (const baseUrl of [IGAMING_PRIMARY, IGAMING_FALLBACK]) {
-      try {
-        const res = await fetchWithTimeout(`${baseUrl}?brand_id=${brand_id}`, 10000);
-        const contentType = res.headers.get("content-type") || "";
-
-        // Read body once
-        const text = await res.text();
-
-        // Detect Cloudflare bot-challenge page
-        if (isCloudflareChallenge(text)) {
-          console.warn(`[SoftAPI] Cloudflare challenge detected from ${baseUrl} for brand_id=${brand_id}. Skipping.`);
-          lastError = new Error(`Cloudflare challenge from ${baseUrl}`);
-          continue;
-        }
-
-        if (!res.ok) {
-          lastError = new Error(`HTTP ${res.status} from ${baseUrl}`);
-          continue;
-        }
-
-        if (!contentType.includes("json") && !text.trim().startsWith("{") && !text.trim().startsWith("[")) {
-          lastError = new Error(`Non-JSON response from ${baseUrl}`);
-          continue;
-        }
-
-        let data: any;
-        try {
-          data = JSON.parse(text);
-        } catch {
-          lastError = new Error(`JSON parse failed from ${baseUrl}`);
-          continue;
-        }
-
-        const { games, providerTitle } = parseGames(data, brand_id, category);
-        const responsePayload = {
-          success: true,
-          brand_id,
-          provider_title: providerTitle,
-          total_games: games.length,
-          games,
-        };
-
-        await writeLocalCache(brand_id, responsePayload);
-
-        return NextResponse.json(responsePayload, {
-          status: 200,
-          headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
-        });
-
-      } catch (err) {
-        lastError = err;
-        console.error(`[SoftAPI] Fetch failed from ${baseUrl} for brand ${brand_id}:`, err);
-      }
-    }
-
     const cachedPayload = await readLocalCache(brand_id);
     if (cachedPayload) {
-      console.warn(`[SoftAPI] Using local cache for brand_id=${brand_id} after remote fetch failed.`);
+      console.log(`[SoftAPI] Serving local cache for brand_id=${brand_id}`);
+      if (category && category !== "all") {
+        const filteredGames = cachedPayload.games.filter(
+          (g: any) => g.categories === category
+        );
+        return NextResponse.json(
+          {
+            ...cachedPayload,
+            total_games: filteredGames.length,
+            games: filteredGames,
+          },
+          {
+            status: 200,
+            headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
+          }
+        );
+      }
+
       return NextResponse.json(cachedPayload, {
         status: 200,
         headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
       });
     }
 
-    // Both URLs failed (likely Cloudflare block) — return empty games gracefully
-    // so the UI doesn't break. Server IP needs to be whitelisted by igamingapis.com.
-    console.warn(`[SoftAPI] All providers failed for brand_id=${brand_id}. Returning empty games.`);
+    console.warn(`[SoftAPI] Local cache not found for brand_id=${brand_id}. Returning empty games.`);
     return NextResponse.json({
-      success: true,
+      success: false,
       brand_id,
       provider_title: mapBrandToTitle(brand_id),
       total_games: 0,
       games: [],
-      warning: "Games temporarily unavailable from provider",
+      warning: "Local cache not found for brand_id",
     }, {
-      status: 200,
-      headers: { "Cache-Control": "no-store" },
+      status: 404,
     });
 
   } catch (error: any) {
