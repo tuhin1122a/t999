@@ -8,7 +8,11 @@ const PASSWORD = process.env.GAMEXA_PASSWORD!;
 async function getAuthToken(): Promise<string> {
   const res = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Origin': 'https://gamexaglobal.com',
+      'Referer': 'https://gamexaglobal.com/',
+    },
     body: JSON.stringify({
       agent_code: AGENT_CODE,
       password: PASSWORD,

@@ -19,7 +19,11 @@ async function getAuthToken(): Promise<string | null> {
   try {
     const res = await fetch(`${GAMEXA_BASE_URL}/api/auth/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Origin": "https://gamexaglobal.com",
+        "Referer": "https://gamexaglobal.com/",
+      },
       body: JSON.stringify({ agent_code: AGENT_CODE, password: PASSWORD }),
     });
 
