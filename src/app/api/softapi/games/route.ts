@@ -142,16 +142,16 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const cachedPayload = await readLocalCache(brand_id);
-    if (cachedPayload) {
+    const cachedSoftApiPayload = await readLocalCache(brand_id);
+    if (cachedSoftApiPayload) {
       console.log(`[SoftAPI] Serving local cache for brand_id=${brand_id}`);
       if (category && category !== "all") {
-        const filteredGames = cachedPayload.games.filter(
+        const filteredGames = cachedSoftApiPayload.games.filter(
           (g: any) => g.categories === category
         );
         return NextResponse.json(
           {
-            ...cachedPayload,
+            ...cachedSoftApiPayload,
             total_games: filteredGames.length,
             games: filteredGames,
           },
@@ -162,7 +162,7 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      return NextResponse.json(cachedPayload, {
+      return NextResponse.json(cachedSoftApiPayload, {
         status: 200,
         headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
       });

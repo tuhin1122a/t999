@@ -2,6 +2,7 @@
 
 "use client";
 
+import TabNav from "@/components/TabNav";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import GameOpeningLoader from "@/components/loader/GameOpeningLoader";
 import useGetCurrentUser from "@/hook/useCurrentUser";
@@ -9,8 +10,7 @@ import { createPlayer, launchGameFromAnyAPI } from "@/lib/features/gameService";
 import { useOpenGameMutation } from "@/lib/features/gamesApiSlice";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import TabNav from "@/components/TabNav";
+import { useEffect, useState } from "react";
 
 const Play = () => {
   const [openGame] = useOpenGameMutation();
@@ -24,6 +24,13 @@ const Play = () => {
   const gameId = searchParams.get("gameId") || "";
 
   const user = useGetCurrentUser();
+
+  const isMobileDevice = () => {
+    if (typeof navigator === "undefined") return false;
+    return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  };
 
   // ---------------- Get or create GameXA player ----------------
   const getPlayerId = async (user: any) => {
@@ -100,7 +107,7 @@ const Play = () => {
           throw new Error("Invalid game launch response");
         }
 
-        if (iframeMode === "0") {
+        if (iframeMode === "0" || isMobileDevice()) {
           window.location.href = url;
         } else {
           setIframe(url);
