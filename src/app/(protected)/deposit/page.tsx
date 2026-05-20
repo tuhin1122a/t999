@@ -93,11 +93,6 @@ const DepositPage: React.FC = () => {
       return;
     }
 
-    if (!walletNumber.trim()) {
-      setError("Please enter your sender wallet number");
-      return;
-    }
-
     setError("");
     setStep(2);
   };
@@ -167,7 +162,7 @@ const DepositPage: React.FC = () => {
   const isValidAmount = totalAmount >= (selectedPaymentMethod?.min_deposit || 100) && 
                         totalAmount <= (selectedPaymentMethod?.max_deposit || 50000);
   
-  const isStep1Valid = selectedPaymentMethod && isValidAmount && walletNumber.trim() !== "";
+  const isStep1Valid = selectedPaymentMethod && isValidAmount;
   const isFormValid = isStep1Valid && trxId.trim() !== "" && selectedAgentNumber !== "";
 
   // --- Effects ---
