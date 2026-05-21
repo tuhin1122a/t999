@@ -132,17 +132,24 @@ const Play = () => {
   }, [gameId, user, openGame, router]);
 
   return (
-    <div className="w-full h-screen flex flex-col justify-between bg-black">
+    <div className="w-full h-screen flex flex-col justify-between bg-black relative">
       {isIframeLoading && !error && <GameOpeningLoader />}
 
       {!isIframeLoading && !error && iframe && (
-        <div className="w-full h-[calc(100vh-102px)] md:h-screen">
+        <div className="w-full h-[calc(100vh-102px)] md:h-screen relative">
           <iframe
             src={iframe}
             className="w-full h-full border-0 rounded-b-lg"
             onLoad={() => setIsLoading(false)}
             allowFullScreen
           />
+          <button
+            onClick={() => router.push("/slots")}
+            className="absolute top-4 left-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white shadow-lg border border-white/20"
+            aria-label="Back to slots"
+          >
+            <span className="text-xl">←</span>
+          </button>
         </div>
       )}
 

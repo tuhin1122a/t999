@@ -1,18 +1,17 @@
 "use client";
-import React from "react";
-import { TfiHome } from "react-icons/tfi";
-import { TbGiftCard } from "react-icons/tb";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BiAward } from "react-icons/bi";
 import { GiCutDiamond } from "react-icons/gi";
-import { usePathname } from "next/navigation";
 import { IoGameController } from "react-icons/io5";
+import { TbGiftCard } from "react-icons/tb";
+import { TfiHome } from "react-icons/tfi";
 
 const TabNav = () => {
   const path = usePathname();
 
   return (
-    <div className="fixed bottom-[50px] left-0 w-full md:w-[500px] md:mx-auto md:left-1/2 md:-translate-x-1/2 z-[999]">
+    <div className="fixed bottom-0 left-0 w-full md:w-[500px] md:mx-auto md:left-1/2 md:-translate-x-1/2 z-[999]" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div
         style={{
           width: "100%",
