@@ -7,6 +7,7 @@ import path from "path";
 const IGAMING_PRIMARY = "https://igamingapis.com/provider/brands.php";
 const IGAMING_FALLBACK = "https://igamingapis.live/provider/brands.php";
 const SOFTAPI_CACHE_DIR = path.join(process.cwd(), "data", "softapi-brand-cache");
+const SERVED_LOCAL_CACHE_LOGGED = new Set<string>();
 
 async function ensureCacheDir() {
   try {
@@ -144,7 +145,10 @@ export async function GET(req: NextRequest) {
 
     const cachedSoftApiPayload = await readLocalCache(brand_id);
     if (cachedSoftApiPayload) {
-      console.log(`[SoftAPI] Serving local cache for brand_id=${brand_id}`);
+      if (!SERVED_LOCAL_CACHE_LOGGED.has(brand_id)) {
+        console.log(`[SoftAPI] Serving local cache for brand_id=${brand_id}`);
+        SERVED_LOCAL_CACHE_LOGGED.add(brand_id);
+      }
       if (category && category !== "all") {
         const filteredGames = cachedSoftApiPayload.games.filter(
           (g: any) => g.categories === category

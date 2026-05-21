@@ -1,14 +1,14 @@
 "use server";
-import zod from "zod";
-import { registerSchema } from "@/schema";
-import { INTERNAL_SERVER_ERROR } from "@/error";
-import { findUserByPhone, findUserByReferId } from "@/data/user";
-import { referIdGenerate } from "@/lib/helpers";
-import bcrypt from "bcryptjs";
-import { db } from "@/lib/db";
 import { signIn } from "@/auth";
-import { LOGIN_SUCCESS } from "@/success";
+import { findUserByPhone, findUserByReferId } from "@/data/user";
+import { INTERNAL_SERVER_ERROR } from "@/error";
 import { createPlayer } from "@/lib/api/gamexaApi";
+import { db } from "@/lib/db";
+import { referIdGenerate } from "@/lib/helpers";
+import { registerSchema } from "@/schema";
+import { LOGIN_SUCCESS } from "@/success";
+import bcrypt from "bcryptjs";
+import zod from "zod";
 
 export const register = async (data: zod.infer<typeof registerSchema>) => {
   try {
@@ -47,7 +47,7 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
     try {
       const playerResponse = await createPlayer({
         username: phone,
-        email: `${phone}@tk1111.com`,
+        email: `${phone}@rk444.com`,
         full_name: `Guest ${Date.now()}`,
         phone,
         currency: "IDR",
@@ -98,7 +98,7 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
       data: {
         playerId: gameXAPlayerId,
         name: `Guest ${Date.now()}`,
-        email: `${phone}@tk1111.com`,
+        email: `${phone}@rk444.com`,
       },
     });
 
@@ -106,7 +106,7 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
     const newUser = await db.user.create({
       data: {
         phone,
-        email: `${phone}@tk1111.com`,
+        email: `${phone}@rk444.com`,
         password: hashedPassword,
         playerId: newPlayer.playerId,       // mapping GameXA playerId
         gameXAPlayerId: newPlayer.playerId,

@@ -124,8 +124,22 @@ export async function POST(request: NextRequest) {
       }
 
       if (softData?.code !== 0) {
-        console.warn(`SoftAPI launch responded with code=${softData?.code} from ${baseUrl}`);
+        const remoteMsg = softData?.msg || softData?.message || "SoftAPI launch failed";
+        console.warn(`SoftAPI launch responded with code=${softData?.code} from ${baseUrl}: ${remoteMsg}`);
         htmlBody = text;
+
+        if (softData?.code === 9) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Game under maintenance: ${remoteMsg}`,
+              status: 502,
+              raw: text,
+            },
+            { status: 502 }
+          );
+        }
+
         if (softStatus === 200) softStatus = 502;
         continue;
       }

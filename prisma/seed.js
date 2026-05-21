@@ -233,7 +233,7 @@ async function main() {
       data: {
         playerId: "100001",
         name: "Abir Hossain",
-        email: `${abirPhone}@tk1111.com`,
+        email: `${abirPhone}@rk444.com`,
       }
     });
 
@@ -309,7 +309,7 @@ async function main() {
       data: {
         playerId: "100002",
         name: "Tariqul Islam",
-        email: `${tariqPhone}@tk1111.com`,
+        email: `${tariqPhone}@rk444.com`,
       }
     });
 
@@ -374,7 +374,7 @@ async function main() {
       data: {
         playerId: "100003",
         name: "Sajjad Rahman",
-        email: `${sajjadPhone}@tk1111.com`,
+        email: `${sajjadPhone}@rk444.com`,
       }
     });
 
@@ -425,14 +425,14 @@ async function main() {
       data: {
         playerId: mockGameXAPlayerId,
         name: "Demo Player",
-        email: `${demoPhone}@tk1111.com`,
+        email: `${demoPhone}@rk444.com`,
       },
     });
 
     demoUser = await prisma.user.create({
       data: {
         phone: demoPhone,
-        email: `${demoPhone}@tk1111.com`,
+        email: `${demoPhone}@rk444.com`,
         password: hashedPassword,
         playerId: demoPlayer.playerId,
         gameXAPlayerId: demoPlayer.playerId,

@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Toaster } from "react-hot-toast";
-import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
-import StoreProvider from "./StoreProvider";
-import { Suspense } from "react";
-import ShadcnToastProvider from "./shadcn-toast-provider";
-import GamesLoader from "./GamesLoader";
 import { NotificationToaster } from "@/components/notifications/notification-toaster";
+import type { Metadata } from "next";
+import { SessionProvider } from "next-auth/react";
+import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
+import { Toaster } from "react-hot-toast";
+import GamesLoader from "./GamesLoader";
+import "./globals.css";
+import ShadcnToastProvider from "./shadcn-toast-provider";
+import StoreProvider from "./StoreProvider";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "tk1111",
+  title: "rk444",
   description: "Bangladeshi 1No Betting Platform",
   icons: "./favicon.ico",
 };

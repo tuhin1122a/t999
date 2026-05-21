@@ -339,6 +339,49 @@
   background-size: cover;
 }
 
+.provider-option {
+  cursor: pointer;
+  border-radius: 11px;
+  outline-offset: -1px;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out;
+}
+
+.provider-option:active {
+  transform: scale(0.96);
+}
+
+.card-enter {
+  opacity: 0;
+  animation: slot-card-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.provider-list-appear {
+  opacity: 0;
+  animation: provider-list-fade 240ms ease-out forwards;
+}
+
+@keyframes slot-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes provider-list-fade {
+  from {
+    opacity: 0.2;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .btn-prev-bg {
   background: url("../../public/button-prev-bg.svg") no-repeat;
   background-size: cover;

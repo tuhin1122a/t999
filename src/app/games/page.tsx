@@ -1,30 +1,43 @@
 "use client";
 import AppHeader from "@/components/AppHeader";
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import { GameCardWithProvider } from "@/components/GameCards";
-import { useGames } from "@/lib/store.zustond";
-import { Categories } from "@/types/game";
+import CategoryTabs from "@/components/CategoryTabs";
 import PrimaryInput from "@/components/form/input";
+import { GameCardWithProvider } from "@/components/GameCards";
 import GameLoader from "@/components/loader/GameLoader";
 import SideNavLayout from "@/components/SideNavLayout";
+import { useGames } from "@/lib/store.zustond";
+import { Categories } from "@/types/game";
 
 const Games = () => {
   const [search, setSearch] = useState("");
   const { getGames, isLoading } = useGames((state) => state);
   const [gamesList, setGamesList] = useState<any[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined);
   
   useEffect(() => {
-    // Try to get video poker games first
-    let games = getGames(Categories.VideoPoker, search, 200);
-    
-    // If no video poker games found, try slots as fallback
-    if (!games || games.length === 0) {
-      games = getGames(Categories.Slots, search, 200);
+    const categoryToUse = activeCategory || (Categories.VideoPoker as unknown as string);
+    let games = getGames(categoryToUse, search, 200);
+
+    // If category is "all" or not set, fallback to slots if empty
+    if (!activeCategory || activeCategory === "all") {
+      if (!games || games.length === 0) {
+        games = getGames(Categories.Slots as unknown as string, search, 200);
+      }
     }
-    
+
     setGamesList(games || []);
   }, [getGames, search]);
+
+  useEffect(() => {
+    // when activeCategory changes, refetch games
+    if (activeCategory !== undefined) {
+      const categoryToUse = activeCategory === "all" ? Categories.Slots as unknown as string : activeCategory;
+      const games = getGames(categoryToUse, search, 200);
+      setGamesList(games || []);
+    }
+  }, [activeCategory, getGames, search]);
 
   return (
     <SideNavLayout>
@@ -40,6 +53,7 @@ const Games = () => {
               className="mb-2"
             />
           </div>
+          <CategoryTabs onChange={(c) => setActiveCategory(c)} initial={"all"} />
           <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4">
             {gamesList &&
               gamesList.map((game,i) => (

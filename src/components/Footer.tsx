@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import React from "react";
 
 import logo_sq from "@/../public/logo-sq.jpg";
 import { db } from "@/lib/db";
@@ -76,11 +75,11 @@ const Footer = async () => {
 
           <img
             src={typeof promotionsLogo === "string" && promotionsLogo ? promotionsLogo : logo_sq.src}
-            alt="tk1111"
+            alt="rk444"
             className="w-[72px] h-[72px] rounded-full object-cover"
           />
           <p className="text-white text-xs font-[number:var(--www-wwwMbuzz88-com-segoe-UI-regular-font-weight)] text-[length:var(--www-wwwMbuzz88-com-segoe-UI-regular-font-size)] tracking-[var(--www-wwwMbuzz88-com-segoe-UI-regular-letter-spacing)] leading-[var(--www-wwwMbuzz88-com-segoe-UI-regular-line-height)] [font-style:var(--www-wwwMbuzz88-com-segoe-UI-regular-font-style)]">
-            tk1111.com website is operated by company, under license number
+            rk444.com website is operated by company, under license number
             AE6427EQRW00034 issued to it and regulated by Gaming Services
             Provider N.V., authorized by the Government of Curaçao under license
             number 1668JAZ.

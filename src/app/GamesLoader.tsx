@@ -4,6 +4,8 @@ import { useGames } from "@/lib/store.zustond";
 import { GamesList } from "@/types/game";
 import { useEffect, useState } from "react";
 
+let softApiGamesFetched = false;
+
 const GamesLoader = () => {
   const [fetchGamesList, { data, isLoading }] = useFetchGamesListMutation();
   const [softApiGames, setSoftApiGames] = useState<unknown[]>([]);
@@ -15,6 +17,9 @@ const GamesLoader = () => {
   }, [fetchGamesList]);
 
   useEffect(() => {
+    if (softApiGamesFetched) return;
+    softApiGamesFetched = true;
+
     const getSoftGames = async () => {
       try {
         console.log("Fetching SoftAPI popular games...");

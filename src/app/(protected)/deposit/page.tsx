@@ -2,13 +2,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import PageLoader from "@/components/loader/PageLoader";
+import DepositPageLoader from "@/components/loader/DepositPageLoader";
 import PaymentMethod from "@/components/PaymentMethod";
 import SiteHeader from "@/components/SiteHeader";
 import useGetCurrentUser from "@/hook/useCurrentUser";
 import {
-  useGetDepositPaymentDataQuery,
-  useMakeDepositeMutation,
+    useGetDepositPaymentDataQuery,
+    useMakeDepositeMutation,
 } from "@/lib/features/depositApiSlice";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -530,7 +530,7 @@ const DepositPage: React.FC = () => {
           </main>
         </div>
       ) : (
-        <PageLoader />
+        <DepositPageLoader />
       )}
     </>
   );

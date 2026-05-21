@@ -64,8 +64,40 @@ export const launchSoftAPIGameService = async (game_id: string) => {
 
     if (!res.ok) {
       const errorText = await res.text();
-      console.error("Launch SoftAPI game HTTP error:", res.status, errorText);
-      throw new Error(`HTTP ${res.status}: ${errorText}`);
+      let parsedError: any = null;
+      try {
+        parsedError = JSON.parse(errorText);
+      } catch {
+        parsedError = null;
+      }
+
+      const nestedRaw = parsedError?.raw
+        ? typeof parsedError.raw === "string"
+          ? (() => {
+              try {
+                return JSON.parse(parsedError.raw);
+              } catch {
+                return null;
+              }
+            })()
+          : parsedError.raw
+        : null;
+
+      const message =
+        parsedError?.error ||
+        parsedError?.msg ||
+        nestedRaw?.msg ||
+        nestedRaw?.message ||
+        errorText;
+
+      console.error(
+        "Launch SoftAPI game HTTP error:",
+        res.status,
+        message,
+        "raw:",
+        errorText
+      );
+      throw new Error(`HTTP ${res.status}: ${message}`);
     }
 
     const data = await res.json();
@@ -107,7 +139,8 @@ export const launchGameFromAnyAPI = async (
       };
     }
 
-    throw new Error("SoftAPI launch failed. No fallback route is configured.");
+    const launchError = softApiResponse?.error || softApiResponse?.message || "SoftAPI launch failed. No fallback route is configured.";
+    throw new Error(launchError);
   } catch (error) {
     console.error("Error launching game:", error);
     throw error;

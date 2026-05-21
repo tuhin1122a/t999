@@ -1,4 +1,3 @@
-import React from "react";
 import { PiHandDepositFill } from "react-icons/pi";
 
 const DepositPageLoader = () => {

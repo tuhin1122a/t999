@@ -11,6 +11,7 @@ import { useOpenGameMutation } from "@/lib/features/gamesApiSlice";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 const Play = () => {
   const [openGame] = useOpenGameMutation();
@@ -41,7 +42,7 @@ const Play = () => {
     try {
       const playerData = {
         username: user.phone || `user_${Date.now()}`,
-        email: user.email || `${user.phone}@tk1111.com`,
+        email: user.email || `${user.phone}@rk444.com`,
         full_name: user.name || `Guest ${Date.now()}`,
         phone: user.phone || "",
         password: "StrongPassword123!",
@@ -114,8 +115,14 @@ const Play = () => {
         }
       } catch (err: unknown) {
         console.error("Game launch error:", err);
+        const message = err instanceof Error ? err.message : "Failed to launch game.";
+        const toastMessage = message.toLowerCase().includes("maintenance")
+          ? "Game is under maintenance. Please try again later."
+          : `Failed to launch game. ${message}`;
+
+        toast.error(toastMessage);
         setError(true);
-        setErrorMessage("Failed to launch game. " + (err as Error).message);
+        setErrorMessage(toastMessage);
       } finally {
         setIsLoading(false);
       }

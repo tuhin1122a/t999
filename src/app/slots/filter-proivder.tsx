@@ -1,19 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useEffect, useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
+import { useEffect, useState } from "react";
 import "swiper/css";
 import "swiper/css/navigation";
-import { providers } from "../../../data/api-providers";
-import Image from "next/image";
-import { Title } from "@/types/game";
+import { Swiper, SwiperSlide } from "swiper/react";
+
+type ProviderItem = {
+  brand_id: string;
+  brand_title: string;
+  logo: string;
+};
 
 const FilterProivder = ({
   onSelect,
 }: {
-  onSelect: (provider: Title) => void;
+  onSelect: (providerId: string) => void;
 }) => {
-  const [selectedProvider, setProvider] = useState<any>("all");
+  const [selectedProvider, setProvider] = useState<string>("all");
+  const [providers, setProviders] = useState<ProviderItem[]>([]);
 
   const selectorStyle = {
     active: {
@@ -45,7 +49,22 @@ const FilterProivder = ({
 
   useEffect(() => {
     onSelect(selectedProvider);
-  }, [selectedProvider]);
+  }, [selectedProvider, onSelect]);
+
+  useEffect(() => {
+    async function loadProviders() {
+      try {
+        const res = await fetch("/api/softapi/providers");
+        if (!res.ok) throw new Error("Failed to load provider list");
+        const data = await res.json();
+        setProviders(data.providers || []);
+      } catch (error) {
+        console.error("Error loading SoftAPI providers:", error);
+      }
+    }
+
+    loadProviders();
+  }, []);
 
   return (
     <div>
@@ -53,17 +72,17 @@ const FilterProivder = ({
         <Swiper slidesPerView={"auto"} spaceBetween={10} className="mySwiper">
           <SwiperSlide className="max-w-max">
             <div
-              className="h-[45px] px-4  py-3"
+              className="h-[45px] px-4 py-3 transition-all duration-150 ease-out active:scale-95 hover:-translate-y-0.5 provider-option"
               onClick={() => setProvider("all")}
               style={
-                selectedProvider == "all"
+                selectedProvider === "all"
                   ? selectorStyle.active
                   : selectorStyle.inActive
               }
             >
               <span
                 className={`block px-3 text-lg font-bold ${
-                  selectedProvider == "all" ? "text-black" : "text-white"
+                  selectedProvider === "all" ? "text-black" : "text-white"
                 }`}
               >
                 All
@@ -71,25 +90,21 @@ const FilterProivder = ({
             </div>
           </SwiperSlide>
 
-          {providers.map((provider, i) => (
-            <SwiperSlide key={i} className="max-w-max">
+          {providers.map((provider) => (
+            <SwiperSlide key={provider.brand_id} className="max-w-max">
               <div
-                className="h-[45px] px-4 py-3"
-                onClick={() => setProvider(provider.name)}
+                className="h-[45px] px-4 py-3 flex items-center justify-center transition-all duration-150 ease-out active:scale-95 hover:-translate-y-0.5 provider-option"
+                onClick={() => setProvider(provider.brand_id)}
                 style={
-                  provider.name == selectedProvider
+                  provider.brand_id === selectedProvider
                     ? selectorStyle.active
                     : selectorStyle.inActive
                 }
               >
-                <Image
-                  src={
-                    selectedProvider == provider.name
-                      ? provider.imageBlack
-                      : provider.imageWhite
-                  }
-                  alt={provider.name}
-                  className="max-w-[85px]"
+                <img
+                  src={provider.logo}
+                  alt={provider.brand_title}
+                  className="max-w-[85px] max-h-[30px] object-contain"
                 />
               </div>
             </SwiperSlide>

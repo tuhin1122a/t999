@@ -1,10 +1,10 @@
 /**
  * Durantopay API Types
  * 
- * AppName: tk1111
+ * AppName: rk444
  * AppKey: ec7eb489-5dc1-4406-919b-418177e2931a22
  * AppSecret: 4368cef6-855b-46ae-8c42-2f86e77c401f22
- * App Address: http://tk1111.com
+ * App Address: http://rk444.com
  */
 
 // Common response structure

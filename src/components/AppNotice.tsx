@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import React from "react";
 
 import notice from "@/../public/icons/notice.png";
 import Marquee from "react-fast-marquee";
@@ -65,7 +64,7 @@ const AppNotice = () => {
                 overflow: "hidden",
               }}
             >
-              tk1111 🌟 আপনার প্রথম জমাতে 50% বোনাস পান! 🎉
+              rk444 🌟 আপনার প্রথম জমাতে 50% বোনাস পান! 🎉
             </p>
           </Marquee>
         </div>

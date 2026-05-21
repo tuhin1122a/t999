@@ -17,7 +17,7 @@ interface GameType {
   games: GamesList | null;
   isLoading: boolean;
   error: string;
-  providerGames: Record<string, NetEnt[]> | null;
+  providerGames: Record<string, NetEnt[]>;
   isProviderLoading: boolean;
 
   getGames: (
@@ -44,7 +44,7 @@ export const useGames = create<GameType>((set, get) => ({
   games: null,
   isLoading: true,
   error: "",
-  providerGames: null,
+  providerGames: {},
   isProviderLoading: false,
 
   getGames: (category, name, limit, provider) => {
