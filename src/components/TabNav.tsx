@@ -11,34 +11,17 @@ const TabNav = () => {
   const path = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 w-full md:w-[500px] md:mx-auto md:left-1/2 md:-translate-x-1/2 z-[999]" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-      <div
-        style={{
-          width: "100%",
-          height: 52,
-          paddingLeft: 5.2,
-          paddingRight: 5.2,
-          left: 0,
-          top: 0,
-          position: "absolute",
-          flexDirection: "column",
-          justifyContent: "flex-start",
-          alignItems: "flex-start",
-          display: "inline-flex",
-        }}
-      >
+    <div className="fixed inset-x-0 bottom-0 z-[999] flex justify-center pb-[env(safe-area-inset-bottom,0px)]">
+      <div className="w-full md:w-[500px] px-2">
         <div
-          className="flex items-center justify-between py-1 px-2"
+          className="flex items-center justify-between h-[52px] py-1 px-2"
           style={{
-            alignSelf: "stretch",
-            height: 46.8,
-            position: "relative",
             background:
               "linear-gradient(180deg, var(--color-cyan-18, #005A5A) 0%, var(--color-cyan-12, #003E3E) 50%, var(--color-cyan-9, #002C2C) 100%)",
             boxShadow:
-              "0px -3.119999885559082px 10.399999618530273px rgba(8, 186, 183, 0.40)",
+              "0px -3.12px 10.4px rgba(8, 186, 183, 0.40)",
             borderRadius: 36.4,
-            borderTop: "1px var(--color-cyan-53, #26E7E4) solid",
+            borderTop: "1px solid var(--color-cyan-53, #26E7E4)",
           }}
         >
           <div className="flex-1">
