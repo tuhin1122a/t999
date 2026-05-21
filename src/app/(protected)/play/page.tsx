@@ -108,7 +108,7 @@ const Play = () => {
           throw new Error("Invalid game launch response");
         }
 
-        if (iframeMode === "0" || isMobileDevice()) {
+        if (iframeMode === "0") {
           window.location.href = url;
         } else {
           setIframe(url);
@@ -133,6 +133,14 @@ const Play = () => {
 
   return (
     <div className="w-full h-screen flex flex-col justify-between bg-black relative">
+      <Link
+        href="/slots"
+        className="absolute top-4 left-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white shadow-lg border border-white/20"
+        aria-label="Back to slots"
+      >
+        <span className="text-xl">←</span>
+      </Link>
+
       {isIframeLoading && !error && <GameOpeningLoader />}
 
       {!isIframeLoading && !error && iframe && (
@@ -143,13 +151,6 @@ const Play = () => {
             onLoad={() => setIsLoading(false)}
             allowFullScreen
           />
-          <button
-            onClick={() => router.push("/slots")}
-            className="absolute top-4 left-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white shadow-lg border border-white/20"
-            aria-label="Back to slots"
-          >
-            <span className="text-xl">←</span>
-          </button>
         </div>
       )}
 
