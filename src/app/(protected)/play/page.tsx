@@ -2,7 +2,6 @@
 
 "use client";
 
-import TabNav from "@/components/TabNav";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import GameOpeningLoader from "@/components/loader/GameOpeningLoader";
 import useGetCurrentUser from "@/hook/useCurrentUser";
@@ -10,7 +9,7 @@ import { createPlayer, launchGameFromAnyAPI } from "@/lib/features/gameService";
 import { useOpenGameMutation } from "@/lib/features/gamesApiSlice";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const Play = () => {
@@ -210,9 +209,6 @@ const Play = () => {
         </div>
       )}
 
-      <div className="absolute inset-x-0 bottom-0 z-40 md:hidden">
-        <TabNav />
-      </div>
     </div>
   );
 };
