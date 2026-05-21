@@ -19,12 +19,17 @@ const Play = () => {
   const [iframe, setIframe] = useState("");
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("Game is not available");
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const gameId = searchParams.get("gameId") || "";
 
   const user = useGetCurrentUser();
+  const balanceValue = Number(
+    (user as any)?.wallet?.balance ?? (user as any)?.balance ?? 0
+  ).toFixed(2);
 
   const isMobileDevice = () => {
     if (typeof navigator === "undefined") return false;
@@ -32,6 +37,24 @@ const Play = () => {
       navigator.userAgent
     );
   };
+
+  const handleToggleFullscreen = () => {
+    const element = iframeRef.current?.parentElement || document.documentElement;
+    if (!element) return;
+
+    if (!document.fullscreenElement) {
+      element.requestFullscreen?.().then(() => setIsFullScreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullScreen(false)).catch(() => {});
+    }
+  };
+
+  useEffect(() => {
+    const changeHandler = () => setIsFullScreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", changeHandler);
+    return () => document.removeEventListener("fullscreenchange", changeHandler);
+  }, []);
+
 
   // ---------------- Get or create GameXA player ----------------
   const getPlayerId = async (user: any) => {
@@ -132,22 +155,39 @@ const Play = () => {
   }, [gameId, user, openGame, router]);
 
   return (
-    <div className="w-full h-screen flex flex-col justify-between bg-black relative">
-      <Link
-        href="/slots"
-        className="absolute top-4 left-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white shadow-lg border border-white/20"
-        aria-label="Back to slots"
-      >
-        <span className="text-xl">←</span>
-      </Link>
+    <div className="w-full h-screen flex flex-col justify-between bg-black relative overflow-hidden">
+      <div className="absolute inset-x-0 top-0 z-50 flex items-center justify-between gap-2 px-3 py-3 bg-black/80 backdrop-blur-xl border-b border-white/10">
+        <Link
+          href="/slots"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white shadow-lg border border-white/20"
+          aria-label="Back to slots"
+        >
+          <span className="text-xl">←</span>
+        </Link>
+
+        <div className="flex-1 px-2 text-center">
+          <div className="text-xs text-slate-300 uppercase tracking-[0.3em]">Play Mode</div>
+          <div className="text-sm font-semibold text-white">Balance: ৳ {balanceValue}</div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleToggleFullscreen}
+          className="flex h-11 min-w-[3rem] items-center justify-center rounded-full bg-white/10 text-white shadow-lg border border-white/20"
+          aria-label={isFullScreen ? "Exit fullscreen" : "Enter fullscreen"}
+        >
+          <span className="text-lg">⤢</span>
+        </button>
+      </div>
 
       {isIframeLoading && !error && <GameOpeningLoader />}
 
       {!isIframeLoading && !error && iframe && (
-        <div className="w-full h-[calc(100vh-102px)] md:h-screen relative">
+        <div className="absolute inset-x-0 top-[68px] bottom-[60px] md:top-0 md:bottom-0 h-[calc(100vh-68px-60px)] md:h-screen relative">
           <iframe
+            ref={iframeRef}
             src={iframe}
-            className="w-full h-full border-0 rounded-b-lg"
+            className="w-full h-full border-0 bg-black"
             onLoad={() => setIsLoading(false)}
             allowFullScreen
           />
@@ -155,7 +195,7 @@ const Play = () => {
       )}
 
       {error && (
-        <div className="w-full h-[calc(100vh-102px)] md:h-screen bg-[#006165] flex justify-center items-center">
+        <div className="absolute inset-x-0 top-[68px] bottom-[60px] md:top-0 md:bottom-0 bg-[#006165] flex justify-center items-center">
           <div className="w-[280px] md:w-[320px] lg:w-[350px] bg-white overflow-hidden rounded-xl">
             <div className="h-[70%] w-full bg-red-500 px-8 py-2">
               <h3 className="text-2xl font-semibold text-white">Error</h3>
@@ -170,8 +210,9 @@ const Play = () => {
         </div>
       )}
 
-      {/* Render mobile bottom navigation bar */}
-      <TabNav />
+      <div className="absolute inset-x-0 bottom-0 z-40 md:hidden">
+        <TabNav />
+      </div>
     </div>
   );
 };
