@@ -162,7 +162,7 @@ const Play = () => {
       {isIframeLoading && !error && <GameOpeningLoader />}
 
       {!isIframeLoading && !error && iframe && (
-        <div className="absolute inset-x-0 top-[68px] bottom-[60px] md:top-0 md:bottom-0 h-[calc(100vh-68px-60px)] md:h-screen relative">
+        <div className="absolute inset-x-0 top-[68px] bottom-[76px] md:top-0 md:bottom-0 h-[calc(100vh-68px-76px)] md:h-screen relative">
           <iframe
             ref={iframeRef}
             src={iframe}
@@ -174,7 +174,7 @@ const Play = () => {
       )}
 
       {error && (
-        <div className="absolute inset-x-0 top-[68px] bottom-[60px] md:top-0 md:bottom-0 bg-[#006165] flex justify-center items-center">
+        <div className="absolute inset-x-0 top-[68px] bottom-[76px] md:top-0 md:bottom-0 bg-[#006165] flex justify-center items-center">
           <div className="w-[280px] md:w-[320px] lg:w-[350px] bg-white overflow-hidden rounded-xl">
             <div className="h-[70%] w-full bg-red-500 px-8 py-2">
               <h3 className="text-2xl font-semibold text-white">Error</h3>
