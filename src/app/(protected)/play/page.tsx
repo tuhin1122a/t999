@@ -2,6 +2,8 @@
 
 "use client";
 
+import AppHeader from "@/components/AppHeader";
+import TabNav from "@/components/TabNav";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import GameOpeningLoader from "@/components/loader/GameOpeningLoader";
 import useGetCurrentUser from "@/hook/useCurrentUser";
@@ -155,29 +157,7 @@ const Play = () => {
 
   return (
     <div className="w-full h-screen flex flex-col justify-between bg-black relative overflow-hidden">
-      <div className="absolute inset-x-0 top-0 z-50 flex items-center justify-between gap-2 px-3 py-3 bg-black/80 backdrop-blur-xl border-b border-white/10">
-        <Link
-          href="/slots"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white shadow-lg border border-white/20"
-          aria-label="Back to slots"
-        >
-          <span className="text-xl">←</span>
-        </Link>
-
-        <div className="flex-1 px-2 text-center">
-          <div className="text-xs text-slate-300 uppercase tracking-[0.3em]">Play Mode</div>
-          <div className="text-sm font-semibold text-white">Balance: ৳ {balanceValue}</div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleToggleFullscreen}
-          className="flex h-11 min-w-[3rem] items-center justify-center rounded-full bg-white/10 text-white shadow-lg border border-white/20"
-          aria-label={isFullScreen ? "Exit fullscreen" : "Enter fullscreen"}
-        >
-          <span className="text-lg">⤢</span>
-        </button>
-      </div>
+      <AppHeader balance={balanceValue} />
 
       {isIframeLoading && !error && <GameOpeningLoader />}
 
@@ -208,6 +188,10 @@ const Play = () => {
           </div>
         </div>
       )}
+
+      <div className="absolute inset-x-0 bottom-0 z-40 md:hidden">
+        <TabNav />
+      </div>
 
     </div>
   );
