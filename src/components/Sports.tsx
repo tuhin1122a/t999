@@ -1,34 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useRef } from "react";
-
-import sports_1 from "@/../public/sports/sports-1.png";
-import sports_2 from "@/../public/sports/sports-2.png";
-import sports_3 from "@/../public/sports/sports-3.png";
-import sports_4 from "@/../public/sports/sports-4.png";
+import Link from "next/link";
+import { useRef } from "react";
+import GameSelectionHeader from "./GameSelectionHeader";
 
 export const sportsData = [
   {
-    image: sports_1,
-    redirect: "/sports",
+    providerId: "83",
+    image:
+      "https://ik.imagekit.io/f4rqxekfu/brands/brand_83_1759747195_Atqb52OM-.png",
+    title: "LuckySport",
+    redirect: "/sports?providerId=83",
   },
   {
-    image: sports_2,
-    redirect: "/sports",
-  },
-  {
-    image: sports_3,
-    redirect: "/sports",
-  },
-  {
-    image: sports_4,
-    redirect: "/sports",
+    providerId: "141",
+    image:
+      "https://ik.imagekit.io/f4rqxekfu/brands/1774284124-9wicketslogo_1__nHSY_O0YU.webp",
+    title: "9wickets",
+    redirect: "/sports?providerId=141",
   },
 ];
-
-import GameSelectionHeader from "./GameSelectionHeader";
-import Link from "next/link";
-import Image from "next/image";
 
 const Sports = () => {
   const gamesContainer = useRef<HTMLDivElement | null>(null);
@@ -39,6 +30,7 @@ const Sports = () => {
   const handleLeftButtonClick = () => {
     gamesContainer.current!.scrollLeft += 130;
   };
+
   return (
     <div
       className="my-4"
@@ -58,7 +50,7 @@ const Sports = () => {
       >
         <div className="hot-games-list">
           {sportsData.map((s, i) => (
-            <SportsCard key={i} image={s.image} redirect={s.redirect} />
+            <SportsCard key={i} provider={s} />
           ))}
         </div>
       </div>
@@ -69,15 +61,18 @@ const Sports = () => {
 export default Sports;
 
 export const SportsCard = ({
-  image,
-  redirect,
+  provider,
 }: {
-  image: any;
-  redirect: string;
+  provider: {
+    providerId: string;
+    image: string;
+    title: string;
+    redirect: string;
+  };
 }) => {
   return (
-    <Link href={redirect}>
-      <Image src={image} alt="sports" />
+    <Link href={provider.redirect} className="block">
+      <img src={provider.image} alt={provider.title} className="max-w-full h-auto" />
     </Link>
   );
 };

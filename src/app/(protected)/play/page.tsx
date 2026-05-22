@@ -3,7 +3,6 @@
 import AppHeader from "@/components/AppHeader";
 import TabNav from "@/components/TabNav";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
-import GameOpeningLoader from "@/components/loader/GameOpeningLoader";
 import useGetCurrentUser from "@/hook/useCurrentUser";
 import { createPlayer, launchGameFromAnyAPI } from "@/lib/features/gameService";
 import { useOpenGameMutation } from "@/lib/features/gamesApiSlice";
@@ -98,7 +97,7 @@ const Play = () => {
       {/* GAME AREA (FULL FIT FIX) */}
       <div className="flex-1 relative bg-black overflow-hidden">
 
-        {isIframeLoading && !error && <GameOpeningLoader />}
+        {/* {isIframeLoading && !error && <GameOpeningLoader />} */}
 
         {!error && iframe && (
           <iframe

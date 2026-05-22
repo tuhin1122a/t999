@@ -9,13 +9,23 @@ type LocalArrayStorage<T> = {
 export const LocalArrayStorage = <T = any>(): LocalArrayStorage<T> => {
   // Helper: Get or initialize array
   const getArray = (key: string): T[] => {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : [];
+    try {
+      if (typeof window === "undefined" || typeof localStorage === "undefined") return [];
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : [];
+    } catch (err) {
+      return [];
+    }
   };
 
   // Helper: Save array
   const saveArray = (key: string, arr: T[]) => {
-    localStorage.setItem(key, JSON.stringify(arr));
+    try {
+      if (typeof window === "undefined" || typeof localStorage === "undefined") return;
+      localStorage.setItem(key, JSON.stringify(arr));
+    } catch (err) {
+      // ignore
+    }
   };
 
   return {

@@ -1,13 +1,14 @@
 "use client";
 import AppHeader from "@/components/AppHeader";
-import React, { useState } from "react";
+import { useState } from "react";
 
-import { GameCardWithProvider } from "@/components/GameCards";
-import { useGames } from "@/lib/store.zustond";
-import { Categories } from "@/types/game";
 import PrimaryInput from "@/components/form/input";
+import { GameCardWithProvider } from "@/components/GameCards";
 import GameLoader from "@/components/loader/GameLoader";
 import SideNavLayout from "@/components/SideNavLayout";
+import TabLayout from "@/components/TabLayout";
+import { useGames } from "@/lib/store.zustond";
+import { Categories } from "@/types/game";
 
 const LiveCasionPage = () => {
   const [search, setSearch] = useState("");
@@ -15,7 +16,7 @@ const LiveCasionPage = () => {
   const gamesList = getGames(Categories.LiveDealers, search);
   return (
     <SideNavLayout>
-      <div>
+      <TabLayout>
         <AppHeader title="Live Casino" />
         <main className="py-5 px-2 bg-[#003e3e] min-h-screen">
           <div className="flex items-center">
@@ -41,7 +42,7 @@ const LiveCasionPage = () => {
             </span>
           )}
         </main>
-      </div>
+      </TabLayout>
     </SideNavLayout>
   );
 };

@@ -1,476 +1,476 @@
 {
-    "status": true,
-    "total_games": 94,
-    "games": [
-        {
-            "brand_id": "45",
-            "brand_title": "PGSoft",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/pgsoft__eSCGuSud.png"
-        },
-        {
-            "brand_id": "46",
-            "brand_title": "SABASports(IBC)",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/sabasports-ibc_jLnyoDVBx.jpg"
-        },
-        {
-            "brand_id": "48",
-            "brand_title": "UnitedGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/unitedgaming_mNkr4Q5Lu.png"
-        },
-        {
-            "brand_id": "49",
-            "brand_title": "JILI",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/jili_zCoKdKI0w.png"
-        },
-        {
-            "brand_id": "50",
-            "brand_title": "JDB",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/jdb_bfN7Li8aT.svg"
-        },
-        {
-            "brand_id": "51",
-            "brand_title": "TADAGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/tadagaming_VODQcWMhZ.png"
-        },
-        {
-            "brand_id": "52",
-            "brand_title": "CQ9",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/cq9_GMWnfJS6j.png"
-        },
-        {
-            "brand_id": "53",
-            "brand_title": "PragmaticPlay-EU",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_53_1759738767_0RTFI0ruM.png"
-        },
-        {
-            "brand_id": "54",
-            "brand_title": "PragmaticPlay-Asia",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_54_1759738767_XUvlduUi2.png"
-        },
-        {
-            "brand_id": "55",
-            "brand_title": "PragmaticPlayLive-EU",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_55_1759738768_pO-J--EsT.png"
-        },
-        {
-            "brand_id": "56",
-            "brand_title": "PragmaticPlayLive-Asia",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_56_1759738767_X-OOEWVG3.png"
-        },
-        {
-            "brand_id": "57",
-            "brand_title": "Spribe",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/spribe_PT57NjKD1.png"
-        },
-        {
-            "brand_id": "58",
-            "brand_title": "Evolution Live",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_58_1759739497_u136bxtGP.png"
-        },
-        {
-            "brand_id": "59",
-            "brand_title": "Evolution Live (Asia)",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_59_1759739498_kDA8fpQtV.png"
-        },
-        {
-            "brand_id": "60",
-            "brand_title": "YeeBet",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/yeebet_Qkd_HP7B1.png"
-        },
-        {
-            "brand_id": "61",
-            "brand_title": "FaChaiGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/fachaigaming_XDlsvQLjm.png"
-        },
-        {
-            "brand_id": "62",
-            "brand_title": "BigTimeGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/bigtimegaming_R1n1_ixJN.jpg"
-        },
-        {
-            "brand_id": "63",
-            "brand_title": "BigTimeGaming(Asia)",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/bigtimegaming-asia_iJ_C78lGQ.jpg"
-        },
-        {
-            "brand_id": "64",
-            "brand_title": "GameArt",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/gameart_NBb8dzy_S.png"
-        },
-        {
-            "brand_id": "65",
-            "brand_title": "Bgaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/bgaming_pdaAU3WLj.png"
-        },
-        {
-            "brand_id": "66",
-            "brand_title": "NoLimit City\uff08Asia\uff09",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/nolimit-city-asia_Bw3lMxQ63.png"
-        },
-        {
-            "brand_id": "67",
-            "brand_title": "NoLimit City",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/nolimit-city_dGZqMlHEI.png"
-        },
-        {
-            "brand_id": "68",
-            "brand_title": "Netent",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/netent_PcottkcL9.png"
-        },
-        {
-            "brand_id": "69",
-            "brand_title": "Netent\uff08Asia\uff09",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_69_1759742598_NnaIvF82-.png"
-        },
-        {
-            "brand_id": "70",
-            "brand_title": "RelaxGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/relaxgaming_-Yg8pOo7k.png"
-        },
-        {
-            "brand_id": "71",
-            "brand_title": "Skywind",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_71_1759745923_jGiWGxkyY.png"
-        },
-        {
-            "brand_id": "72",
-            "brand_title": "Playtech",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/playtech_kh3OoJoCZ.svg"
-        },
-        {
-            "brand_id": "73",
-            "brand_title": "PlaynGo",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/playngo_M64H004gH.png"
-        },
-        {
-            "brand_id": "74",
-            "brand_title": "RedTiger",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/redtiger_GckNg_i4e.png"
-        },
-        {
-            "brand_id": "75",
-            "brand_title": "RedTiger\uff08Asia\uff09",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_75_1759742711_p_BDBA0F5.png"
-        },
-        {
-            "brand_id": "76",
-            "brand_title": "Playson",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/playson_TVurEdDE9.png"
-        },
-        {
-            "brand_id": "77",
-            "brand_title": "Evoplay",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/evoplay_1A4Zz15L6.png"
-        },
-        {
-            "brand_id": "78",
-            "brand_title": "Ezugi",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/ezugi_YOoNA87AJ.png"
-        },
-        {
-            "brand_id": "79",
-            "brand_title": "iDeal",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/ideal_JfiVSmlvK.png"
-        },
-        {
-            "brand_id": "80",
-            "brand_title": "T1",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/t1_SVPjMoD7a.png"
-        },
-        {
-            "brand_id": "81",
-            "brand_title": "PlayAce(AgGaming)",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/playace-aggaming_IVBgkzHHl.png"
-        },
-        {
-            "brand_id": "82",
-            "brand_title": "Astar",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/astar_qR5tTKi4v.png"
-        },
-        {
-            "brand_id": "83",
-            "brand_title": "LuckySport",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_83_1759747195_Atqb52OM-.png"
-        },
-        {
-            "brand_id": "84",
-            "brand_title": "Rich88",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/rich88_UywTBtIVM.png"
-        },
-        {
-            "brand_id": "85",
-            "brand_title": "TF",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/tf_Hfhq23ykw.png"
-        },
-        {
-            "brand_id": "86",
-            "brand_title": "NextSpin",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_86_1759753285_gXkNIjtpb.webp"
-        },
-        {
-            "brand_id": "87",
-            "brand_title": "DreamGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/dreamgaming_orGaXRnvq.jpg"
-        },
-        {
-            "brand_id": "88",
-            "brand_title": "Sexy",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/sexy_6tieOBYXp.png"
-        },
-        {
-            "brand_id": "89",
-            "brand_title": "Sagaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/sagaming_3lTI1C8VE.png"
-        },
-        {
-            "brand_id": "90",
-            "brand_title": "Microgaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/microgaming_mm5ILoG4V.png"
-        },
-        {
-            "brand_id": "91",
-            "brand_title": "Habanero",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/habanero_TzgioUNJE.svg"
-        },
-        {
-            "brand_id": "92",
-            "brand_title": "YGRGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/ygrgaming_TbLfUpZzc.jpg"
-        },
-        {
-            "brand_id": "93",
-            "brand_title": "KoolBet",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/koolbet_GfoRDo30w.jpg"
-        },
-        {
-            "brand_id": "94",
-            "brand_title": "DpEsports",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/dpesports_oL4ejT2g1.png"
-        },
-        {
-            "brand_id": "95",
-            "brand_title": "DpSports",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/dpsports_6EVgDlxnv.png"
-        },
-        {
-            "brand_id": "96",
-            "brand_title": "3Oaks (BNG)",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1776591924-favicon_X7wqKmKFQ.ico"
-        },
-        {
-            "brand_id": "97",
-            "brand_title": "Hacksaw Asia",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/hacksaw-asia_oCM4030vb.png"
-        },
-        {
-            "brand_id": "98",
-            "brand_title": "Hacksaw Latam",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/hacksaw-latam_vKVa1IAKd.png"
-        },
-        {
-            "brand_id": "99",
-            "brand_title": "Hacksaw World",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/hacksaw-world_DzjKeVGna.png"
-        },
-        {
-            "brand_id": "100",
-            "brand_title": "Turbogames Asia",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/turbogames-asia_x-LY05KTt.png"
-        },
-        {
-            "brand_id": "101",
-            "brand_title": "Turbogames World",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/turbogames-world_hhq2EG8ZD.png"
-        },
-        {
-            "brand_id": "102",
-            "brand_title": "OneGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/onegaming_US8ajzcPi.png"
-        },
-        {
-            "brand_id": "103",
-            "brand_title": "5gGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/5ggaming_tTaDa1S0F.png"
-        },
-        {
-            "brand_id": "104",
-            "brand_title": "Mini",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/mini_pVhCJw440.png"
-        },
-        {
-            "brand_id": "105",
-            "brand_title": "2J",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_105_1759755216_d8ysyB9Bd.png"
-        },
-        {
-            "brand_id": "106",
-            "brand_title": "EpicWin",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/epicwin_cHPP34SvY.png"
-        },
-        {
-            "brand_id": "107",
-            "brand_title": "Smartsoft",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/smartsoft_pqTVVLSgg.png"
-        },
-        {
-            "brand_id": "108",
-            "brand_title": "Wonwon",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_108_1759755400_NoNC975dE.PNG"
-        },
-        {
-            "brand_id": "109",
-            "brand_title": "BtGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/btgaming_4Sg3NMWJ-.png"
-        },
-        {
-            "brand_id": "110",
-            "brand_title": "Pix",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/pix_Sk-nLiaKt.png"
-        },
-        {
-            "brand_id": "111",
-            "brand_title": "Galaxsys",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_111_1759755586_QYQ6oiwvw.png"
-        },
-        {
-            "brand_id": "112",
-            "brand_title": "InOut",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/inout_L95ybT6Vl.svg"
-        },
-        {
-            "brand_id": "113",
-            "brand_title": "V8 CARD",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_113_1759757270_KyAOcxq5j.webp"
-        },
-        {
-            "brand_id": "114",
-            "brand_title": "WM CASINO",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759580526-wm-casino_gfuzIsjHR.png"
-        },
-        {
-            "brand_id": "117",
-            "brand_title": "EazyGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759584633-headerLogo_ovoTgi_ge.png"
-        },
-        {
-            "brand_id": "118",
-            "brand_title": "BtiGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759690799-images_A5pMrF4oS.png"
-        },
-        {
-            "brand_id": "119",
-            "brand_title": "King Midas",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759745485-kingmidas_hnP8rc8ZJ.png"
-        },
-        {
-            "brand_id": "120",
-            "brand_title": "King Midas - One Gaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759746283-kingmidas_Oqu0zjno0.png"
-        },
-        {
-            "brand_id": "121",
-            "brand_title": "OnGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_121_1759746876_jnFiPaUL5b.png"
-        },
-        {
-            "brand_id": "122",
-            "brand_title": "AOG",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_122_1759749392_NEAf74Igf.png"
-        },
-        {
-            "brand_id": "123",
-            "brand_title": "PgsGaming",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759749692-bc55-game-brand-logo-pegasus_8ltp7Dy3l.png"
-        },
-        {
-            "brand_id": "124",
-            "brand_title": "Expanse",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759755996-vvcvcv_ffim_MyzU.PNG"
-        },
-        {
-            "brand_id": "125",
-            "brand_title": "FAST SPIN",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759756425-sdsdds__z5wLkmya.PNG"
-        },
-        {
-            "brand_id": "126",
-            "brand_title": "SBO",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759756460-scxxc_oxD99dBJS6.PNG"
-        },
-        {
-            "brand_id": "128",
-            "brand_title": "Askmeslot",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770665380-askmeslot_logo_-OY4t2_NYB.webp"
-        },
-        {
-            "brand_id": "129",
-            "brand_title": "Vplus",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770666052-vpus__nilYIAg6B.png"
-        },
-        {
-            "brand_id": "130",
-            "brand_title": "Casini",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770666456-casini-black-text-logo.cde821af64f85d0da29386a6985e2a8f_-mnrWVgfL.svg"
-        },
-        {
-            "brand_id": "131",
-            "brand_title": "100HP",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770666578-100HPWHITE-removebg-preview_hJt231z9y.webp"
-        },
-        {
-            "brand_id": "132",
-            "brand_title": "MT GAMING",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770666928-t_zsSn-g7oM.png"
-        },
-        {
-            "brand_id": "133",
-            "brand_title": "KA",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667025-Screenshot_2026-02-10_012653_MHJo17sYY.png"
-        },
-        {
-            "brand_id": "134",
-            "brand_title": "Casino Game (CG)",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667178-logo-cg-game_tLSGmLofX.png"
-        },
-        {
-            "brand_id": "135",
-            "brand_title": "Crowdplay",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667442-clow_pau_wHSEuDeuk.png"
-        },
-        {
-            "brand_id": "136",
-            "brand_title": "RubyPlay",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667786-rubyplay_logo_01_colour_alt_YQ9e9e-zP.webp"
-        },
-        {
-            "brand_id": "137",
-            "brand_title": "Amigo",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667934-logo_i_pIoQF60.svg"
-        },
-        {
-            "brand_id": "138",
-            "brand_title": "ATM",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770668042-logo__11__hGN9bryFr.png"
-        },
-        {
-            "brand_id": "139",
-            "brand_title": "Aviatrix",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1773393816-aviatrix-1_1__jkxRgnYAr.png"
-        },
-        {
-            "brand_id": "140",
-            "brand_title": "MAC 88",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1773760761-images_VsVsANb4k.png"
-        },
-        {
-            "brand_id": "141",
-            "brand_title": "9wickets",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1774284124-9wicketslogo_1__nHSY_O0YU.webp"
-        },
-        {
-            "brand_id": "142",
-            "brand_title": "CMD",
-            "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1774286045-C_001__CMD_HGxx3eznn.png"
-        }
-    ]
+  "status": true,
+  "total_games": 94,
+  "games": [
+    {
+      "brand_id": "45",
+      "brand_title": "PGSoft",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/pgsoft__eSCGuSud.png"
+    },
+    {
+      "brand_id": "46",
+      "brand_title": "SABASports(IBC)",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/sabasports-ibc_jLnyoDVBx.jpg"
+    },
+    {
+      "brand_id": "48",
+      "brand_title": "UnitedGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/unitedgaming_mNkr4Q5Lu.png"
+    },
+    {
+      "brand_id": "49",
+      "brand_title": "JILI",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/jili_zCoKdKI0w.png"
+    },
+    {
+      "brand_id": "50",
+      "brand_title": "JDB",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/jdb_bfN7Li8aT.svg"
+    },
+    {
+      "brand_id": "51",
+      "brand_title": "TADAGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/tadagaming_VODQcWMhZ.png"
+    },
+    {
+      "brand_id": "52",
+      "brand_title": "CQ9",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/cq9_GMWnfJS6j.png"
+    },
+    {
+      "brand_id": "53",
+      "brand_title": "PragmaticPlay-EU",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_53_1759738767_0RTFI0ruM.png"
+    },
+    {
+      "brand_id": "54",
+      "brand_title": "PragmaticPlay-Asia",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_54_1759738767_XUvlduUi2.png"
+    },
+    {
+      "brand_id": "55",
+      "brand_title": "PragmaticPlayLive-EU",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_55_1759738768_pO-J--EsT.png"
+    },
+    {
+      "brand_id": "56",
+      "brand_title": "PragmaticPlayLive-Asia",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_56_1759738767_X-OOEWVG3.png"
+    },
+    {
+      "brand_id": "57",
+      "brand_title": "Spribe",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/spribe_PT57NjKD1.png"
+    },
+    {
+      "brand_id": "58",
+      "brand_title": "Evolution Live",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_58_1759739497_u136bxtGP.png"
+    },
+    {
+      "brand_id": "59",
+      "brand_title": "Evolution Live (Asia)",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_59_1759739498_kDA8fpQtV.png"
+    },
+    {
+      "brand_id": "60",
+      "brand_title": "YeeBet",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/yeebet_Qkd_HP7B1.png"
+    },
+    {
+      "brand_id": "61",
+      "brand_title": "FaChaiGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/fachaigaming_XDlsvQLjm.png"
+    },
+    {
+      "brand_id": "62",
+      "brand_title": "BigTimeGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/bigtimegaming_R1n1_ixJN.jpg"
+    },
+    {
+      "brand_id": "63",
+      "brand_title": "BigTimeGaming(Asia)",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/bigtimegaming-asia_iJ_C78lGQ.jpg"
+    },
+    {
+      "brand_id": "64",
+      "brand_title": "GameArt",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/gameart_NBb8dzy_S.png"
+    },
+    {
+      "brand_id": "65",
+      "brand_title": "Bgaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/bgaming_pdaAU3WLj.png"
+    },
+    {
+      "brand_id": "66",
+      "brand_title": "NoLimit City（Asia）",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/nolimit-city-asia_Bw3lMxQ63.png"
+    },
+    {
+      "brand_id": "67",
+      "brand_title": "NoLimit City",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/nolimit-city_dGZqMlHEI.png"
+    },
+    {
+      "brand_id": "68",
+      "brand_title": "Netent",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/netent_PcottkcL9.png"
+    },
+    {
+      "brand_id": "69",
+      "brand_title": "Netent（Asia）",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_69_1759742598_NnaIvF82-.png"
+    },
+    {
+      "brand_id": "70",
+      "brand_title": "RelaxGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/relaxgaming_-Yg8pOo7k.png"
+    },
+    {
+      "brand_id": "71",
+      "brand_title": "Skywind",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_71_1759745923_jGiWGxkyY.png"
+    },
+    {
+      "brand_id": "72",
+      "brand_title": "Playtech",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/playtech_kh3OoJoCZ.svg"
+    },
+    {
+      "brand_id": "73",
+      "brand_title": "PlaynGo",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/playngo_M64H004gH.png"
+    },
+    {
+      "brand_id": "74",
+      "brand_title": "RedTiger",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/redtiger_GckNg_i4e.png"
+    },
+    {
+      "brand_id": "75",
+      "brand_title": "RedTiger（Asia）",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_75_1759742711_p_BDBA0F5.png"
+    },
+    {
+      "brand_id": "76",
+      "brand_title": "Playson",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/playson_TVurEdDE9.png"
+    },
+    {
+      "brand_id": "77",
+      "brand_title": "Evoplay",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/evoplay_1A4Zz15L6.png"
+    },
+    {
+      "brand_id": "78",
+      "brand_title": "Ezugi",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/ezugi_YOoNA87AJ.png"
+    },
+    {
+      "brand_id": "79",
+      "brand_title": "iDeal",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/ideal_JfiVSmlvK.png"
+    },
+    {
+      "brand_id": "80",
+      "brand_title": "T1",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/t1_SVPjMoD7a.png"
+    },
+    {
+      "brand_id": "81",
+      "brand_title": "PlayAce(AgGaming)",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/playace-aggaming_IVBgkzHHl.png"
+    },
+    {
+      "brand_id": "82",
+      "brand_title": "Astar",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/astar_qR5tTKi4v.png"
+    },
+    {
+      "brand_id": "83",
+      "brand_title": "LuckySport",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_83_1759747195_Atqb52OM-.png"
+    },
+    {
+      "brand_id": "84",
+      "brand_title": "Rich88",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/rich88_UywTBtIVM.png"
+    },
+    {
+      "brand_id": "85",
+      "brand_title": "TF",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/tf_Hfhq23ykw.png"
+    },
+    {
+      "brand_id": "86",
+      "brand_title": "NextSpin",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_86_1759753285_gXkNIjtpb.webp"
+    },
+    {
+      "brand_id": "87",
+      "brand_title": "DreamGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/dreamgaming_orGaXRnvq.jpg"
+    },
+    {
+      "brand_id": "88",
+      "brand_title": "Sexy",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/sexy_6tieOBYXp.png"
+    },
+    {
+      "brand_id": "89",
+      "brand_title": "Sagaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/sagaming_3lTI1C8VE.png"
+    },
+    {
+      "brand_id": "90",
+      "brand_title": "Microgaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/microgaming_mm5ILoG4V.png"
+    },
+    {
+      "brand_id": "91",
+      "brand_title": "Habanero",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/habanero_TzgioUNJE.svg"
+    },
+    {
+      "brand_id": "92",
+      "brand_title": "YGRGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/ygrgaming_TbLfUpZzc.jpg"
+    },
+    {
+      "brand_id": "93",
+      "brand_title": "KoolBet",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/koolbet_GfoRDo30w.jpg"
+    },
+    {
+      "brand_id": "94",
+      "brand_title": "DpEsports",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/dpesports_oL4ejT2g1.png"
+    },
+    {
+      "brand_id": "95",
+      "brand_title": "DpSports",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/dpsports_6EVgDlxnv.png"
+    },
+    {
+      "brand_id": "96",
+      "brand_title": "3Oaks (BNG)",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1776591924-favicon_X7wqKmKFQ.ico"
+    },
+    {
+      "brand_id": "97",
+      "brand_title": "Hacksaw Asia",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/hacksaw-asia_oCM4030vb.png"
+    },
+    {
+      "brand_id": "98",
+      "brand_title": "Hacksaw Latam",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/hacksaw-latam_vKVa1IAKd.png"
+    },
+    {
+      "brand_id": "99",
+      "brand_title": "Hacksaw World",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/hacksaw-world_DzjKeVGna.png"
+    },
+    {
+      "brand_id": "100",
+      "brand_title": "Turbogames Asia",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/turbogames-asia_x-LY05KTt.png"
+    },
+    {
+      "brand_id": "101",
+      "brand_title": "Turbogames World",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/turbogames-world_hhq2EG8ZD.png"
+    },
+    {
+      "brand_id": "102",
+      "brand_title": "OneGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/onegaming_US8ajzcPi.png"
+    },
+    {
+      "brand_id": "103",
+      "brand_title": "5gGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/5ggaming_tTaDa1S0F.png"
+    },
+    {
+      "brand_id": "104",
+      "brand_title": "Mini",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/mini_pVhCJw440.png"
+    },
+    {
+      "brand_id": "105",
+      "brand_title": "2J",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_105_1759755216_d8ysyB9Bd.png"
+    },
+    {
+      "brand_id": "106",
+      "brand_title": "EpicWin",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/epicwin_cHPP34SvY.png"
+    },
+    {
+      "brand_id": "107",
+      "brand_title": "Smartsoft",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/smartsoft_pqTVVLSgg.png"
+    },
+    {
+      "brand_id": "108",
+      "brand_title": "Wonwon",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_108_1759755400_NoNC975dE.PNG"
+    },
+    {
+      "brand_id": "109",
+      "brand_title": "BtGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/btgaming_4Sg3NMWJ-.png"
+    },
+    {
+      "brand_id": "110",
+      "brand_title": "Pix",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/pix_Sk-nLiaKt.png"
+    },
+    {
+      "brand_id": "111",
+      "brand_title": "Galaxsys",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_111_1759755586_QYQ6oiwvw.png"
+    },
+    {
+      "brand_id": "112",
+      "brand_title": "InOut",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/inout_L95ybT6Vl.svg"
+    },
+    {
+      "brand_id": "113",
+      "brand_title": "V8 CARD",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_113_1759757270_KyAOcxq5j.webp"
+    },
+    {
+      "brand_id": "114",
+      "brand_title": "WM CASINO",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759580526-wm-casino_gfuzIsjHR.png"
+    },
+    {
+      "brand_id": "117",
+      "brand_title": "EazyGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759584633-headerLogo_ovoTgi_ge.png"
+    },
+    {
+      "brand_id": "118",
+      "brand_title": "BtiGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759690799-images_A5pMrF4oS.png"
+    },
+    {
+      "brand_id": "119",
+      "brand_title": "King Midas",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759745485-kingmidas_hnP8rc8ZJ.png"
+    },
+    {
+      "brand_id": "120",
+      "brand_title": "King Midas - One Gaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759746283-kingmidas_Oqu0zjno0.png"
+    },
+    {
+      "brand_id": "121",
+      "brand_title": "OnGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_121_1759746876_jnFiPaUL5b.png"
+    },
+    {
+      "brand_id": "122",
+      "brand_title": "AOG",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/brand_122_1759749392_NEAf74Igf.png"
+    },
+    {
+      "brand_id": "123",
+      "brand_title": "PgsGaming",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759749692-bc55-game-brand-logo-pegasus_8ltp7Dy3l.png"
+    },
+    {
+      "brand_id": "124",
+      "brand_title": "Expanse",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759755996-vvcvcv_ffim_MyzU.PNG"
+    },
+    {
+      "brand_id": "125",
+      "brand_title": "FAST SPIN",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759756425-sdsdds__z5wLkmya.PNG"
+    },
+    {
+      "brand_id": "126",
+      "brand_title": "SBO",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1759756460-scxxc_oxD99dBJS6.PNG"
+    },
+    {
+      "brand_id": "128",
+      "brand_title": "Askmeslot",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770665380-askmeslot_logo_-OY4t2_NYB.webp"
+    },
+    {
+      "brand_id": "129",
+      "brand_title": "Vplus",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770666052-vpus__nilYIAg6B.png"
+    },
+    {
+      "brand_id": "130",
+      "brand_title": "Casini",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770666456-casini-black-text-logo.cde821af64f85d0da29386a6985e2a8f_-mnrWVgfL.svg"
+    },
+    {
+      "brand_id": "131",
+      "brand_title": "100HP",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770666578-100HPWHITE-removebg-preview_hJt231z9y.webp"
+    },
+    {
+      "brand_id": "132",
+      "brand_title": "MT GAMING",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770666928-t_zsSn-g7oM.png"
+    },
+    {
+      "brand_id": "133",
+      "brand_title": "KA",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667025-Screenshot_2026-02-10_012653_MHJo17sYY.png"
+    },
+    {
+      "brand_id": "134",
+      "brand_title": "Casino Game (CG)",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667178-logo-cg-game_tLSGmLofX.png"
+    },
+    {
+      "brand_id": "135",
+      "brand_title": "Crowdplay",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667442-clow_pau_wHSEuDeuk.png"
+    },
+    {
+      "brand_id": "136",
+      "brand_title": "RubyPlay",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667786-rubyplay_logo_01_colour_alt_YQ9e9e-zP.webp"
+    },
+    {
+      "brand_id": "137",
+      "brand_title": "Amigo",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770667934-logo_i_pIoQF60.svg"
+    },
+    {
+      "brand_id": "138",
+      "brand_title": "ATM",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1770668042-logo__11__hGN9bryFr.png"
+    },
+    {
+      "brand_id": "139",
+      "brand_title": "Aviatrix",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1773393816-aviatrix-1_1__jkxRgnYAr.png"
+    },
+    {
+      "brand_id": "140",
+      "brand_title": "MAC 88",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1773760761-images_VsVsANb4k.png"
+    },
+    {
+      "brand_id": "141",
+      "brand_title": "9wickets",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1774284124-9wicketslogo_1__nHSY_O0YU.webp"
+    },
+    {
+      "brand_id": "142",
+      "brand_title": "CMD",
+      "logo": "https://ik.imagekit.io/f4rqxekfu/brands/1774286045-C_001__CMD_HGxx3eznn.png"
+    }
+  ]
 }

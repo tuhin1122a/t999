@@ -60,7 +60,7 @@ export const useGames = create<GameType>((set, get) => ({
       if (name) {
         const searchLower = name.toLowerCase();
         providerGames = providerGames.filter((game) =>
-          game.name.toLowerCase().includes(searchLower)
+          !!game?.name && typeof game.name === "string" && game.name.toLowerCase().includes(searchLower)
         );
         console.log(`Provider games filtered by search ${name}: ${providerGames.length}`);
       }
@@ -99,7 +99,7 @@ export const useGames = create<GameType>((set, get) => ({
     if (name) {
       const searchLower = name.toLowerCase();
       const searchFiltered = flitedGames.filter((game) =>
-        game.name.toLowerCase().includes(searchLower)
+        !!game?.name && typeof game.name === "string" && game.name.toLowerCase().includes(searchLower)
       );
       console.log(`Games filtered by search ${name}: ${searchFiltered.length}`);
       flitedGames = searchFiltered;
@@ -118,24 +118,8 @@ export const useGames = create<GameType>((set, get) => ({
     const allGamesArrays = Object.values(games).flat();
     let flitedGames: any;
     if (category == "hot") {
-      const gamesId = [
-        "8892",
-        "8891",
-        "8890",
-        "15808",
-        "15814",
-        "15815",
-        "15813",
-        "15810",
-        "15809",
-        "15065",
-        "15056",
-        "15812",
-        "7053",
-        "10269",
-        "9896",
-      ];
-      flitedGames = allGamesArrays.filter((game) => gamesId.includes(game.id));
+      const shuffledGames = [...allGamesArrays].sort(() => Math.random() - 0.5);
+      flitedGames = shuffledGames.slice(0, 30);
     }
 
     if (search) {
@@ -143,6 +127,9 @@ export const useGames = create<GameType>((set, get) => ({
       flitedGames = flitedGames.filter((game: any) =>
         game.name.toLowerCase().includes(searchLower)
       );
+      if (flitedGames.length > 30) {
+        flitedGames = flitedGames.slice(0, 30);
+      }
     }
     return flitedGames;
   },
