@@ -1,7 +1,6 @@
 import { findCurrentUser } from "@/data/user";
 import { NextResponse } from "next/server";
-import { getAvailablePaymentSystems } from "@/lib/api/durantoPayApi";
-import { getPaymentMethodImage, getPaymentMethodLabel } from "@/lib/utils/paymentMethodUtils";
+import { db } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -10,25 +9,27 @@ export async function GET() {
       return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
     }
 
-    // Get available payment systems from DurantoPay
-    const paymentSystemsResponse = await getAvailablePaymentSystems();
-    
-    if (!paymentSystemsResponse.status) {
-      return NextResponse.json({ error: "Failed to fetch payment methods" }, { status: 500 });
-    }
+    // Get available payment systems from database, filtering out DurantoPay
+    const paymentWallets = await db.paymentWallet.findMany({
+      where: {
+        NOT: {
+          walletName: {
+            equals: "DurantoPay",
+            mode: "insensitive"
+          }
+        }
+      }
+    });
 
-    // Transform the response to match the existing format
-    // The DurantoPay API returns an array of payment method names
-    const paymentMethods = paymentSystemsResponse.data || [];
-    const wallets = paymentMethods.map((method: string) => {
+    const wallets = paymentWallets.map((wallet) => {
       return {
-        id: method,
-        name: method,
-        image: getPaymentMethodImage(method),
-        label: getPaymentMethodLabel(method),
-        min_withdrawals: 100, // Default values, should be configurable
-        max_withdrawals: 50000, // Default values, should be configurable
-        instructions: `Please use your ${method} account to receive the payment`,
+        id: wallet.id,
+        name: wallet.walletName,
+        image: wallet.walletLogo,
+        label: wallet.walletName,
+        min_withdrawals: 100, // Default values
+        max_withdrawals: 50000, // Default values
+        instructions: `Please use your ${wallet.walletName} account to receive the payment`,
         warning: `Make sure to use an account registered under your name`,
         isActive: true,
       };
@@ -43,4 +44,4 @@ export async function GET() {
     console.error("Withdraw payment methods error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+}

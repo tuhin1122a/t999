@@ -18,6 +18,15 @@ export const findUserByReferId = async (referId: string) => {
 };
 
 export const findCurrentUser = async () => {
+  if (process.env.NODE_ENV !== "production" && process.env.MOCK_USER_ID) {
+    const mockUser = await db.user.findUnique({
+      where: { id: process.env.MOCK_USER_ID },
+      include: { wallet: true }
+    });
+    if (mockUser) {
+      return mockUser;
+    }
+  }
   const session = await auth();
   
   // Ensure we return a proper user object with ID

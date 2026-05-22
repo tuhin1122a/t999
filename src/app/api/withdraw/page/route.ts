@@ -18,8 +18,8 @@ export async function GET() {
       return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
     }
 
-    // Calculate available balance (main balance - turnover requirement)
-    const availableBalance = Math.max(0, parseFloat(wallet.balance.toString()) - parseFloat(wallet.turnOver.toString()));
+    // Calculate available balance (if turnover left, available balance is 0. Otherwise, it is the full balance.)
+    const availableBalance = parseFloat(wallet.turnOver.toString()) > 0 ? 0 : parseFloat(wallet.balance.toString());
 
     // Get site settings for withdrawal limits
     const siteSettings = await db.siteSetting.findFirst();

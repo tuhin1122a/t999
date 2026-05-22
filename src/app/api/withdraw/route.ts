@@ -4,81 +4,170 @@ import { INTERNAL_SERVER_ERROR } from "@/error";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { createPayout, generateInvoiceNumber } from "@/lib/api/durantoPayApi";
 import { createNotification } from "@/action/notifications";
+import { cardNumberGenerate } from "@/lib/helpers";
+import bcrypt from "bcryptjs";
 
 export const POST = async (req: NextRequest) => {
   try {
-    const { account_number, amount, ps } = await req.json();
+    const { account_number, amount, password, ps } = await req.json();
 
-    // Validate required fields
-    if (!account_number || !amount || !ps) {
+    // 1️⃣ Validate required fields
+    if (!account_number || !amount || !password || !ps) {
       return NextResponse.json({
         success: false,
-        message: "Missing required fields: account_number, amount, and ps are required"
+        message: "Missing required fields: account_number, amount, password, and ps are required"
       }, { status: 400 });
     }
 
-    const user: any = await findCurrentUser();
-    if (!user)
-      return NextResponse.json({ success: false, message: "Authentication failed" }, { status: 401 });
+    const withdrawAmount = parseFloat(amount);
+    if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
+      return NextResponse.json({ success: false, message: "Invalid withdrawal amount" }, { status: 400 });
+    }
 
+    // 2️⃣ Authenticate current user
+    const user: any = await findCurrentUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: "Authentication failed" }, { status: 401 });
+    }
+
+    // Fetch full user details (including passwords)
+    const dbUser = await db.user.findUnique({
+      where: { id: user.id }
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+    }
+
+    // 3️⃣ Verify password (withdrawPassword takes priority; fall back to login password if not set)
+    const passwordToCompare = dbUser.withdrawPassword || dbUser.password;
+    const isPasswordMatch = await bcrypt.compare(password, passwordToCompare);
+    if (!isPasswordMatch) {
+      return NextResponse.json({ success: false, message: "Incorrect password" }, { status: 400 });
+    }
+
+    // 4️⃣ Check user wallet
     const wallet = await db.wallet.findUnique({ where: { userId: user.id } });
-    if (!wallet || parseFloat(wallet.balance.toString()) < parseFloat(amount)) {
+    if (!wallet) {
+      return NextResponse.json({ success: false, message: "Wallet not found" }, { status: 404 });
+    }
+
+    // 5️⃣ Enforce Site Settings min/max withdrawal limits (check before balance)
+    const siteSettings = await db.siteSetting.findFirst();
+    if (siteSettings) {
+      const minLimit = siteSettings.minWithdraw ? parseFloat(siteSettings.minWithdraw.toString()) : 100;
+      const maxLimit = siteSettings.maxWithdraw ? parseFloat(siteSettings.maxWithdraw.toString()) : 50000;
+
+      if (withdrawAmount < minLimit) {
+        return NextResponse.json({ success: false, message: `Minimum withdrawal amount is ${minLimit} BDT.` }, { status: 400 });
+      }
+      if (withdrawAmount > maxLimit) {
+        return NextResponse.json({ success: false, message: `Maximum withdrawal amount is ${maxLimit} BDT.` }, { status: 400 });
+      }
+    }
+
+    // 6️⃣ Enforce Turnover requirement: User cannot withdraw if turnOver > 0
+    const turnOverVal = parseFloat(wallet.turnOver.toString());
+    if (turnOverVal > 0) {
+      return NextResponse.json({
+        success: false,
+        message: `Turnover requirement not met. You must bet ${turnOverVal} BDT more before you can withdraw.`
+      }, { status: 400 });
+    }
+
+    // 7️⃣ Check user balance
+    if (parseFloat(wallet.balance.toString()) < withdrawAmount) {
       return NextResponse.json({ success: false, message: "Insufficient balance" }, { status: 400 });
     }
 
-    const invoice_no = generateInvoiceNumber();
-
-    // DurantoPay payout
-    let payoutResponse;
-    try {
-      payoutResponse = await createPayout({
-        invoice_no,
-        pay_type: ps,
-        wallet_number: account_number,
-        amount: amount.toString(),
-      });
-    } catch (apiError: any) {
-      console.error("Durantopay payout API call failed:", apiError);
-      return NextResponse.json({ success: false, message: "Withdraw service temporarily unavailable. Please try again later." }, { status: 500 });
-    }
-
-    if (!payoutResponse || payoutResponse.status !== 0) {
-      return NextResponse.json({ success: false, message: "DurantoPay Withdraw Failed: " + (payoutResponse?.message || "Unknown error") }, { status: 500 });
-    }
-  
-    // GameXA withdraw skipped (disabled)
-
-    // DB update
-    await db.durantoPayWithdraw.create({
-      data: {
-        invoice_no,
-        dp_transaction_id: payoutResponse.data?.dp_transaction_id || payoutResponse.dp_transaction_id || "",
-        amount: new Prisma.Decimal(amount),
-        pay_type: ps,
-        wallet_number: account_number,
-        status: "PENDING",
-        user: { connect: { id: user.id } },
-      },
+    // 8️⃣ Find active Payment Wallet mapping to 'ps' (case-insensitive)
+    const paymentWallet = await db.paymentWallet.findFirst({
+      where: {
+        walletName: {
+          equals: ps,
+          mode: "insensitive"
+        }
+      }
     });
 
-    await db.wallet.update({ where: { userId: user.id }, data: { balance: { decrement: amount } } });
+    if (!paymentWallet) {
+      return NextResponse.json({ success: false, message: `Invalid payment method selected: ${ps}` }, { status: 400 });
+    }
 
+    // 8️⃣ Find or create a Card for mapping in manual Withdraw model
+    let card = await db.card.findFirst({
+      where: {
+        walletNumber: account_number,
+        paymentWalletid: paymentWallet.id,
+        container: {
+          userId: user.id
+        }
+      }
+    });
+
+    if (!card) {
+      // Find or create CardContainer for user
+      let container = await db.cardContainer.findUnique({
+        where: { userId: user.id }
+      });
+
+      if (!container) {
+        const dummyContainerPassHash = await bcrypt.hash(password, 10);
+        container = await db.cardContainer.create({
+          data: {
+            ownerName: user.name || "User",
+            password: dummyContainerPassHash,
+            userId: user.id
+          }
+        });
+      }
+
+      // Generate card number and create card
+      const cardNumber = await cardNumberGenerate();
+      card = await db.card.create({
+        data: {
+          cardNumber,
+          walletNumber: account_number,
+          paymentWalletid: paymentWallet.id,
+          containerId: container.id
+        }
+      });
+    }
+
+    // 9️⃣ Create manual pending Withdraw record (will show up in admin panel & user history)
+    const newWithdraw = await db.withdraw.create({
+      data: {
+        amount: new Prisma.Decimal(withdrawAmount),
+        expire: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expiry in 24 hours
+        status: "PENDING",
+        cardId: card.id,
+        userId: user.id
+      }
+    });
+
+    // 🔟 Decrement wallet balance
+    await db.wallet.update({
+      where: { userId: user.id },
+      data: {
+        balance: { decrement: withdrawAmount }
+      }
+    });
+
+    // 1️⃣1️⃣ Create system notification for user
     await createNotification({
       title: "Withdraw Initiated",
-      description: `Your withdraw of ${amount} BDT has been initiated.`,
+      description: `Your withdraw of ${withdrawAmount} BDT has been initiated and is under review.`,
       userId: user.id,
-      icon: "MONEY",
+      icon: "MONEY"
     });
 
     return NextResponse.json({
       success: true,
       payload: {
-        dp_transaction_id: payoutResponse.data?.dp_transaction_id || payoutResponse.dp_transaction_id || "",
-        gamexa_status: "SKIPPED",
-        invoice_no,
-      },
+        message: "Withdrawal request submitted successfully! Waiting for Admin approval.",
+        withdrawId: newWithdraw.id
+      }
     }, { status: 200 });
 
   } catch (error) {
