@@ -1,92 +1,175 @@
 "use client";
-
-import React, { useState, useEffect } from "react";
 import AppHeader from "@/components/AppHeader";
-import { GameCardWithProvider } from "@/components/GameCards";
-import { useGames } from "@/lib/store.zustond";
-import { Categories, Title, NetEnt } from "@/types/game";
+import { useEffect, useRef, useState } from "react";
+
 import PrimaryInput from "@/components/form/input";
+import { GameCardWithProvider } from "@/components/GameCards";
 import GameLoader from "@/components/loader/GameLoader";
 import SideNavLayout from "@/components/SideNavLayout";
+import TabLayout from "@/components/TabLayout";
+import { useGames } from "@/lib/store.zustond";
+import { Categories } from "@/types/game";
+import FilterProivder from "@/components/FilterProvider";
+import Link from "next/link";
+import { MdFavorite } from "react-icons/md";
+import { ClipLoader } from "react-spinners";
 
 const FishPage = () => {
-  const [search, setSearch] = useState("");
-  const [gamesList, setGamesList] = useState<NetEnt[]>([]); // ✅ TypeScript safe
-  const [loading, setLoading] = useState(true);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  const { getGames } = useGames((state) => state);
+  const [search, setSearch] = useState<string>();
+  const [provider, setProvider] = useState<string>("all");
+  const [limit, setLimit] = useState(30);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
 
-  // Async fetch + fallback
+  const loadedProvidersRef = useRef<Set<string>>(new Set());
+  const pendingProvidersRef = useRef<Set<string>>(new Set());
+
+  const { getGames, setProviderGames, setProviderLoading } = useGames((state) => state);
+  const gamesList = getGames(Categories.Fish, search, limit, provider);
+
+  const hasIntersectedOnce = useRef(false);
   useEffect(() => {
-    const fetchGames = async () => {
-      setLoading(true);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
 
-      // Try to get fishing games first
-      const fishingGames = await getGames("fishing", search, 200);
-      console.log("Fishing games found:", fishingGames?.length || 0);
-      
-      if (fishingGames && fishingGames.length > 0) {
-        setGamesList(fishingGames);
-      } else {
-        // Fallback to other categories
-        const fallbackCategories = ["arcade", "fish_game"];
-        let list: NetEnt[] = [];
-
-        for (const category of fallbackCategories) {
-          const result = await getGames(category, search, 200);
-          console.log(`Fallback category ${category} games found:`, result?.length || 0);
-          if (result && result.length > 0) {
-            list = result;
-            break;
-          }
+        if (entry.isIntersecting && !hasIntersectedOnce.current) {
+          setLimit((limit) => limit + 9);
+          hasIntersectedOnce.current = true;
         }
-        
-        setGamesList(list);
+
+        // Reset the flag when the loader goes out of view
+        if (!entry.isIntersecting) {
+          hasIntersectedOnce.current = false;
+        }
+      },
+      {
+        root: null,
+        rootMargin: "0px",
+        threshold: 0.1,
       }
+    );
 
-      setLoading(false);
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
     };
+  }, []);
 
-    fetchGames();
-  }, [search, getGames]);
+  const handleProviderChange = async (providerId: string) => {
+    if (providerId === provider) {
+      return;
+    }
+
+    setIsFilterLoading(true);
+    setProvider(providerId);
+
+    if (providerId === "all") {
+      setIsFilterLoading(false);
+      return;
+    }
+
+    if (loadedProvidersRef.current.has(providerId)) {
+      setIsFilterLoading(false);
+      return;
+    }
+
+    if (pendingProvidersRef.current.has(providerId)) {
+      setIsFilterLoading(false);
+      return;
+    }
+
+    pendingProvidersRef.current.add(providerId);
+
+    try {
+      setProviderLoading(true);
+      console.log(`Fetching provider ${providerId} from local SoftAPI cache`);
+      const res = await fetch(`/api/softapi/games?brand_id=${providerId}`);
+      if (!res.ok) throw new Error("SoftAPI response not OK");
+      const response = await res.json();
+
+      if (response.success && Array.isArray(response.games)) {
+        setProviderGames(providerId, response.games);
+        loadedProvidersRef.current.add(providerId);
+      } else {
+        setProviderGames(providerId, []);
+      }
+    } catch (error) {
+      console.error("Error fetching games by provider from SoftAPI:", error);
+      setProviderGames(providerId, []);
+    } finally {
+      pendingProvidersRef.current.delete(providerId);
+      setProviderLoading(false);
+      setIsFilterLoading(false);
+    }
+  };
 
   return (
     <SideNavLayout>
-      <div>
-        <AppHeader title="Fish Games" />
-        <main className="py-5 px-2 bg-[#003e3e] min-h-screen">
-          {/* Search Input */}
-          <div className="flex items-center mb-4">
-            <PrimaryInput
-              value={search}
-              type="search"
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search Fish Games"
-              className="w-full"
-            />
-          </div>
+      <TabLayout>
+        <div>
+          <AppHeader title="Fish Games" />
+          <main className="py-5 px-2 bg-[#003e3e] pb-24 md:pb-5 min-h-screen">
+            <FilterProivder onSelect={handleProviderChange} category="fishing" />
+            <div className="flex items-center gap-2">
+              <PrimaryInput
+                placeholder="Search Games"
+                className="mb-2"
+                onChange={(e) => setSearch(e.target.value)}
+                value={search}
+              />
+              <Link
+                href="/favorites"
+                title="favorites"
+                className="bg-wwwwwwck-44-4comdaintree -mt-2 rounded-[10.4px] overflow-hidden border border-solid border-[#006165] shadow-[0px_2.08px_0px_#002631] p-3"
+              >
+                <MdFavorite className="w-5 h-5 text-[#23ffc8]" />
+              </Link>
+            </div>
 
-          {/* Games Grid */}
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4">
-            {loading ? (
-              <GameLoader length={20} loading={loading} />
-            ) : gamesList.length > 0 ? (
-              gamesList.map((game, i) => (
-                <GameCardWithProvider game={game} key={i} />
-              ))
-            ) : null}
-          </div>
+            {isFilterLoading ? (
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2">
+                <GameLoader length={15} loading={true} />
+              </div>
+            ) : (
+              <>
+                <div key={provider} className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2 provider-list-appear">
+                  {gamesList &&
+                    gamesList.map((game, i) => (
+                      <GameCardWithProvider game={game} index={i} key={game.id || i} />
+                    ))}
 
-          {/* No Result */}
-          {!loading && gamesList.length === 0 && (
-            <span className="block text-center text-lg font-semibold text-[#23FFC8] mt-5">
-              Not Found
-            </span>
-          )}
-        </main>
-      </div>
+                  {!gamesList && <GameLoader length={15} loading={true} />}
+                </div>
+
+                <div
+                  ref={loaderRef}
+                  className="my-5 flex items-center justify-center"
+                >
+                  {gamesList && gamesList.length >= limit - 1 && (
+                    <ClipLoader color="#FFB800" size={25} />
+                  )}
+                </div>
+
+                {gamesList && gamesList.length === 0 && (
+                  <span className="block text-center text-lg font-semibold text-[#23FFC8] mt-5">
+                    Not Found
+                  </span>
+                )}
+              </>
+            )}
+          </main>
+        </div>
+      </TabLayout>
     </SideNavLayout>
   );
 };
 
 export default FishPage;
+

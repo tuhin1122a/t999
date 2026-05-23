@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useRef } from "react";
 import GameSelectionHeader from "./GameSelectionHeader";
+import { GameCardWithProvider } from "./GameCards";
+import { useGames } from "@/lib/store.zustond";
+import { Categories } from "@/types/game";
+import GameLoader from "./loader/GameLoader";
 
 export const sportsData = [
   {
@@ -31,6 +35,9 @@ const Sports = () => {
     gamesContainer.current!.scrollLeft += 130;
   };
 
+  const { getGames } = useGames((state) => state);
+  const gamesList = getGames(Categories.Sport, undefined, 20);
+
   return (
     <div
       className="my-4"
@@ -42,16 +49,19 @@ const Sports = () => {
         title="Sports Games"
         leftAction={handleLeftButtonClick}
         rightAction={handleRightButtonClick}
-        seeMoreLink="/live-sports"
+        seeMoreLink="/sports"
       />
       <div
         className="max-w-full w-full overflow-x-auto scrollbar-none scroll-smooth"
         ref={gamesContainer}
       >
         <div className="hot-games-list">
-          {sportsData.map((s, i) => (
-            <SportsCard key={i} provider={s} />
-          ))}
+          {gamesList &&
+            gamesList.map((game, i) => (
+              <GameCardWithProvider key={i} game={game} />
+            ))}
+
+          <GameLoader length={20} loading={!!!gamesList} />
         </div>
       </div>
     </div>
@@ -61,18 +71,15 @@ const Sports = () => {
 export default Sports;
 
 export const SportsCard = ({
-  provider,
+  image,
+  redirect,
 }: {
-  provider: {
-    providerId: string;
-    image: string;
-    title: string;
-    redirect: string;
-  };
+  image: string;
+  redirect: string;
 }) => {
   return (
-    <Link href={provider.redirect} className="block">
-      <img src={provider.image} alt={provider.title} className="max-w-full h-auto" />
+    <Link href={redirect} className="block">
+      <img src={image} alt="sport provider" className="max-w-full h-auto" />
     </Link>
   );
 };

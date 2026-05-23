@@ -120,7 +120,7 @@ const SlotPage = () => {
         <div>
           <AppHeader title="Slots" />
           <main className="py-5 px-2 bg-[#003e3e] pb-24 md:pb-5">
-            <FilterProivder onSelect={handleProviderChange} />
+            <FilterProivder onSelect={handleProviderChange} category="slots" />
             <div className="flex items-center gap-2">
               <PrimaryInput
                 placeholder="Search Games"

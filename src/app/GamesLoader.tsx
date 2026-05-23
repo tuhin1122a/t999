@@ -23,7 +23,10 @@ const GamesLoader = () => {
     const getSoftGames = async () => {
       try {
         console.log("Fetching SoftAPI popular games...");
-        const popularBrands = ["49", "45", "58", "67", "51", "53", "52", "65"];
+        const popularBrands = [
+          "49", "45", "58", "67", "51", "53", "52", "65",
+          "46", "48", "83", "85", "94", "95", "118", "126", "141", "142"
+        ];
 
         const results = await Promise.all(
           popularBrands.map(async (brandId) => {

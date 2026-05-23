@@ -49,13 +49,27 @@ export const useGames = create<GameType>((set, get) => ({
 
   getGames: (category, name, limit, provider) => {
     const state = get();
-    const games = state.games!;
+    const games = state.games;
     
     // If provider games are available and a provider is selected, use them
     if (provider && provider !== "all" && state.providerGames && state.providerGames[provider]) {
       console.log(`Using provider-specific games for ${provider}`);
       let providerGames = state.providerGames[provider];
       
+      // Apply category filter if provided
+      if (category) {
+        providerGames = providerGames.filter((game) => {
+          if (category === Categories.Slots) {
+            return (
+              game.categories === category ||
+              game.categories == Categories.FastGames
+            );
+          } else {
+            return game.categories === category;
+          }
+        });
+      }
+
       // Apply search filter if provided
       if (name) {
         const searchLower = name.toLowerCase();
@@ -73,8 +87,29 @@ export const useGames = create<GameType>((set, get) => ({
       return providerGames;
     }
     
-    if (!games) return null;
-    const allGamesArrays = Object.values(games).flat();
+    const seen = new Set<string>();
+    const allGamesArrays: NetEnt[] = [];
+    
+    const addGames = (list: NetEnt[]) => {
+      for (const game of list) {
+        if (game && game.id) {
+          if (!seen.has(game.id)) {
+            seen.add(game.id);
+            allGamesArrays.push(game);
+          }
+        }
+      }
+    };
+
+    if (games) {
+      addGames(Object.values(games).flat());
+    }
+    if (state.providerGames) {
+      addGames(Object.values(state.providerGames).flat());
+    }
+
+    if (allGamesArrays.length === 0 && !games) return null;
+
     console.log(`Getting games for category: ${category}, search: ${name}, provider: ${provider}`);
     console.log(`Total games available: ${allGamesArrays.length}`);
 

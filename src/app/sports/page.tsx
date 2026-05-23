@@ -1,188 +1,182 @@
 "use client";
 import AppHeader from "@/components/AppHeader";
+import { useEffect, useRef, useState } from "react";
+
 import PrimaryInput from "@/components/form/input";
 import { GameCardWithProvider } from "@/components/GameCards";
+import GameLoader from "@/components/loader/GameLoader";
 import SideNavLayout from "@/components/SideNavLayout";
 import TabLayout from "@/components/TabLayout";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-
-const SPORTS_PROVIDERS = [
-  { brand_id: "83", title: "LuckySport" },
-  { brand_id: "141", title: "9wickets" },
-];
+import { useGames } from "@/lib/store.zustond";
+import { Categories } from "@/types/game";
+import FilterProivder from "@/components/FilterProvider";
+import Link from "next/link";
+import { MdFavorite } from "react-icons/md";
+import { ClipLoader } from "react-spinners";
 
 const Sports = () => {
-  const searchParams = useSearchParams();
-  const providerId = searchParams.get("providerId");
-  const [search, setSearch] = useState("");
-  const [providerGames, setProviderGames] = useState<any[]>([]);
-  const [providerTitle, setProviderTitle] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [sportsGames, setSportsGames] = useState<any[]>([]);
-  const [isSportsLoading, setIsSportsLoading] = useState(false);
-  const [sportsError, setSportsError] = useState<string | null>(null);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  const filteredGames = useMemo(() => {
-    const gamesToFilter = providerId ? providerGames : sportsGames;
-    if (!gamesToFilter || gamesToFilter.length === 0) return [];
-    if (!search.trim()) return gamesToFilter;
-    const query = search.toLowerCase();
-    return gamesToFilter.filter((game) =>
-      game.name?.toLowerCase().includes(query)
-    );
-  }, [providerId, providerGames, sportsGames, search]);
+  const [search, setSearch] = useState<string>();
+  const [provider, setProvider] = useState<string>("all");
+  const [limit, setLimit] = useState(30);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
 
+  const loadedProvidersRef = useRef<Set<string>>(new Set());
+  const pendingProvidersRef = useRef<Set<string>>(new Set());
+
+  const { getGames, setProviderGames, setProviderLoading } = useGames((state) => state);
+  const gamesList = getGames(Categories.Sport, search, limit, provider);
+
+  const hasIntersectedOnce = useRef(false);
   useEffect(() => {
-    if (!providerId) {
-      setProviderGames([]);
-      setProviderTitle(null);
-      setError(null);
-      return;
-    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
 
-    const fetchProviderGames = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/softapi/games?brand_id=${providerId}`);
-        const data = await response.json();
-        console.log("Sports page provider API response:", { providerId, data });
-        if (Array.isArray(data.games)) {
-          setProviderGames(data.games);
-        } else {
-          setProviderGames([]);
+        if (entry.isIntersecting && !hasIntersectedOnce.current) {
+          setLimit((limit) => limit + 9);
+          hasIntersectedOnce.current = true;
         }
-        setProviderTitle(data.provider_title || `Provider ${providerId}`);
-      } catch (err) {
-        console.error("Failed to fetch provider games:", err);
-        setError("Unable to load provider games.");
-        setProviderGames([]);
-      } finally {
-        setIsLoading(false);
+
+        // Reset the flag when the loader goes out of view
+        if (!entry.isIntersecting) {
+          hasIntersectedOnce.current = false;
+        }
+      },
+      {
+        root: null,
+        rootMargin: "0px",
+        threshold: 0.1,
+      }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
       }
     };
+  }, []);
 
-    fetchProviderGames();
-  }, [providerId]);
-
-  useEffect(() => {
-    if (providerId) {
+  const handleProviderChange = async (providerId: string) => {
+    if (providerId === provider) {
       return;
     }
 
-    const fetchSportsGames = async () => {
-      setIsSportsLoading(true);
-      setSportsError(null);
-      try {
-        const results = await Promise.all(
-          SPORTS_PROVIDERS.map(async (provider) => {
-            const response = await fetch(
-              `/api/softapi/games?brand_id=${provider.brand_id}&category=sport`
-            );
-            if (!response.ok) {
-              return [];
-            }
-            const data = await response.json();
-            return Array.isArray(data.games) ? data.games : [];
-          })
-        );
+    setIsFilterLoading(true);
+    setProvider(providerId);
 
-        const allSportsGames = results.flat();
-        setSportsGames(allSportsGames);
-      } catch (err) {
-        console.error("Failed to fetch sports games:", err);
-        setSportsError("Unable to load sports games.");
-        setSportsGames([]);
-      } finally {
-        setIsSportsLoading(false);
+    if (providerId === "all") {
+      setIsFilterLoading(false);
+      return;
+    }
+
+    if (loadedProvidersRef.current.has(providerId)) {
+      setIsFilterLoading(false);
+      return;
+    }
+
+    if (pendingProvidersRef.current.has(providerId)) {
+      setIsFilterLoading(false);
+      return;
+    }
+
+    const state = useGames.getState();
+    if (state.providerGames[providerId] !== undefined) {
+      loadedProvidersRef.current.add(providerId);
+      setIsFilterLoading(false);
+      return;
+    }
+
+    pendingProvidersRef.current.add(providerId);
+
+    try {
+      setProviderLoading(true);
+      console.log(`Fetching provider ${providerId} from local SoftAPI cache`);
+      const res = await fetch(`/api/softapi/games?brand_id=${providerId}`);
+      if (!res.ok) throw new Error("SoftAPI response not OK");
+      const response = await res.json();
+
+      if (response.success && Array.isArray(response.games)) {
+        setProviderGames(providerId, response.games);
+        loadedProvidersRef.current.add(providerId);
+      } else {
+        setProviderGames(providerId, []);
       }
-    };
-
-    fetchSportsGames();
-  }, [providerId]);
+    } catch (error) {
+      console.error("Error fetching games by provider from SoftAPI:", error);
+      setProviderGames(providerId, []);
+    } finally {
+      pendingProvidersRef.current.delete(providerId);
+      setProviderLoading(false);
+      setIsFilterLoading(false);
+    }
+  };
 
   return (
     <SideNavLayout>
       <TabLayout>
-        <AppHeader title="Sports" />
-        <main className="bg-[#003e3e] min-h-screen px-4 py-6">
-          {!providerId ? (
-            <div className="max-w-6xl mx-auto">
-
-              <div className="mb-4">
-                <PrimaryInput
-                  placeholder="Search sports games"
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
-              {isSportsLoading ? (
-                <div className="text-white">Loading sports games...</div>
-              ) : sportsError ? (
-                <div className="text-red-400">{sportsError}</div>
-              ) : filteredGames.length === 0 ? (
-                <div className="text-gray-300">No sports games available right now.</div>
-              ) : (
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2 provider-list-appear">
-                  {filteredGames.map((game, index) => (
-                    <GameCardWithProvider
-                      key={game.id || index}
-                      game={game}
-                      index={index}
-                    />
-                  ))}
-                </div>
-              )}
+        <div>
+          <AppHeader title="Sports" />
+          <main className="py-5 px-2 bg-[#003e3e] pb-24 md:pb-5 min-h-screen">
+            <FilterProivder onSelect={handleProviderChange} category="sport" />
+            <div className="flex items-center gap-2">
+              <PrimaryInput
+                placeholder="Search Games"
+                className="mb-2"
+                onChange={(e) => setSearch(e.target.value)}
+                value={search}
+              />
+              <Link
+                href="/favorites"
+                title="favorites"
+                className="bg-wwwwwwck-44-4comdaintree -mt-2 rounded-[10.4px] overflow-hidden border border-solid border-[#006165] shadow-[0px_2.08px_0px_#002631] p-3"
+              >
+                <MdFavorite className="w-5 h-5 text-[#23ffc8]" />
+              </Link>
             </div>
-          ) : (
-            <div className="max-w-6xl mx-auto">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white">
-                  {providerTitle || `Provider ${providerId}`} Games
-                </h2>
-                <p className="text-sm text-gray-300 mt-2">
-                  Showing games fetched from provider ID {providerId}.
-                </p>
-              </div>
 
-              <div className="mb-4">
-                <PrimaryInput
-                  placeholder="Search sports games"
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full"
-                />
+            {isFilterLoading ? (
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2">
+                <GameLoader length={15} loading={true} />
               </div>
+            ) : (
+              <>
+                <div key={provider} className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2 provider-list-appear">
+                  {gamesList &&
+                    gamesList.map((game, i) => (
+                      <GameCardWithProvider game={game} index={i} key={game.id || i} />
+                    ))}
 
-              {isLoading ? (
-                <div className="text-white">Loading games...</div>
-              ) : error ? (
-                <div className="text-red-400">{error}</div>
-              ) : filteredGames.length === 0 ? (
-                <div className="text-gray-300">No games found for this provider.</div>
-              ) : (
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2 provider-list-appear">
-                  {filteredGames.map((game, index) => (
-                    <GameCardWithProvider
-                      key={game.id || index}
-                      game={game}
-                      index={index}
-                    />
-                  ))}
+                  {(!gamesList || (gamesList.length === 0 && useGames((state) => state.isLoading))) && <GameLoader length={15} loading={true} />}
                 </div>
-              )}
-            </div>
-          )}
-        </main>
+
+                <div
+                  ref={loaderRef}
+                  className="my-5 flex items-center justify-center"
+                >
+                  {gamesList && gamesList.length >= limit - 1 && (
+                    <ClipLoader color="#FFB800" size={25} />
+                  )}
+                </div>
+
+                {gamesList && gamesList.length === 0 && !useGames((state) => state.isLoading) && (
+                  <span className="block text-center text-lg font-semibold text-[#23FFC8] mt-5">
+                    Not Found
+                  </span>
+                )}
+              </>
+            )}
+          </main>
+        </div>
       </TabLayout>
     </SideNavLayout>
   );
 };
 
 export default Sports;
+
