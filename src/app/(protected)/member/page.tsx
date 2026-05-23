@@ -9,8 +9,9 @@ import { useFetchWalletQuery } from "@/lib/features/walletApiSlice";
 import { getCurrencySymbol } from "@/lib/utils";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FaFileInvoiceDollar, FaGift } from "react-icons/fa";
-import { FaChartLine, FaCircleUser, FaCopy, FaCreditCard } from "react-icons/fa6";
+import { FaChartLine, FaCircleUser, FaCopy, FaCreditCard, FaArrowLeftLong } from "react-icons/fa6";
 import { FiCheck, FiDownload, FiRefreshCw } from "react-icons/fi";
 import { GiFishMonster } from "react-icons/gi";
 import { LuNotebookText } from "react-icons/lu";
@@ -32,6 +33,7 @@ const menuItems = [
 ];
 
 const App: React.FC = () => {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -76,122 +78,126 @@ const App: React.FC = () => {
   }, [showToast]);
 
   return (
-    <div className="relative overflow-hidden w-full min-h-screen px-3 py-3 text-white pb-20 md:pb-4 md:flex md:flex-col md:items-center bg-[#02080f]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.18),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(245,158,11,0.12),_transparent_20%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#0a1820] to-transparent" />
-      <div className="relative md:max-w-4xl md:w-full">
+    <div className="min-h-screen bg-[#003e3e] flex flex-col text-white pb-28">
+      {/* Premium Dark Theme Header */}
+      <header className="bg-[#002632] border-b border-[#006165] py-4 px-6 flex items-center justify-between sticky top-0 z-10 shadow-[rgba(0,38,49,0.3)_0px_2px_8px_0px]">
+        <button
+          onClick={() => router.back()}
+          className="text-gray-300 hover:text-white cursor-pointer transition-colors"
+        >
+          <FaArrowLeftLong className="text-xl" />
+        </button>
+        <h3 className="text-lg font-bold text-white tracking-wide">Member Center</h3>
+        <div className="w-6" /> {/* Placeholder to center the title */}
+      </header>
 
-        {/* Toast */}
+      <main className="w-full max-w-md mx-auto px-4 py-6 space-y-6">
+        {/* Toast Notification */}
         <div
-          className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-[#002632] border border-teal-700/50 text-white px-4 py-2 rounded-xl shadow-lg z-50 transition-all duration-300 ${
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-[#002632] border border-[#23FFC8]/30 text-white px-4 py-3 rounded-xl shadow-2xl z-50 transition-all duration-300 flex flex-col items-center gap-0.5 ${
             showToast ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3 pointer-events-none"
           }`}
         >
-          <div className="text-sm font-medium text-[#23FFC8] flex items-center gap-1.5">
-            <FiCheck /> Balance updated
+          <div className="text-sm font-bold text-[#23FFC8] flex items-center gap-1.5">
+            <FiCheck className="text-lg" /> Balance updated
           </div>
-          <div className="text-[11px] text-gray-400 mt-0.5" suppressHydrationWarning>
+          <div className="text-[10px] text-gray-400 font-medium" suppressHydrationWarning>
             {lastUpdateTime?.toLocaleTimeString() || ""}
           </div>
         </div>
 
-        {/* Profile Section */}
-        <div className="relative overflow-hidden text-white px-5 py-6 rounded-[28px] border border-white/10 bg-gradient-to-br from-[#06222c] via-[#03111a] to-[#0c1f2f] shadow-[0_30px_80px_rgba(0,0,0,0.35)] md:rounded-[32px] md:mt-4">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_22%),radial-gradient(circle_at_bottom_right,_rgba(245,158,11,0.14),_transparent_20%)]" />
-          <div className="relative">
-            {/* User row */}
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+        {/* Profile Card */}
+        <div className="relative overflow-hidden bg-[#002632] px-5 py-6 rounded-2xl border border-[#006165] shadow-lg">
+          {/* Subtle Cyber Glowing Effect */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#23FFC8]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[#FFB800]/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <div className="relative">
                 <UserAvatar imageUrl="https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png" />
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#22d3ee] border-2 border-[#06222c] rounded-full" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#23FFC8] border-2 border-[#002632] rounded-full shadow-md" />
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-semibold text-xl md:text-2xl leading-tight">{user?.name}</h2>
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#f9d66b] font-semibold shadow-sm shadow-[#f9d66b]/10">
-                    Premium Member
+                  <h2 className="font-extrabold text-lg text-white leading-tight truncate max-w-[150px] sm:max-w-none">{user?.name}</h2>
+                  <span className="rounded-full bg-[#FFB800]/10 border border-[#FFB800]/30 px-2.5 py-0.5 text-[9px] uppercase tracking-wider text-[#FFB800] font-bold shadow-sm">
+                    Premium
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center mt-2 gap-2 text-sm text-slate-300 md:text-base">
+                <div className="flex flex-wrap items-center mt-1.5 gap-2 text-xs text-gray-400">
                   <span>ID: {user?.playerId}</span>
                   <button
                     onClick={handleCopyPlayerId}
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-100 transition hover:border-[#22d3ee]/50 hover:bg-[#22d3ee]/10"
+                    className="inline-flex items-center gap-1 rounded-full border border-[#006165] bg-[#003e3e]/50 px-2 py-0.5 text-[10px] text-gray-300 transition hover:border-[#23FFC8]/50 hover:bg-[#003e3e] hover:text-[#23FFC8] font-bold cursor-pointer"
                   >
-                    {copied ? <FiCheck className="text-[#22d3ee]" /> : <FaCopy className="text-slate-100" />}
+                    {copied ? <FiCheck className="text-[#23FFC8]" /> : <FaCopy />}
                     Copy
                   </button>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Balance */}
-          <div className="rounded-[20px] p-3 bg-white/5 border border-white/10 shadow-[0_12px_32px_rgba(0,0,0,0.14)]">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <span className="text-[10px] text-[#fcd34d]/80 font-semibold uppercase tracking-[0.24em]">
-                  Available Balance
-                </span>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span
-                    className="text-2xl font-bold text-white md:text-3xl"
-                    style={{
-                      animation: isRefreshing ? "none" : "balancePulse 0.5s ease-out",
-                    }}
-                  >
-                    {(walletLoading || walletRetching) && (
-                      <Skeleton className="w-[120px] h-[36px] rounded-md bg-slate-800" />
-                    )}
-                    {!walletLoading && !walletRetching && data && (
-                      <>
-                        {getCurrencySymbol("BDT")}
-                        {balance.toFixed(2)}
-                      </>
-                    )}
+            {/* Balance Subcard */}
+            <div className="rounded-xl p-4 bg-gradient-to-br from-[#0F727C] to-[#004E56] text-white border border-[#11867d]/40 shadow-inner relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[#23FFC8]/5 rounded-full blur-2xl pointer-events-none" />
+              
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between relative">
+                <div>
+                  <span className="text-[10px] text-[#23FFC8]/80 font-bold uppercase tracking-widest">
+                    Available Balance
                   </span>
-                  <div className="text-xs text-slate-300">
-                    <div>Updated {lastUpdateTime?.toLocaleTimeString() || ""}</div>
-                    <div className="text-[10px] text-slate-500">Live premium balance</div>
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <span
+                      className="text-3xl font-black text-white"
+                      style={{
+                        animation: isRefreshing ? "none" : "balancePulse 0.5s ease-out",
+                      }}
+                    >
+                      {(walletLoading || walletRetching) && (
+                        <Skeleton className="w-[120px] h-[36px] rounded-md bg-white/20" />
+                      )}
+                      {!walletLoading && !walletRetching && data && (
+                        <>
+                          <span className="text-[#FFB800] mr-1">{getCurrencySymbol("BDT")}</span>
+                          {balance.toFixed(2)}
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-gray-300 mt-1 font-semibold" suppressHydrationWarning>
+                    Updated {lastUpdateTime?.toLocaleTimeString() || ""}
                   </div>
                 </div>
+                
+                <button
+                  onClick={handleRefreshBalance}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[linear-gradient(180deg,_#FFE600,_#FFB800)] text-[#B64100] border border-[#FFB800] px-4.5 py-2 text-xs font-extrabold shadow-md hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer"
+                  disabled={isRefreshing}
+                >
+                  <FiRefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+                  Refresh
+                </button>
               </div>
-              <button
-                onClick={handleRefreshBalance}
-                className="inline-flex items-center gap-2 rounded-full bg-[#22d3ee]/10 px-4 py-3 text-sm font-semibold text-[#c7f9ff] shadow-[0_15px_40px_rgba(34,211,238,0.18)] transition hover:bg-[#22d3ee]/20"
-                disabled={isRefreshing}
-              >
-                <FiRefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                Refresh
-              </button>
             </div>
-            <style>{`
-              @keyframes balancePulse {
-                0% { transform: scale(1); }
-                50% { transform: scale(1.04); }
-                100% { transform: scale(1); }
-              }
-            `}</style>
           </div>
         </div>
-      </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-4 gap-2 px-4 py-3 md:gap-3 md:py-4">
+        {/* Action Buttons (Deposit, Withdraw, My Card, Reward) */}
+        <div className="grid grid-cols-4 gap-2.5">
           {[
-            { href: "/deposit", icon: PiHandDepositFill, label: "Deposit" },
-            { href: "/withdraw", icon: PiHandWithdrawFill, label: "Withdraw" },
-            { href: "/my-cards", icon: FaCreditCard, label: "My Card" },
-            { href: "/rewardCenter", icon: FaGift, label: "Reward" },
+            { href: "/deposit", icon: PiHandDepositFill, label: "Deposit", color: "text-[#23FFC8] bg-[#003e3e]/40 border-[#006165]" },
+            { href: "/withdraw", icon: PiHandWithdrawFill, label: "Withdraw", color: "text-[#FFB800] bg-[#003e3e]/40 border-[#FFB800]/30" },
+            { href: "/my-cards", icon: FaCreditCard, label: "My Card", color: "text-[#e0c3fc] bg-[#003e3e]/40 border-[#006165]" },
+            { href: "/rewardCenter", icon: FaGift, label: "Reward", color: "text-rose-400 bg-[#003e3e]/40 border-[#006165]" },
           ].map((btn) => (
-            <Link href={btn.href} key={btn.label}>
-              <button className="w-full rounded-[28px] border border-white/10 bg-gradient-to-br from-[#0f172a] via-[#07121f] to-[#082334] px-3 py-3 text-center shadow-[0_18px_40px_rgba(0,0,0,0.20)] transition hover:-translate-y-0.5 hover:border-[#22d3ee]/30 active:scale-[0.98]">
-                <div className="flex flex-col items-center gap-2">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-[24px] bg-[#22d3ee]/10 text-[#22d3ee] shadow-[0_10px_24px_rgba(34,211,238,0.14)]">
-                    <btn.icon className="h-5 w-5" />
+            <Link href={btn.href} key={btn.label} className="block">
+              <button className="w-full rounded-2xl border border-[#006165] bg-[#002632] px-2 py-4 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#002632]/80 hover:border-[#23FFC8]/30 active:scale-[0.98] cursor-pointer">
+                <div className="flex flex-col items-center gap-2.5">
+                  <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl border ${btn.color} shadow-inner`}>
+                    <btn.icon className="h-5.5 w-5.5" />
                   </span>
-                  <p className="text-[11px] font-semibold text-white">{btn.label}</p>
+                  <p className="text-[11px] font-bold text-gray-200 tracking-wide">{btn.label}</p>
                 </div>
               </button>
             </Link>
@@ -199,37 +205,39 @@ const App: React.FC = () => {
         </div>
 
         {/* Member Menu Grid */}
-        <div className="px-4 py-3 pb-10 md:py-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-            <h3 className="text-xl font-semibold text-white">Premium Member Menu</h3>
-            <span className="rounded-full bg-white/10 px-3 py-1 text-sm text-slate-200 uppercase tracking-[0.18em] shadow-sm shadow-slate-900/20">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-base font-bold text-[#FFB800] tracking-wide uppercase">Premium Member Menu</h3>
+            <span className="rounded-full bg-[#23FFC8]/10 border border-[#23FFC8]/30 px-3 py-1 text-[9px] text-[#23FFC8] font-extrabold uppercase tracking-wider shadow-sm">
               Elite Access
             </span>
           </div>
-          <div className="grid grid-cols-4 gap-2 md:grid-cols-4 md:gap-3">
+          
+          <div className="grid grid-cols-4 gap-2.5 md:gap-3">
             {menuItems.map((item) => (
               <Link
                 href={item.href}
                 key={item.label}
-                className="group flex flex-col items-center rounded-[24px] border border-white/10 bg-[#07151f]/80 p-4 text-center shadow-[0_14px_60px_rgba(0,0,0,0.20)] transition hover:-translate-y-0.5 hover:bg-[#0b1b2a]/90"
+                className="group flex flex-col items-center rounded-2xl border border-[#006165] bg-[#002632] p-3 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#003840]/90 hover:border-[#23FFC8]/40"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-[#22d3ee]/20 to-[#facc15]/10 text-[#38bdf8] shadow-[0_10px_30px_rgba(34,211,238,0.14)] group-hover:from-[#22d3ee]/30 group-hover:to-[#facc15]/20">
-                  <item.icon className="h-6 w-6 md:h-7 md:w-7" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#003e3e] text-[#23FFC8] border border-[#006165]/50 shadow-inner group-hover:bg-[#004e56] group-hover:text-white transition-colors">
+                  <item.icon className="h-5.5 w-5.5" />
                 </div>
-                <span className="mt-3 text-sm font-medium text-slate-200 transition group-hover:text-white leading-tight">
+                <span className="mt-2.5 text-[10px] font-bold text-gray-300 transition group-hover:text-[#23FFC8] leading-tight">
                   {item.label}
                 </span>
               </Link>
             ))}
 
+            {/* Poker Games (Special Golden Theme highlighted) */}
             <Link
               href="/poker"
-              className="group flex flex-col items-center rounded-[24px] border border-white/10 bg-[#07151f]/80 p-4 text-center shadow-[0_14px_60px_rgba(0,0,0,0.20)] transition hover:-translate-y-0.5 hover:bg-[#0b1b2a]/90"
+              className="group flex flex-col items-center rounded-2xl border border-[#FFB800]/50 bg-[#002632] p-3 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#003840]/90 hover:border-[#FFB800]"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-[#fbbf24]/20 to-[#ec4899]/10 text-[#fbbf24] shadow-[0_10px_30px_rgba(251,191,36,0.14)] group-hover:from-[#fbbf24]/30 group-hover:to-[#ec4899]/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#003e3e] text-[#FFB800] border border-[#FFB800]/30 shadow-inner group-hover:bg-[#FFB800]/10 transition-colors">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 md:h-7 md:w-7"
+                  className="h-5.5 w-5.5"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -242,14 +250,21 @@ const App: React.FC = () => {
                   <path d="M12 4v16" />
                 </svg>
               </div>
-              <span className="mt-3 text-sm font-medium text-slate-200 transition group-hover:text-white leading-tight">
+              <span className="mt-2.5 text-[10px] font-bold text-gray-300 transition group-hover:text-[#FFB800] leading-tight">
                 Poker Games
               </span>
             </Link>
           </div>
         </div>
-      </div>
+      </main>
       <TabNav />
+      <style>{`
+        @keyframes balancePulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.03); }
+          100% { transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 };

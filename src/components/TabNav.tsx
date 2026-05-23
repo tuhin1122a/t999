@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { BiAward } from "react-icons/bi";
 import { GiCutDiamond } from "react-icons/gi";
 import { IoGameController } from "react-icons/io5";
-import { TbGiftCard } from "react-icons/tb";
+import { FaGift } from "react-icons/fa";
 import { TfiHome } from "react-icons/tfi";
 
 const TabNav = () => {
@@ -81,9 +81,9 @@ const TabNav = () => {
                 }`}
                 style={{ width: 35, height: 35 }}
               >
-                <TbGiftCard
-                  style={{ width: 27, height: 27 }}
-                  className="mx-auto !text-slate-950  "
+                <FaGift
+                  style={{ width: 20, height: 20 }}
+                  className="mx-auto !text-slate-950"
                 />
               </div>
               <p

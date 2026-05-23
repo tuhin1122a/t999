@@ -27,7 +27,8 @@ const Withdraw = () => {
           />
           <WithdrawForm
             wallets={wallets}
-            
+            availableBalance={withdrwData.availableBalance}
+            turnOver={withdrwData.turnOver}
           />
         </>
       )}
