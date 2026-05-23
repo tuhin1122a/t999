@@ -26,7 +26,7 @@ const Sports = () => {
   const pendingProvidersRef = useRef<Set<string>>(new Set());
 
   const { getGames, setProviderGames, setProviderLoading } = useGames((state) => state);
-  const gamesList = getGames(Categories.Sport, search, limit, provider);
+  const gamesList = getGames(Categories.Sport, search, provider === "all" ? limit : undefined, provider);
 
   const hasIntersectedOnce = useRef(false);
   useEffect(() => {
