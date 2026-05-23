@@ -11,6 +11,7 @@ import { NetEnt } from "@/types/game";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LiaHeartSolid } from "react-icons/lia";
+import { PlaceholderCard } from "./loader/GameLoader";
 
 const storage = LocalArrayStorage<string>();
 
@@ -21,6 +22,7 @@ interface GameCardWithProviderProps {
 
 export const GameCardWithProvider = ({ game, index }: GameCardWithProviderProps) => {
   const [imageLoaded, setImageLoad] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [isFav, setFav] = useState(false);
   const { img, name, id } = game;
   const user: any = useGetCurrentUser();
@@ -33,7 +35,7 @@ export const GameCardWithProvider = ({ game, index }: GameCardWithProviderProps)
 
   useEffect(() => {
     if (!img || img === "NULL" || img.trim() === "") {
-      setImageSrc("/games/provider/default-game.png");
+      setImageError(true);
       return;
     }
 
@@ -56,23 +58,32 @@ export const GameCardWithProvider = ({ game, index }: GameCardWithProviderProps)
     >
       <Link
         href={`/play?gameId=${id}`}
-        className="relative game-main overflow-hidden"
+        className="relative game-main overflow-hidden block rounded-2xl h-40 bg-[#002632]"
       >
-        <div
-          className={`relative overflow-hidden rounded-2xl transition-opacity duration-500 ease-out ${
-            imageLoaded ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <div className="shiny-card w-full">
-            <img
-              alt={name || "Game image"}
-              src={imageSrc}
-              className="w-full h-40 object-cover rounded-2xl"
-              onLoad={handleImageLoad}
-              onError={() => setImageSrc("/games/provider/default-game.png")}
-            />
+        {/* Category placeholder */}
+        {(!imageLoaded || imageError) && (
+          <div className="absolute inset-0 w-full h-full">
+            <PlaceholderCard category={game.categories} />
           </div>
-        </div>
+        )}
+
+        {!imageError && (
+          <div
+            className={`w-full h-full transition-opacity duration-500 ease-out ${
+              imageLoaded ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="shiny-card w-full h-full">
+              <img
+                alt={name || "Game image"}
+                src={imageSrc}
+                className="w-full h-40 object-cover rounded-2xl"
+                onLoad={handleImageLoad}
+                onError={() => setImageError(true)}
+              />
+            </div>
+          </div>
+        )}
       </Link>
       <div className="absolute top-2 right-2 z-10 ">
         <button

@@ -43,7 +43,7 @@ const SlotGames = () => {
               <GameCardWithProvider key={i} game={game} />
             ))}
 
-          <GameLoader length={20} loading={!!!gamesList} />
+          <GameLoader length={20} loading={!!!gamesList} category="slots" />
         </div>
       </div>
     </div>

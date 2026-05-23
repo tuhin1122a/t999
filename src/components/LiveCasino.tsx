@@ -44,7 +44,7 @@ const LiveCasino = () => {
               <GameCardWithProvider game={game} key={i} />
             ))}
 
-          <GameLoader length={20} loading={!!!gamesList} />
+          <GameLoader length={20} loading={!!!gamesList} category="live_dealers" />
         </div>
       </div>
     </div>

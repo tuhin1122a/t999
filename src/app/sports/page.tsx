@@ -142,7 +142,7 @@ const Sports = () => {
 
             {isFilterLoading ? (
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2">
-                <GameLoader length={15} loading={true} />
+                <GameLoader length={15} loading={true} category="sport" />
               </div>
             ) : (
               <>
@@ -152,7 +152,7 @@ const Sports = () => {
                       <GameCardWithProvider game={game} index={i} key={game.id || i} />
                     ))}
 
-                  {(!gamesList || (gamesList.length === 0 && useGames((state) => state.isLoading))) && <GameLoader length={15} loading={true} />}
+                  {(!gamesList || (gamesList.length === 0 && useGames((state) => state.isLoading))) && <GameLoader length={15} loading={true} category="sport" />}
                 </div>
 
                 <div

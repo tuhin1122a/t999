@@ -139,7 +139,7 @@ const SlotPage = () => {
 
             {isFilterLoading ? (
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2">
-                <GameLoader length={15} loading={true} />
+                <GameLoader length={15} loading={true} category="slots" />
               </div>
             ) : (
               <>
@@ -149,7 +149,7 @@ const SlotPage = () => {
                       <GameCardWithProvider game={game} index={i} key={game.id || i} />
                     ))}
 
-                  {!gamesList && <GameLoader length={15} loading={true} />}
+                  {!gamesList && <GameLoader length={15} loading={true} category="slots" />}
                 </div>
 
                 <div
