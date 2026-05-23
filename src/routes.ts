@@ -42,6 +42,7 @@ export const publicRoutes = [
   "/languages",
   "/appp",
   "/chat",
+  "/support",
   "/pvp",
 
 ];

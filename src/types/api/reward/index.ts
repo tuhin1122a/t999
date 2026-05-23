@@ -15,7 +15,15 @@ export interface StatisticType {
   validReferral: number;
 }
 
+export interface ReferredUserType {
+  id: string;
+  phone: string;
+  createdAt: string;
+  isValid: boolean;
+}
+
 export interface InvitationRewardGetOutput {
   rewards: ExtendedWithUserRewards[];
   statistic: StatisticType;
+  referredUsers?: ReferredUserType[];
 }

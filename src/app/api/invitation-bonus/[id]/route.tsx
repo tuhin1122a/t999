@@ -34,7 +34,7 @@ export const PUT = async (
       where: { userId: user.id },
     });
 
-    if (userInvitationBonus?.totalValidreferral !== reward.targetReferral) {
+    if (userInvitationBonus && userInvitationBonus.totalValidreferral < reward.targetReferral) {
       return Response.json(
         { error: "Please refer more users to get it" },
         { status: 400 }

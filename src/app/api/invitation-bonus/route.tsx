@@ -9,22 +9,77 @@ export const GET = async () => {
     if (!user)
       return Response.json({ error: "Refresh the page" }, { status: 401 });
 
-    const userInvitationBonus = await db.invitationBonus.findUnique({
+    let userInvitationBonus = await db.invitationBonus.findUnique({
       where: { userId: user.id },
       include: { claimedRewards: true },
     });
 
+    if (!userInvitationBonus) {
+      userInvitationBonus = await db.invitationBonus.create({
+        data: {
+          userId: user.id,
+          totalRegisters: 0,
+          totalValidreferral: 0,
+        },
+        include: { claimedRewards: true },
+      });
+    }
+
+    // Fetch referred users and check if they have approved deposits
+    const userInvitation = await db.invitation.findUnique({
+      where: { userId: user.id },
+      include: {
+        referredUsers: {
+          include: {
+            deposit: {
+              where: { status: "APPROVED" },
+              select: { id: true },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+    });
+
+    const referredUsersList = userInvitation?.referredUsers.map((refUser) => {
+      const isValid = refUser.deposit.length > 0;
+      return {
+        id: refUser.id,
+        phone: refUser.phone,
+        createdAt: refUser.createdAt.toISOString(),
+        isValid,
+      };
+    }) || [];
+
+    const registersCount = referredUsersList.length;
+    const validReferralsCount = referredUsersList.filter((u) => u.isValid).length;
+
+    // Sync counts with userInvitationBonus in DB
+    await db.invitationBonus.update({
+      where: { id: userInvitationBonus.id },
+      data: {
+        totalRegisters: registersCount,
+        totalValidreferral: validReferralsCount,
+      },
+    });
+
+    // Update in-memory counts
+    userInvitationBonus.totalRegisters = registersCount;
+    userInvitationBonus.totalValidreferral = validReferralsCount;
+
     const rewards = await db.invitationRewards.findMany({ where: {} });
 
     const userRewards = rewards.map((reward) => {
-      const newReward = { ...reward, completedReferral: 0, isClamed: false };
+      const newReward = { ...reward, completedReferral: 0, isClaimed: false };
 
       newReward.completedReferral =
-        userInvitationBonus!.totalValidreferral >= reward.targetReferral
+        userInvitationBonus.totalValidreferral >= reward.targetReferral
           ? reward.targetReferral
-          : userInvitationBonus!.totalValidreferral;
+          : userInvitationBonus.totalValidreferral;
 
-      newReward.isClamed = !!userInvitationBonus!.claimedRewards.find(
+      newReward.isClaimed = !!userInvitationBonus.claimedRewards.find(
         (clamedReward) => reward.id === clamedReward.rewardId
       );
 
@@ -68,14 +123,21 @@ export const GET = async () => {
       0
     );
 
-    const statictic = {
-      registersCount: userInvitationBonus!.totalRegisters,
+    const statistic = {
+      registersCount: userInvitationBonus.totalRegisters,
       todayIncome: totalIncomeToday,
-      validReferral: userInvitationBonus!.totalValidreferral,
+      validReferral: userInvitationBonus.totalValidreferral,
       totalIncome,
     };
 
-    return Response.json({ rewards: userRewards, statictic }, { status: 200 });
+    return Response.json(
+      {
+        rewards: userRewards,
+        statistic,
+        referredUsers: referredUsersList,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.log("Invitation Bonus = ", error);
     return Response.json({ error: INTERNAL_SERVER_ERROR }, { status: 500 });

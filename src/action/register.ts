@@ -27,14 +27,38 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
 
     const referralUser = referralId ? await findUserByReferId(referralId) : null;
     if (referralUser) {
-      await db.invitationBonus.update({
+      // Ensure the referrer has an Invitation record
+      let referralInvitation = await db.invitation.findUnique({
         where: { userId: referralUser.id },
-        data: { totalRegisters: { increment: 1 } },
       });
+      if (!referralInvitation) {
+        referralInvitation = await db.invitation.create({
+          data: { userId: referralUser.id },
+        });
+      }
+
+      // Ensure the referrer has an InvitationBonus record
+      const referralInvitationBonus = await db.invitationBonus.findUnique({
+        where: { userId: referralUser.id },
+      });
+      if (!referralInvitationBonus) {
+        await db.invitationBonus.create({
+          data: {
+            userId: referralUser.id,
+            totalRegisters: 1,
+            totalValidreferral: 0,
+          },
+        });
+      } else {
+        await db.invitationBonus.update({
+          where: { userId: referralUser.id },
+          data: { totalRegisters: { increment: 1 } },
+        });
+      }
 
       isReferralBonusActive = true;
       invitedBy = {
-        create: { user: { connect: { id: referralUser.id } } },
+        connect: { id: referralInvitation.id },
       };
     }
 
@@ -128,12 +152,7 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
     });
 
     // ---------------- Update Referral ----------------
-    if (referralUser) {
-      await db.invitation.update({
-        where: { userId: referralUser.id },
-        data: { referredUsers: { connect: { id: newUser.id } } },
-      });
-    }
+    // Connected automatically via invitedBy relation during user creation
 
     // ---------------- Auto Sign In ----------------
     try {

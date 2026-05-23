@@ -18,6 +18,7 @@ import Image from "next/image";
 import { FaLink } from "react-icons/fa6";
 import { StatisticType } from "@/types/api/reward";
 import useCurrentUser from "@/hook/useCurrentUser";
+import { toast } from "sonner";
 
 interface OverviewProps {
   statictic: StatisticType;
@@ -98,17 +99,18 @@ const Statictic = ({
 };
 
 const InviteLink = ({ invitationCode }: { invitationCode: string }) => {
-  const [domain, setDomain] = useState("");
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
-    setDomain(window.location.hostname);
+    setOrigin(window.location.origin);
   }, []);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(invitationLink);
+    toast.success("Invitation link copied!");
   };
 
-  const invitationLink = `${domain}/register?r=${invitationCode}`;
+  const invitationLink = `${origin}/register?r=${invitationCode}`;
 
   return (
     <div className="bg-[#dae2e9] p-2 space-y-6 py-5 rounded-lg">

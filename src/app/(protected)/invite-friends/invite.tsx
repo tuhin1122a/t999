@@ -11,6 +11,7 @@ const Invite = () => {
   const { data, isLoading } = useFindInvitationRewardDataQuery();
   const rewards = data?.rewards;
   const statictic = data?.statistic;
+  const referredUsers = data?.referredUsers || [];
   return (
     <div>
       {(!data || isLoading) && (
@@ -49,7 +50,7 @@ const Invite = () => {
             <Rewards rewards={rewards} />
           </TabsContent>
           <TabsContent value="records" className="px-3 py-6">
-            <Records />
+            <Records referredUsers={referredUsers} />
           </TabsContent>
         </Tabs>
       )}
