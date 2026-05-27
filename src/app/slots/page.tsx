@@ -138,12 +138,12 @@ const SlotPage = () => {
             </div>
 
             {isFilterLoading ? (
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2">
+              <div className="grid grid-cols-3 gap-2 mt-2">
                 <GameLoader length={15} loading={true} category="slots" />
               </div>
             ) : (
               <>
-                <div key={provider} className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4 mt-2 provider-list-appear">
+                <div key={provider} className="grid grid-cols-3 gap-2 mt-2 provider-list-appear">
                   {gamesList &&
                     gamesList.map((game, i) => (
                       <GameCardWithProvider game={game} index={i} key={game.id || i} />
