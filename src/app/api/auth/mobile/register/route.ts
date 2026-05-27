@@ -141,6 +141,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         wallet: true,
+        bettingRecord: true,
       },
     });
 
@@ -160,6 +161,9 @@ export async function POST(req: NextRequest) {
         name: newUser.name || "Pro User",
         balance: newUser.wallet ? Number(newUser.wallet.balance) : 0,
         isBanned: newUser.isBanned,
+        turnOver: newUser.wallet ? Number(newUser.wallet.turnOver) : 0,
+        totalBet: newUser.bettingRecord ? Number(newUser.bettingRecord.totalBet) : 0,
+        totalWin: newUser.bettingRecord ? Number(newUser.bettingRecord.totalWin) : 0,
       },
     });
   } catch (error: any) {

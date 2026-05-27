@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       where: { id: decoded.sub },
       include: {
         wallet: true,
+        bettingRecord: true,
       },
     });
 
@@ -54,6 +55,9 @@ export async function GET(req: NextRequest) {
         name: user.name || "Pro User",
         balance: user.wallet ? Number(user.wallet.balance) : 0,
         isBanned: user.isBanned,
+        turnOver: user.wallet ? Number(user.wallet.turnOver) : 0,
+        totalBet: user.bettingRecord ? Number(user.bettingRecord.totalBet) : 0,
+        totalWin: user.bettingRecord ? Number(user.bettingRecord.totalWin) : 0,
       },
     });
   } catch (error: any) {
