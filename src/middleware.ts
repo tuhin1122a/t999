@@ -19,6 +19,7 @@ export default auth(async (req) => {
     nextUrl.pathname.startsWith("/api/softapi/games") ||
     nextUrl.pathname.startsWith("/api/softapi/providers") ||
     nextUrl.pathname.startsWith("/api/softapi/callback") ||
+    nextUrl.pathname.startsWith("/api/softapi/launch") ||
     nextUrl.pathname.startsWith("/api/gamexa/games/providers") ||
     // ✅ Mobile app API routes — no browser session, authenticated via JWT Bearer token
     nextUrl.pathname.startsWith("/api/auth/mobile/");

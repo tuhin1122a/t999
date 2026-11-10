@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.jlfafafa3.com" },
       { protocol: "https", hostname: "**.wbgame.com" },
       { protocol: "https", hostname: "jsgame.live" },
+      { protocol: "https", hostname: "**.wkuytxcg8.com" },
+      { protocol: "https", hostname: "**.nexusggr.dev" },
+      { protocol: "https", hostname: "**.nexusggr.com" },
+      { protocol: "https", hostname: "cdn-img.wkuytxcg8.com" },
     ],
   },
   async headers() {

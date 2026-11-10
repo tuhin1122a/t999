@@ -1,3 +1,4 @@
+// src/lib/features/gameService.ts
 export interface PlayerData {
   username?: string;
   password?: string;
@@ -7,49 +8,22 @@ export interface PlayerData {
   first_name?: string;
   last_name?: string;
   phone?: string;
+  full_name?: string;
 }
 
 // ==================== Player Management ====================
-export const createPlayer = async (playerData: PlayerData) => {
+export const createPlayer = async (playerData: PlayerData): Promise<any> => {
   const playerId =
     playerData?.phone ||
     playerData?.username ||
     (playerData?.email ? playerData.email.split("@")[0] : null) ||
     `LOCAL_PLAYER_${Date.now()}`;
 
-  console.log("Bypassing GameXA player creation. Returning local playerId:", playerId);
-
   return {
     success: true,
     player_id: playerId,
     player: { id: playerId },
   };
-};
-
-// ==================== Launch Game ====================
-export const launchGameService = async (_player_id: string, game_id: string) => {
-  try {
-    console.log("Launching game via SoftAPI with game_id:", game_id);
-    const res = await fetch("/api/softapi/launch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gameId: game_id }),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Launch game HTTP error:", res.status, errorText);
-      throw new Error(`HTTP ${res.status}: ${errorText}`);
-    }
-
-    const data = await res.json();
-    console.log("🎯 launchGame response:", data);
-
-    return data;
-  } catch (error) {
-    console.error("Launch game error:", error);
-    throw error;
-  }
 };
 
 // ==================== Launch SoftAPI Game ====================
@@ -110,18 +84,22 @@ export const launchSoftAPIGameService = async (game_id: string) => {
   }
 };
 
+// ==================== Launch Game ====================
+export const launchGameService = async (_player_id: string, game_id: string) =>
+  launchSoftAPIGameService(game_id);
+
 // ==================== Helper ====================
 export const isGameXAGameCheck = () => false;
 
 // ==================== Launch Game from any API ====================
 export const launchGameFromAnyAPI = async (
   gameId: string,
-  playerId: string
+  playerId: string,
+  _openGame?: unknown
 ) => {
   console.log("launchGameFromAnyAPI called with:", { gameId, playerId });
 
   if (!gameId?.trim()) throw new Error("Game ID is required to launch a game");
-  if (!playerId?.trim()) throw new Error("Player ID is required to launch a game");
 
   try {
     console.log("Attempting to launch via SoftAPI with gameId:", gameId);
@@ -129,6 +107,8 @@ export const launchGameFromAnyAPI = async (
 
     if (softApiResponse && softApiResponse.success && softApiResponse.game_launch_url) {
       return {
+        success: true,
+        game_launch_url: softApiResponse.game_launch_url,
         content: {
           game: {
             url: softApiResponse.game_launch_url,
@@ -139,7 +119,11 @@ export const launchGameFromAnyAPI = async (
       };
     }
 
-    const launchError = softApiResponse?.error || softApiResponse?.message || "SoftAPI launch failed. No fallback route is configured.";
+    const launchError =
+      softApiResponse?.error ||
+      softApiResponse?.msg ||
+      softApiResponse?.message ||
+      "SoftAPI launch failed.";
     throw new Error(launchError);
   } catch (error) {
     console.error("Error launching game:", error);

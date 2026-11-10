@@ -25,7 +25,7 @@ const GamesLoader = () => {
         console.log("Fetching SoftAPI popular games...");
         const popularBrands = [
           "49", "45", "58", "67", "51", "53", "52", "65",
-          "46", "48", "83", "85", "94", "95", "118", "126", "141", "142"
+          "46", "48", "83", "85", "94", "95", "118", "126", "141", "142",
         ];
 
         const results = await Promise.all(
@@ -34,7 +34,7 @@ const GamesLoader = () => {
               const res = await fetch(`/api/softapi/games?brand_id=${brandId}`);
               if (!res.ok) return [];
               const json = await res.json();
-              return json.success ? json.games : [];
+              return json.success && Array.isArray(json.games) ? json.games : [];
             } catch (err) {
               console.error(`Failed to fetch SoftAPI brand ${brandId}:`, err);
               return [];

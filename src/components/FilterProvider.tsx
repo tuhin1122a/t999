@@ -17,20 +17,20 @@ const CATEGORY_BRANDS: Record<string, string[]> = {
     "45", "49", "50", "51", "52", "53", "54", "61", "62", "63", "64", "65", "66", "67", "68", "69", "70", "71",
     "72", "73", "74", "75", "76", "77", "80", "81", "82", "84", "86", "90", "91", "92", "93", "96", "97", "98",
     "99", "102", "103", "105", "106", "108", "109", "112", "119", "120", "123", "124", "125", "128", "129", "131",
-    "133", "134", "136", "137", "138", "140"
+    "133", "134", "136", "137", "138", "140",
   ],
   live_dealers: [
-    "53", "54", "55", "56", "58", "59", "60", "78", "88", "89", "114", "117", "121", "130", "132", "135"
+    "53", "54", "55", "56", "58", "59", "60", "78", "88", "89", "114", "117", "121", "130", "132", "135",
   ],
   sport: [
-    "46", "48", "83", "85", "94", "95", "118", "126", "141", "142"
+    "46", "48", "83", "85", "94", "95", "118", "126", "141", "142",
   ],
   fishing: [
-    "49", "50", "51", "52", "84", "91", "99", "133"
+    "49", "50", "51", "52", "84", "91", "99", "133",
   ],
   arcade: [
-    "57", "100", "101", "104", "107", "111", "113", "139"
-  ]
+    "57", "100", "101", "104", "107", "111", "113", "139",
+  ],
 };
 
 const FilterProivder = ({
@@ -42,6 +42,7 @@ const FilterProivder = ({
 }) => {
   const [selectedProvider, setProvider] = useState<string>("all");
   const [providers, setProviders] = useState<ProviderItem[]>([]);
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const isLoading = useGames((state) => state.isLoading);
 
   const selectorStyle = {
@@ -82,21 +83,23 @@ const FilterProivder = ({
         const res = await fetch("/api/softapi/providers");
         if (!res.ok) throw new Error("Failed to load provider list");
         const data = await res.json();
-        
-        let fetchedProviders: ProviderItem[] = data.providers || [];
+
+        let fetchedProviders: ProviderItem[] = data.providers || data.games || [];
         if (category && CATEGORY_BRANDS[category]) {
           const allowedBrands = CATEGORY_BRANDS[category];
-          fetchedProviders = fetchedProviders.filter((p) => allowedBrands.includes(p.brand_id));
+          fetchedProviders = fetchedProviders.filter((p) =>
+            allowedBrands.includes(String(p.brand_id))
+          );
         }
-        
+
         // Only filter out empty providers once loading is complete
         if (!isLoading && category) {
           const gamesState = useGames.getState();
           const allGames = gamesState.games ? Object.values(gamesState.games).flat() : [];
-          
+
           fetchedProviders = fetchedProviders.filter((p) => {
             const hasGamesInMain = allGames.some(
-              (game: any) => game && game.brand_id === p.brand_id && game.categories === category
+              (game: any) => game && String(game.brand_id) === String(p.brand_id) && game.categories === category
             );
             const hasGamesInProvider = gamesState.providerGames[p.brand_id]?.some(
               (game: any) => game && game.categories === category
@@ -104,7 +107,7 @@ const FilterProivder = ({
             return hasGamesInMain || hasGamesInProvider;
           });
         }
-        
+
         setProviders(fetchedProviders);
       } catch (error) {
         console.error("Error loading SoftAPI providers:", error);
@@ -120,7 +123,7 @@ const FilterProivder = ({
         <Swiper slidesPerView={"auto"} spaceBetween={10} className="mySwiper">
           <SwiperSlide className="max-w-max">
             <div
-              className="h-[45px] px-4 py-3 transition-all duration-150 ease-out active:scale-95 hover:-translate-y-0.5 provider-option"
+              className="h-[45px] px-4 py-3 transition-all duration-150 ease-out active:scale-95 hover:-translate-y-0.5 provider-option cursor-pointer"
               onClick={() => setProvider("all")}
               style={
                 selectedProvider === "all"
@@ -138,25 +141,46 @@ const FilterProivder = ({
             </div>
           </SwiperSlide>
 
-          {providers.map((provider) => (
-            <SwiperSlide key={provider.brand_id} className="max-w-max">
-              <div
-                className="h-[45px] px-4 py-3 flex items-center justify-center transition-all duration-150 ease-out active:scale-95 hover:-translate-y-0.5 provider-option"
-                onClick={() => setProvider(provider.brand_id)}
-                style={
-                  provider.brand_id === selectedProvider
-                    ? selectorStyle.active
-                    : selectorStyle.inActive
-                }
-              >
-                <img
-                  src={provider.logo}
-                  alt={provider.brand_title}
-                  className="max-w-[85px] max-h-[30px] object-contain"
-                />
-              </div>
-            </SwiperSlide>
-          ))}
+          {providers.map((provider) => {
+            const hasImgError = imgErrors[provider.brand_id];
+            const isSelected = provider.brand_id === selectedProvider;
+
+            return (
+              <SwiperSlide key={provider.brand_id} className="max-w-max">
+                <div
+                  className="h-[45px] px-4 py-3 flex items-center justify-center transition-all duration-150 ease-out active:scale-95 hover:-translate-y-0.5 provider-option cursor-pointer"
+                  onClick={() => setProvider(provider.brand_id)}
+                  style={
+                    isSelected
+                      ? selectorStyle.active
+                      : selectorStyle.inActive
+                  }
+                >
+                  {!hasImgError && provider.logo ? (
+                    <img
+                      src={provider.logo}
+                      alt={provider.brand_title}
+                      className="max-w-[85px] max-h-[30px] object-contain"
+                      onError={() =>
+                        setImgErrors((prev) => ({
+                          ...prev,
+                          [provider.brand_id]: true,
+                        }))
+                      }
+                    />
+                  ) : (
+                    <span
+                      className={`text-xs font-semibold px-2 whitespace-nowrap ${
+                        isSelected ? "text-black" : "text-white"
+                      }`}
+                    >
+                      {provider.brand_title}
+                    </span>
+                  )}
+                </div>
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
       </div>
     </div>

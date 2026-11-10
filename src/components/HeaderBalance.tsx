@@ -18,12 +18,37 @@ import { redirect } from "next/navigation";
 import { logout } from "@/action/logout";
 import { getCurrencySymbol } from "@/lib/utils";
 const UserBalance = ({
-  balance,
+  balance: initialBalance,
   currency,
 }: {
   balance: number;
   currency: string;
 }) => {
+  const [currentBalance, setCurrentBalance] = useState<number>(initialBalance);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  React.useEffect(() => {
+    setCurrentBalance(initialBalance);
+  }, [initialBalance]);
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/wallet");
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.payload?.balance !== undefined) {
+          setCurrentBalance(Number(data.payload.balance));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to refresh balance:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <section className="flex relative items-center h-full ">
       <div className="flex items-center h-full">
@@ -37,10 +62,10 @@ const UserBalance = ({
               >
                 <div className="flex items-center w-full ">
                   <BalanceDisplay
-                    amount={balance}
+                    amount={currentBalance}
                     currencySymbol={getCurrencySymbol(currency)!}
                   />
-                  <RefreshButton />
+                  <RefreshButton onRefresh={handleRefresh} isRefreshing={isRefreshing} />
                 </div>
               </div>
             </div>
@@ -132,13 +157,19 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
   );
 };
 
-const RefreshButton: React.FC = () => {
+const RefreshButton: React.FC<{ onRefresh?: () => void; isRefreshing?: boolean }> = ({ onRefresh, isRefreshing }) => {
   return (
-    <div className="flex shrink-0 justify-center items-center ml-1.5 h-[18px] w-[18px]">
+    <button
+      type="button"
+      onClick={onRefresh}
+      disabled={isRefreshing}
+      className="flex shrink-0 justify-center items-center ml-1.5 h-[18px] w-[18px] cursor-pointer hover:opacity-80 active:scale-95 transition-all"
+      title="Refresh balance"
+    >
       <div className="overflow-x-hidden overflow-y-hidden bg-cover flex justify-center items-center h-full w-full size-full">
-        <HiOutlineRefresh className="w-3 h-3 text-teal-400/50" />
+        <HiOutlineRefresh className="w-3.5 h-3.5 text-teal-400" />
       </div>
-    </div>
+    </button>
   );
 };
 

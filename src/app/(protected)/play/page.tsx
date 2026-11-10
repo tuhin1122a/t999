@@ -7,7 +7,6 @@ import {
   createPlayer,
   launchGameFromAnyAPI,
 } from "@/lib/features/gameService";
-import { useOpenGameMutation } from "@/lib/features/gamesApiSlice";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -15,12 +14,11 @@ import toast from "react-hot-toast";
 import { FiChevronDown, FiX } from "react-icons/fi";
 
 const Play = () => {
-  const [openGame] = useOpenGameMutation();
-
   const [isIframeLoading, setIsLoading] = useState(true);
   const [iframe, setIframe] = useState("");
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [displayBalance, setDisplayBalance] = useState<string | null>(null);
 
   // HEADER STATE
   const [showHeader, setShowHeader] = useState(false);
@@ -32,32 +30,52 @@ const Play = () => {
 
   const user = useGetCurrentUser();
 
-  const balanceValue = Number(
+  const walletBalance = Number(
     (user as any)?.wallet?.balance ??
       (user as any)?.balance ??
       0
   ).toFixed(2);
 
-  // -------- PLAYER ----------
-  const getPlayerId = async (user: any) => {
-    if (!user) return null;
+  const balanceValue = displayBalance ?? walletBalance;
 
-    if (user.gameXAPlayerId) return user.gameXAPlayerId;
+  // Periodic balance refresh from local wallet (updated via SoftAPI callback webhook)
+  useEffect(() => {
+    if (!iframe) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/wallet");
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.payload?.balance !== undefined) {
+            setDisplayBalance(Number(data.payload.balance).toFixed(2));
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }, 15_000);
+    return () => clearInterval(interval);
+  }, [iframe]);
+
+  // -------- PLAYER ----------
+  const getPlayerId = async (u: any) => {
+    if (!u) return null;
+    if (u.gameXAPlayerId) return u.gameXAPlayerId;
 
     const player = await createPlayer({
-      username: user.phone || `user_${Date.now()}`,
-      email: user.email || `${user.phone}@rk444.com`,
-      full_name: user.name || `Guest ${Date.now()}`,
-      phone: user.phone || "",
+      username: u.phone || `user_${Date.now()}`,
+      email: u.email || `${u.phone}@rk444.com`,
+      full_name: u.name || `Guest ${Date.now()}`,
+      phone: u.phone || "",
       password: "StrongPassword123!",
-      currency: "IDR",
+      currency: "BDT",
       language: "en",
     });
 
     return (
       player.player_id?.toString() ||
       player.player?.id?.toString() ||
-      player.id?.toString()
+      null
     );
   };
 
@@ -71,11 +89,7 @@ const Play = () => {
 
         const playerId = await getPlayerId(user);
 
-        const res = await launchGameFromAnyAPI(
-          gameId,
-          playerId,
-          openGame
-        );
+        const res = await launchGameFromAnyAPI(gameId, playerId ?? "");
 
         const url =
           res?.content?.game?.url ||
@@ -94,7 +108,8 @@ const Play = () => {
     };
 
     launch();
-  }, [gameId, user, openGame]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameId, user]);
 
   return (
     <div className="w-full h-[100dvh] bg-black overflow-hidden relative">
@@ -108,7 +123,7 @@ const Play = () => {
         }`}
       >
         <div className="relative">
-          <AppHeader balance={balanceValue} />
+          <AppHeader title={`৳ ${balanceValue}`} />
 
           {/* CLOSE BUTTON */}
           <button
