@@ -14,131 +14,73 @@ const TabNav = () => {
     <div className="fixed inset-x-0 bottom-0 z-[999] flex justify-center pb-[env(safe-area-inset-bottom,0px)]">
       <div className="w-full md:w-[500px] px-2">
         <div
-          className="flex items-center justify-between h-[52px] py-1 px-2"
-          style={{
-            background:
-              "linear-gradient(180deg, var(--color-cyan-18, #005A5A) 0%, var(--color-cyan-12, #003E3E) 50%, var(--color-cyan-9, #002C2C) 100%)",
-            boxShadow:
-              "0px -3.12px 10.4px rgba(8, 186, 183, 0.40)",
-            borderRadius: 36.4,
-            borderTop: "1px solid var(--color-cyan-53, #26E7E4)",
-          }}
+          className="flex items-center justify-between h-[56px] py-1 px-3 bg-[#0a1626]/95 border border-[#1b3554] rounded-2xl shadow-2xl backdrop-blur-md"
         >
           <div className="flex-1">
             <Link
               href="/"
-              className={`flex flex-col items-center justify-center  w-full ${
-                path === "/" ? "text-[#FFBC00]" : "text-[#23FFC8]"
+              className={`flex flex-col items-center justify-center w-full transition-colors ${
+                path === "/" ? "text-[#3888e9]" : "text-gray-400 hover:text-gray-200"
               }`}
             >
-              <TfiHome style={{ width: 23, height: 23 }} className="mx-auto" />
-              <p
-                style={{
-                  fontSize: 11.04,
-                  fontFamily: "Segoe UI",
-                  fontWeight: "700",
-                }}
-              >
-                Home
-              </p>
+              <TfiHome style={{ width: 20, height: 20 }} className="mx-auto mb-0.5" />
+              <p className="text-[11px] font-bold">Home</p>
             </Link>
           </div>
           <div className="flex-1">
             <Link
               href="/slots"
-              className={`flex flex-col items-center justify-center  w-full ${
-                path === "/slots" || path.startsWith("/play") || path.startsWith("/sportss") || path.startsWith("/slots")
-                  ? "text-[#FFBC00]"
-                  : "text-[#23FFC8]"
+              className={`flex flex-col items-center justify-center w-full transition-colors ${
+                path === "/slots" || path.startsWith("/play") || path.startsWith("/sportss")
+                  ? "text-[#3888e9]"
+                  : "text-gray-400 hover:text-gray-200"
               }`}
             >
-              <IoGameController
-                style={{ width: 23, height: 23 }}
-                className="mx-auto"
-              />
-              <p
-                style={{
-                  fontSize: 11.04,
-                  fontFamily: "Segoe UI",
-                  fontWeight: "700",
-                }}
-              >
-                Games
-              </p>
+              <IoGameController style={{ width: 20, height: 20 }} className="mx-auto mb-0.5" />
+              <p className="text-[11px] font-bold">Games</p>
             </Link>
           </div>
-          {/* middle */}
+          {/* Middle VIP Invite */}
           <div className="flex-1">
             <Link
               href="/invite-friends"
-              className={`flex flex-col items-center justify-start w-full ${
-                path.startsWith("/invite-friends") ? "text-[#FFBC00]" : "text-[#23FFC8]"
-              }`}
+              className="flex flex-col items-center justify-center w-full -mt-4"
             >
               <div
-                className={`flex rounded-full relative left-0 top-0 items-center justify-center ${
-                  path.startsWith("/invite-friends") ? "bg-[#FFBC00]" : "bg-[#23FFC8]"
+                className={`flex rounded-full items-center justify-center shadow-lg transition-transform active:scale-95 ${
+                  path.startsWith("/invite-friends")
+                    ? "bg-[#3888e9] text-white"
+                    : "bg-gradient-to-tr from-[#10b981] to-[#059669] text-white"
                 }`}
-                style={{ width: 35, height: 35 }}
+                style={{ width: 42, height: 42 }}
               >
-                <FaGift
-                  style={{ width: 20, height: 20 }}
-                  className="mx-auto !text-slate-950"
-                />
+                <FaGift style={{ width: 20, height: 20 }} />
               </div>
-              <p
-                style={{
-                  fontSize: 11.04,
-                  fontFamily: "Segoe UI",
-                  fontWeight: "700",
-                }}
-              >
-                Invite
-              </p>
+              <p className="text-[10px] font-bold text-gray-300 mt-1">Invite</p>
             </Link>
           </div>
           <div className="flex-1">
             <Link
               href="/rewardCenter"
-              className={`flex flex-col items-center justify-center  w-full ${
+              className={`flex flex-col items-center justify-center w-full transition-colors ${
                 path.startsWith("/rewardCenter") || path.startsWith("/reward")
-                  ? "text-[#FFBC00]"
-                  : "text-[#23FFC8]"
+                  ? "text-[#3888e9]"
+                  : "text-gray-400 hover:text-gray-200"
               }`}
             >
-              <BiAward style={{ width: 23, height: 23 }} className="mx-auto" />
-
-              <p
-                style={{
-                  fontSize: 11.04,
-                  fontFamily: "Segoe UI",
-                  fontWeight: "700",
-                }}
-              >
-                Reward
-              </p>
+              <BiAward style={{ width: 20, height: 20 }} className="mx-auto mb-0.5" />
+              <p className="text-[11px] font-bold">Reward</p>
             </Link>
           </div>
           <div className="flex-1">
             <Link
               href="/member"
-              className={`flex flex-col items-center justify-center  w-full ${
-                path.startsWith("/member") ? "text-[#FFBC00]" : "text-[#23FFC8]"
+              className={`flex flex-col items-center justify-center w-full transition-colors ${
+                path.startsWith("/member") ? "text-[#3888e9]" : "text-gray-400 hover:text-gray-200"
               }`}
             >
-              <GiCutDiamond
-                style={{ width: 23, height: 23 }}
-                className="mx-auto"
-              />
-              <p
-                style={{
-                  fontSize: 11.04,
-                  fontFamily: "Segoe UI",
-                  fontWeight: "700",
-                }}
-              >
-                Member
-              </p>
+              <GiCutDiamond style={{ width: 20, height: 20 }} className="mx-auto mb-0.5" />
+              <p className="text-[11px] font-bold">Profile</p>
             </Link>
           </div>
         </div>

@@ -57,7 +57,7 @@ const UserBalance = ({
             <div className="flex items-center h-full">
               <UserAvatar imageUrl="https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png" />
               <div
-                className="flex items-center px-2 rounded-md border border-t border-r border-b border-l border-teal-800 border-solid bg-[#002632] h-[31px] shadow-[rgb(0,38,49)_0px_1.5552px_0px_0px]"
+                className="flex items-center px-2 rounded-md border border-[#1b3554] bg-[#07101b] h-[32px] shadow-inner"
                 aria-haspopup="true"
               >
                 <div className="flex items-center w-full ">
@@ -138,11 +138,11 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
             className="flex items-center w-full"
           >
             <div className="flex items-center w-full">
-              <div className="flex overflow-x-hidden overflow-y-hidden items-center text-sm font-bold text-teal-400 whitespace-nowrap border-teal-400 decoration-teal-400 max-w-[104px] outline-teal-400 text-ellipsis">
-                <span className="mr-1.5 text-sm font-bold text-teal-400 whitespace-nowrap border-teal-400 decoration-teal-400 outline-teal-400">
+              <div className="flex overflow-x-hidden overflow-y-hidden items-center text-sm font-bold text-yellow-400 whitespace-nowrap max-w-[104px] text-ellipsis">
+                <span className="mr-1 text-sm font-bold text-yellow-400 whitespace-nowrap">
                   {currencySymbol}
                 </span>
-                <span className="overflow-x-hidden overflow-y-hidden text-sm font-bold text-teal-400 whitespace-nowrap border-teal-400 decoration-teal-400 outline-teal-400 text-ellipsis">
+                <span className="overflow-x-hidden overflow-y-hidden text-sm font-bold text-yellow-400 whitespace-nowrap text-ellipsis tracking-wide">
                   {amount}
                 </span>
               </div>

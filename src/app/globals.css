@@ -8,53 +8,45 @@
 }
 
 :root {
-  --www-wwwck444-com-segoe-UI-regular-font-family: "Segoe UI", Helvetica;
-  --www-wwwck444-com-segoe-UI-regular-font-size: 10.237499237060547px;
-  --www-wwwck444-com-segoe-UI-regular-font-style: normal;
-  --www-wwwck444-com-segoe-UI-regular-font-weight: 400;
-  --www-wwwck444-com-segoe-UI-regular-letter-spacing: 0px;
-  --www-wwwck444-com-segoe-UI-regular-line-height: normal;
-  --www-wwwck444-com-segoe-UI-regular-underline-font-family: "Segoe UI",
-    Helvetica;
-  --www-wwwck444-com-segoe-UI-regular-underline-font-size: 12.3046875px;
-  --www-wwwck444-com-segoe-UI-regular-underline-font-style: normal;
-  --www-wwwck444-com-segoe-UI-regular-underline-font-weight: 400;
-  --www-wwwck444-com-segoe-UI-regular-underline-letter-spacing: 0px;
-  --www-wwwck444-com-segoe-UI-regular-underline-line-height: 14.350000381469727px;
-  --www-wwwck444-com-semantic-button-font-family: "Segoe UI", Helvetica;
-  --www-wwwck444-com-semantic-button-font-size: 15.600000381469727px;
-  --www-wwwck444-com-semantic-button-font-style: normal;
-  --www-wwwck444-com-semantic-button-font-weight: 700;
-  --www-wwwck444-com-semantic-button-letter-spacing: 0px;
-  --www-wwwck444-com-semantic-button-line-height: 17.940000534057617px;
-  --www-wwwck444-com-semantic-heading-6-font-family: "Segoe UI", Helvetica;
-  --www-wwwck444-com-semantic-heading-6-font-size: 20.799999237060547px;
-  --www-wwwck444-com-semantic-heading-6-font-style: normal;
-  --www-wwwck444-com-semantic-heading-6-font-weight: 700;
-  --www-wwwck444-com-semantic-heading-6-letter-spacing: 0px;
-  --www-wwwck444-com-semantic-heading-6-line-height: normal;
-  --www-wwwck444-com-semantic-input-font-family: "Segoe UI", Helvetica;
-  --www-wwwck444-com-semantic-input-font-size: 12.5px;
-  --www-wwwck444-com-semantic-input-font-style: normal;
-  --www-wwwck444-com-semantic-input-font-weight: 700;
-  --www-wwwck444-com-semantic-input-letter-spacing: 0px;
-  --www-wwwck444-com-semantic-input-line-height: normal;
-  --wwwwwwck-44-4comdaintree: rgba(0, 38, 50, 1);
-  --wwwwwwck-44-4comfire: rgba(182, 65, 0, 1);
+  --font-segoe: "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", sans-serif;
+  
+  /* 1xBet International Palette */
+  --bg-primary: #070e17;
+  --bg-secondary: #0a1626;
+  --bg-card: #0f1f33;
+  --bg-card-hover: #142842;
+  --border-color: #1b3554;
+  --border-subtle: #142940;
+  
+  --accent-blue: #3888e9;
+  --accent-green: #10b981;
+  --accent-gold: #f59e0b;
+  --accent-yellow: #fbbf24;
+  
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  /* Legacy variable mapping to prevent breaking other pages */
+  --wwwwwwck-44-4comdaintree: rgba(10, 22, 38, 1);
+  --wwwwwwck-44-4comfire: rgba(16, 185, 129, 1);
   --wwwwwwck-44-4comwhite: rgba(255, 255, 255, 1);
-  --wwwwwwck444comblue-stone: #006165;
-  --wwwwwwck444combright-turquoise: rgba(35, 255, 200, 1);
-  --wwwwwwck444comfrosted-mint: rgba(224, 255, 247, 1);
-  --wwwwwwck444comselective-yellow: rgba(255, 184, 0, 1);
-  --wwwwwwck444comvis-vis-50: rgba(255, 242, 166, 0.5);
+  --wwwwwwck444comblue-stone: #0f1f33;
+  --wwwwwwck444combright-turquoise: rgba(56, 136, 233, 1);
+  --wwwwwwck444comfrosted-mint: rgba(241, 245, 249, 1);
+  --wwwwwwck444comselective-yellow: rgba(245, 158, 11, 1);
+  --wwwwwwck444comvis-vis-50: rgba(245, 158, 11, 0.3);
+}
+
+body {
+  background-color: #070e17;
+  color: #f1f5f9;
 }
 
 .app {
-  background: url("../../public/app-bg.jpeg") no-repeat;
-  background-size: cover;
+  background: #070e17;
   width: 100%;
-  height: auto;
-  background-color: #000;
+  min-height: 100vh;
 }
 
 .scrollbar-none::-webkit-scrollbar {
