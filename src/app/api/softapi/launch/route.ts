@@ -277,3 +277,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function GET() {
+  try {
+    const ipRes = await fetch("https://api.ipify.org?format=json", {
+      cache: "no-store",
+    });
+    const ipData = await ipRes.json();
+    return NextResponse.json({
+      success: true,
+      outbound_ip: ipData.ip,
+      note: "Whitelist this outbound_ip in your SoftAPI dashboard",
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: err?.message || "Failed to detect outbound IP" },
+      { status: 500 }
+    );
+  }
+}
+
