@@ -115,7 +115,7 @@ export async function createPlayer(data: {
   phone: string;
   password: string;
   currency?: string;
-}) {
+}): Promise<any> {
   const playerId = data.phone || data.username || `LOCAL_PLAYER_${Date.now()}`;
   return { success: true, player_id: playerId, player: { id: playerId } };
 }
