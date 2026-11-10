@@ -1,11 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
-const SUPABASE_FALLBACK_URL =
-  "postgresql://postgres.xcfditzqdvgwhcmdcztm:Tuhin%40Akhi1122@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
+const SUPABASE_TRANSACTION_POOLER_URL =
+  "postgresql://postgres.xcfditzqdvgwhcmdcztm:Tuhin%40Akhi1122@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1";
 
-function resolveValidDatabaseUrl(raw?: string): string {
-  if (!raw) return SUPABASE_FALLBACK_URL;
-  const cleaned = raw
+export function resolveValidDatabaseUrl(raw?: string): string {
+  if (!raw) return SUPABASE_TRANSACTION_POOLER_URL;
+  let cleaned = raw
     .trim()
     .replace(/^DATABASE_URL\s*=\s*/i, "")
     .replace(/^["']+|["']+$/g, "")
@@ -16,8 +16,18 @@ function resolveValidDatabaseUrl(raw?: string): string {
     cleaned.includes("localhost") ||
     cleaned.includes("127.0.0.1")
   ) {
-    return SUPABASE_FALLBACK_URL;
+    return SUPABASE_TRANSACTION_POOLER_URL;
   }
+
+  // Upgrade Supabase session pooler (:5432) to transaction pooler (:6543) to prevent EMAXCONNSESSION on Vercel
+  if (cleaned.includes(".pooler.supabase.com:5432")) {
+    cleaned = cleaned.replace(".pooler.supabase.com:5432", ".pooler.supabase.com:6543");
+  }
+  if (cleaned.includes(".pooler.supabase.com:6543") && !cleaned.includes("pgbouncer=true")) {
+    const sep = cleaned.includes("?") ? "&" : "?";
+    cleaned = `${cleaned}${sep}pgbouncer=true&connection_limit=1`;
+  }
+
   return cleaned;
 }
 
@@ -36,6 +46,7 @@ export const db =
         url: effectiveDatabaseUrl,
       },
     },
+    log: ["error", "warn"],
   });
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+globalForPrisma.prisma = db;
