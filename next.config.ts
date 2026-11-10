@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.51939393.com" },
       { protocol: "https", hostname: "c.animaapp.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "world-casino-api.com" },
       { protocol: "https", hostname: "igamingapis.com" },
       { protocol: "https", hostname: "igamingapis.live" },
       { protocol: "https", hostname: "**.gamexaglobal.com" },

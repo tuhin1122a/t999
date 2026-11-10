@@ -8,8 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SOFTAPI_TOKEN = process.env.SOFTAPI_TOKEN || "cebcb5eeb92bd5f68e6c8dd772827e11";
 const SOFTAPI_SECRET = process.env.SOFTAPI_SECRET || "0d6e277db0020770476bb22a8a075ca5";
-const SOFTAPI_SERVER_URL = process.env.SOFTAPI_SERVER_URL || "https://igamingapis.live/api/v1";
-const SOFTAPI_FALLBACK_URL = process.env.SOFTAPI_FALLBACK_URL || "https://igamingapis.com/api/v1";
+const SOFTAPI_SERVER_URL = process.env.SOFTAPI_SERVER_URL || "https://world-casino-api.com/api/v1";
+const SOFTAPI_FALLBACK_URL = process.env.SOFTAPI_FALLBACK_URL || "https://igamingapis.live/api/v1";
 const JWT_SECRET = process.env.AUTH_SECRET || "rk444_secret_key_t999_app";
 
 function encryptPayloadECB(data: Record<string, unknown>, key32: string): string {
