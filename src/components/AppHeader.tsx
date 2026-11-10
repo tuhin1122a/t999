@@ -13,12 +13,8 @@ const AppHeader = ({ title, fallbackUrl = "/", rightAction }: AppHeaderProps) =>
   const router = useRouter();
 
   const handleBack = useCallback(() => {
-    // If user opened this page directly (history length <= 2), router.back() won't work
-    if (typeof window !== "undefined" && window.history.length > 2) {
-      router.back();
-    } else {
-      router.push(fallbackUrl);
-    }
+    // Directly navigate to Home page (or fallbackUrl) as required
+    router.push(fallbackUrl || "/");
   }, [router, fallbackUrl]);
 
   return (
@@ -27,8 +23,8 @@ const AppHeader = ({ title, fallbackUrl = "/", rightAction }: AppHeaderProps) =>
         type="button"
         onClick={handleBack}
         className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#14263d] hover:bg-[#1e395b] active:scale-95 text-[#3888e9] hover:text-white border border-[#234267] transition-all cursor-pointer"
-        title="Go Back"
-        aria-label="Go Back"
+        title="Go to Home"
+        aria-label="Go to Home"
       >
         <IoIosArrowBack className="w-5 h-5" />
       </button>
