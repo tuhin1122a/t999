@@ -21,7 +21,7 @@ const AuthContainer = async ({
   children,
   title,
 }: AuthContainerProps) => {
-  const siteSettings = await db.siteSetting.findFirst();
+  const siteSettings = await db.siteSetting.findFirst().catch(() => null);
   const promotionsLogo = siteSettings?.promotionsLogo;
 
   return (

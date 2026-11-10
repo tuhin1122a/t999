@@ -5,7 +5,7 @@ import logo_sq from "@/../public/logo-sq.jpg";
 import { db } from "@/lib/db";
 
 const Footer = async () => {
-  const siteSettings = await db.siteSetting.findFirst();
+  const siteSettings = await db.siteSetting.findFirst().catch(() => null);
   const promotionsLogo = siteSettings?.promotionsLogo;
 
   return (
