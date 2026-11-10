@@ -1,8 +1,8 @@
 // GET /api/auth/mobile/banners
 // Returns active banner images from SiteSetting + promotions logo/notice text
 // This uses the EXISTING SiteSetting model (sliderImages array) from the admin dashboard
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {

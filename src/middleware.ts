@@ -5,7 +5,7 @@ import authConfig from "./auth.config";
 
 const { auth } = NextAuth({
   ...authConfig,
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || "LQcRGPS3mr4RoxYioGcwHQhkHDmrFKve3IVy8jll3Yg=",
 });
 
 export default auth(async (req) => {

@@ -9,7 +9,7 @@ import HeroSliderWrapper from "./HeroSliderWrapper";
 import { db } from "@/lib/db";
 
 const HomeApp = async () => {
-  const siteSettings = await db.siteSetting.findFirst();
+  const siteSettings = await db.siteSetting.findFirst().catch(() => null);
   const sliderImages = siteSettings?.sliderImages || [];
 
   return (

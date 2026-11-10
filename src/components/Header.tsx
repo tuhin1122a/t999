@@ -11,8 +11,8 @@ import HeaderBalance from "./HeaderBalance";
 import AppSideCanva from "./AppSideCanva";
 
 const Header = async () => {
-  const user: any = await findCurrentUser();
-  const siteSettings = await db.siteSetting.findFirst();
+  const user: any = await findCurrentUser().catch(() => null);
+  const siteSettings = await db.siteSetting.findFirst().catch(() => null);
   const promotionsLogo = siteSettings?.promotionsLogo;
 
   return (
