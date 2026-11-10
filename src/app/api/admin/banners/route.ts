@@ -4,7 +4,7 @@
 // PATCH  /api/admin/banners - update sortOrder of banners (reorder)
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // Helper: verify admin session (basic check using admin cookie/token)
 async function isAdmin(req: NextRequest): Promise<boolean> {

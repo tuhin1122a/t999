@@ -2,7 +2,7 @@
 // Returns active banner images from SiteSetting + promotions logo/notice text
 // This uses the EXISTING SiteSetting model (sliderImages array) from the admin dashboard
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {

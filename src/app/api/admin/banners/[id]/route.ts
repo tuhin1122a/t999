@@ -2,11 +2,14 @@
 // DELETE /api/admin/banners/[id] - delete a banner
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { imageUrl, title, linkUrl, isActive, sortOrder } = body;
 
@@ -27,9 +30,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = params;
+    const { id } = await params;
     await prisma.banner.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
