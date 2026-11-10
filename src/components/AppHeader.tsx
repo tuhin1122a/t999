@@ -1,20 +1,46 @@
 "use client";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useCallback } from "react";
 import { IoIosArrowBack } from "react-icons/io";
 
-const AppHeader = ({ title }: { title: string }) => {
+interface AppHeaderProps {
+  title: string;
+  fallbackUrl?: string;
+  rightAction?: React.ReactNode;
+}
+
+const AppHeader = ({ title, fallbackUrl = "/", rightAction }: AppHeaderProps) => {
   const router = useRouter();
+
+  const handleBack = useCallback(() => {
+    // If user opened this page directly (history length <= 2), router.back() won't work
+    if (typeof window !== "undefined" && window.history.length > 2) {
+      router.back();
+    } else {
+      router.push(fallbackUrl);
+    }
+  }, [router, fallbackUrl]);
+
   return (
-    <div className="flex sticky z-[100] top-0 w-full p-3 items-center justify-between bg-gradient-to-br from-[#134e4a] to-[#1e6f64]">
-      <button onClick={() => router.back()} className="w-max">
-        <IoIosArrowBack className="w-6 h-6 text-[#ffb800]" />
+    <div className="flex sticky z-[100] top-0 w-full px-3 py-2.5 items-center justify-between bg-[#0a1626] border-b border-[#1b3554] shadow-md">
+      <button
+        type="button"
+        onClick={handleBack}
+        className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#14263d] hover:bg-[#1e395b] active:scale-95 text-[#3888e9] hover:text-white border border-[#234267] transition-all cursor-pointer"
+        title="Go Back"
+        aria-label="Go Back"
+      >
+        <IoIosArrowBack className="w-5 h-5" />
       </button>
 
-      <div className="flex-1 ">
-        <h3 className="text-center w-full   !text-yellow-300 text-[length:var(--www-wwwck444-com-inter-bold-font-size)] tracking-[var(--www-wwwck444-com-inter-bold-letter-spacing)] leading-[var(--www-wwwck444-com-inter-bold-line-height)] whitespace-nowrap [font-style:var(--www-wwwck444-com-inter-bold-font-style)] text-lg font-bold">
+      <div className="flex-1 px-2 text-center">
+        <h3 className="text-white text-base font-bold tracking-wide truncate">
           {title}
         </h3>
+      </div>
+
+      <div className="min-w-[36px] flex justify-end">
+        {rightAction || <div className="w-9" />}
       </div>
     </div>
   );
