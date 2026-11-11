@@ -95,9 +95,9 @@ export async function POST(request: NextRequest) {
     let appUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
       process.env.NEXT_PUBLIC_SERVER_URL ||
-      "https://payment.betbeng.site";
+      "https://rk444.site";
     if (appUrl.includes("localhost")) {
-      appUrl = process.env.NEXT_PUBLIC_SERVER_URL || "https://payment.betbeng.site";
+      appUrl = process.env.NEXT_PUBLIC_SERVER_URL || "https://rk444.site";
     }
     appUrl = appUrl.replace(/\/+$/, "");
 
