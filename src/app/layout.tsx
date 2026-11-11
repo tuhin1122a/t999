@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { auth } from "@/auth";
 import { NotificationToaster } from "@/components/notifications/notification-toaster";
+import TawkToWidget from "@/components/TawkToWidget";
+import { db } from "@/lib/db";
+import { parseTawkConfig, TAWK_CONFIG_KEY } from "@/lib/tawk";
 import type { Metadata } from "next";
 import { SessionProvider } from "next-auth/react";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -40,6 +43,11 @@ export default async function RootLayout({
     console.error("RootLayout auth error:", err);
   }
 
+  const tawkRow = await db.siteConfig
+    .findUnique({ where: { key: TAWK_CONFIG_KEY } })
+    .catch(() => null);
+  const tawkConfig = parseTawkConfig(tawkRow?.value);
+
   return (
     <html lang="en">
       <head>
@@ -62,6 +70,11 @@ export default async function RootLayout({
               <StoreProvider>
                 <GamesLoader />
                 {children}
+                <TawkToWidget
+                  enabled={tawkConfig.enabled}
+                  widgetUrl={tawkConfig.widgetUrl}
+                  showFloatingBubble={tawkConfig.showFloatingBubble}
+                />
                 {session?.user && (
                   <NotificationToaster userId={session.user.id} />
                 )}

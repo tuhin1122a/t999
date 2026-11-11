@@ -2,6 +2,7 @@
 "use client";
 
 import { UserAvatar } from "@/components/HeaderBalance";
+import LiveChatTrigger from "@/components/LiveChatTrigger";
 import TabNav from "@/components/TabNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import useCurrentUser from "@/hook/useCurrentUser";
@@ -216,20 +217,38 @@ const App: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-4 gap-2.5 md:gap-3">
-            {menuItems.map((item) => (
-              <Link
-                href={item.href}
-                key={item.label}
-                className="group flex flex-col items-center rounded-2xl border border-[#006165] bg-[#002632] p-3 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#003840]/90 hover:border-[#23FFC8]/40"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#003e3e] text-[#23FFC8] border border-[#006165]/50 shadow-inner group-hover:bg-[#004e56] group-hover:text-white transition-colors">
-                  <item.icon className="h-5.5 w-5.5" />
-                </div>
-                <span className="mt-2.5 text-[10px] font-bold text-gray-300 transition group-hover:text-[#23FFC8] leading-tight">
-                  {item.label}
-                </span>
-              </Link>
-            ))}
+            {menuItems.map((item) => {
+              const cardClassName =
+                "group flex flex-col items-center rounded-2xl border border-[#006165] bg-[#002632] p-3 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#003840]/90 hover:border-[#23FFC8]/40 cursor-pointer";
+              const cardContent = (
+                <>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#003e3e] text-[#23FFC8] border border-[#006165]/50 shadow-inner group-hover:bg-[#004e56] group-hover:text-white transition-colors">
+                    <item.icon className="h-5.5 w-5.5" />
+                  </div>
+                  <span className="mt-2.5 text-[10px] font-bold text-gray-300 transition group-hover:text-[#23FFC8] leading-tight">
+                    {item.label}
+                  </span>
+                </>
+              );
+
+              if (item.label === "Customer Center") {
+                return (
+                  <LiveChatTrigger
+                    key={item.label}
+                    fallbackHref={item.href}
+                    className={cardClassName}
+                  >
+                    {cardContent}
+                  </LiveChatTrigger>
+                );
+              }
+
+              return (
+                <Link href={item.href} key={item.label} className={cardClassName}>
+                  {cardContent}
+                </Link>
+              );
+            })}
 
             {/* Poker Games (Special Golden Theme highlighted) */}
             <Link

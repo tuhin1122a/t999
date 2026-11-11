@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { MdHistory, MdOutlineSupportAgent } from "react-icons/md";
 import { FaArrowLeftLong } from "react-icons/fa6";
+import LiveChatTrigger from "@/components/LiveChatTrigger";
 import Withdraw from "./withdraw";
 
 const WithdrawPage = () => {
@@ -23,12 +24,14 @@ const WithdrawPage = () => {
         </button>
         <h3 className="text-base font-bold text-white tracking-wide">Withdraw</h3>
         <div className="flex items-center gap-3">
-          <Link
-            href="/support"
-            className="text-gray-300 hover:text-[#23FFC8] cursor-pointer transition-colors"
+          <LiveChatTrigger
+            fallbackHref="/support"
+            title="Live Chat Support"
+            ariaLabel="Live Chat Support"
+            className="text-gray-300 hover:text-[#23FFC8] cursor-pointer transition-colors flex items-center"
           >
             <MdOutlineSupportAgent className="text-xl" />
-          </Link>
+          </LiveChatTrigger>
           <Link
             href="/history?type=withdraw"
             className="text-gray-300 hover:text-[#23FFC8] cursor-pointer transition-colors"

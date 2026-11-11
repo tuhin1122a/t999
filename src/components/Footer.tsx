@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import logo_sq from "@/../public/logo-sq.jpg";
 import { db } from "@/lib/db";
+import LiveChatTrigger from "./LiveChatTrigger";
 
 const Footer = async () => {
   const siteSettings = await db.siteSetting.findFirst().catch(() => null);
@@ -27,11 +28,12 @@ const Footer = async () => {
             </div>
           </Link>
 
-          <Link
-            href="/support"
-            className="flex-1 max-w-[164px] h-[52px] rounded-[14.56px] border border-solid border-[#11867d80] shadow-[0px_2.08px_0px_#003941] [background:linear-gradient(180deg,rgba(15,114,124,1)_0%,rgba(0,78,86,1)_100%)]"
+          <LiveChatTrigger
+            fallbackHref="/support"
+            ariaLabel="Live Chat"
+            className="flex-1 max-w-[164px] h-[52px] flex items-center justify-center rounded-[14.56px] border border-solid border-[#11867d80] shadow-[0px_2.08px_0px_#003941] [background:linear-gradient(180deg,rgba(15,114,124,1)_0%,rgba(0,78,86,1)_100%)] cursor-pointer"
           >
-            <div className="relative w-[119px] h-[26px] top-3 left-[23px]">
+            <div className="relative w-[119px] h-[26px]">
               <div className="[text-shadow:0px_3.12px_0px_#b64100] text-3xl font-bold text-wwwwwwMbuzz88comselective-yellow absolute w-[119px] h-[26px] top-0 left-0 font-www-wwwMbuzz88-com-segoe-UI-bold-upper  text-[length:var(--www-wwwMbuzz88-com-segoe-UI-bold-upper-font-size)] text-center tracking-[var(--www-wwwMbuzz88-com-segoe-UI-bold-upper-letter-spacing)] leading-[var(--www-wwwMbuzz88-com-segoe-UI-bold-upper-line-height)] whitespace-nowrap [font-style:var(--www-wwwMbuzz88-com-segoe-UI-bold-upper-font-style)]">
                 Live Chat
               </div>
@@ -39,7 +41,7 @@ const Footer = async () => {
                 Live Chat
               </div>
             </div>
-          </Link>
+          </LiveChatTrigger>
         </div>
 
         {/* Game Center Title */}

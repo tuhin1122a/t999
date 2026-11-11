@@ -14,9 +14,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { logout } from "@/action/logout";
 import { getCurrencySymbol } from "@/lib/utils";
+import { openTawkChat } from "@/lib/tawk";
 const UserBalance = ({
   balance: initialBalance,
   currency,
@@ -174,6 +175,7 @@ const RefreshButton: React.FC<{ onRefresh?: () => void; isRefreshing?: boolean }
 };
 
 const DropdownMenu: React.FC = () => {
+  const router = useRouter();
   const handleLogout = () => {
     logout().then((res) => {
       if (res && res.success) {
@@ -214,7 +216,12 @@ const DropdownMenu: React.FC = () => {
     {
       icon: <RiCustomerService2Line className="w-6 h-6 text-white" />,
       label: "Customer Service",
-      onclick: () => redirect("/support"),
+      onclick: () => {
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+        if (!openTawkChat()) {
+          router.push("/support");
+        }
+      },
     },
     {
       icon: <IoLogOut className="w-5 h-5 text-white" />,

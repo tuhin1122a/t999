@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import useCurrentUser from "@/hook/useCurrentUser";
+import { openTawkChat } from "@/lib/tawk";
 import toast from "react-hot-toast";
 import {
   Accordion,
@@ -283,14 +284,31 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Info Message */}
-                <Alert className="m-4 bg-blue-50 border-blue-200">
-                  <i className="fas fa-info-circle text-blue-500 mr-2 text-sm"></i>
-                  <AlertTitle>Important Information</AlertTitle>
-                  <AlertDescription>
-                    Our support team is currently experiencing high volume.
-                    Expected response time is 5-10 minutes. Thank you for your
-                    patience.
-                  </AlertDescription>
+                <Alert className="m-4 bg-emerald-50 border-emerald-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <AlertTitle className="text-emerald-900 font-bold flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      24/7 Instant Live Agent Support
+                    </AlertTitle>
+                    <AlertDescription className="text-emerald-800 text-xs sm:text-sm mt-0.5">
+                      Need quick help with deposits, withdrawals, or game issues? Launch our live chat drawer instantly.
+                    </AlertDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!openTawkChat()) {
+                        if (window.__TAWK_ENABLED__ !== false && window.__TAWK_DIRECT_URL__) {
+                          window.open(window.__TAWK_DIRECT_URL__, "_blank", "noopener,noreferrer");
+                        } else {
+                          toast("Please use the support form below to message our team.");
+                        }
+                      }
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 font-semibold cursor-pointer"
+                  >
+                    <i className="fas fa-comments mr-2"></i> Start Live Chat
+                  </Button>
                 </Alert>
 
                 {/* Chat Messages Scroll Area */}

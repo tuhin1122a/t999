@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import useCurrentUser from "@/hook/useCurrentUser";
+import { openTawkChat } from "@/lib/tawk";
 import toast from "react-hot-toast";
 import AppHeader from "@/components/AppHeader";
 import SideNavLayout from "@/components/SideNavLayout";
@@ -229,9 +230,27 @@ const Chat: React.FC = () => {
                       <p className="text-xs text-emerald-400/80">Support team is online</p>
                     </div>
                   </div>
-                  <Badge className="bg-[#23FFC8]/10 text-[#23FFC8] border border-[#23FFC8]/20 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full">
-                    Online
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        if (!openTawkChat()) {
+                          if (window.__TAWK_ENABLED__ !== false && window.__TAWK_DIRECT_URL__) {
+                            window.open(window.__TAWK_DIRECT_URL__, "_blank", "noopener,noreferrer");
+                          } else {
+                            toast("Use the message box below to reach support.");
+                          }
+                        }
+                      }}
+                      className="bg-[#23FFC8] hover:bg-[#1ee0b0] text-[#001d1f] font-bold text-xs h-8 px-3 rounded-lg cursor-pointer"
+                    >
+                      <i className="fas fa-comments mr-1.5"></i> Live Chat
+                    </Button>
+                    <Badge className="bg-[#23FFC8]/10 text-[#23FFC8] border border-[#23FFC8]/20 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full">
+                      Online
+                    </Badge>
+                  </div>
                 </div>
 
                 {/* Player ID Section */}

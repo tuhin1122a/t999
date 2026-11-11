@@ -23,7 +23,9 @@ const AppSideCanva = ({ trigger }: AppSideCanvaProps) => {
         onClose={toggleDrawer(false)}
         className="z-[1001] h-screen"
       >
-        <SideNav />
+        <div onClick={toggleDrawer(false)}>
+          <SideNav />
+        </div>
       </Drawer>
     </>
   );

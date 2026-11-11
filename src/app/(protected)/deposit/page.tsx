@@ -3,6 +3,7 @@
 "use client";
 
 import DepositPageLoader from "@/components/loader/DepositPageLoader";
+import LiveChatTrigger from "@/components/LiveChatTrigger";
 import PaymentMethod from "@/components/PaymentMethod";
 import SiteHeader from "@/components/SiteHeader";
 import useGetCurrentUser from "@/hook/useCurrentUser";
@@ -197,9 +198,14 @@ const DepositPage: React.FC = () => {
       {data && !isLoading && user ? (
         <div className="min-h-screen bg-gray-50 flex flex-col">
           <SiteHeader title="Deposit">
-            <Link href="/support" className="text-gray-700 hover:text-gray-900">
+            <LiveChatTrigger
+              fallbackHref="/support"
+              title="Live Chat Support"
+              ariaLabel="Live Chat Support"
+              className="text-gray-700 hover:text-gray-900 cursor-pointer flex items-center"
+            >
               <MdOutlineSupportAgent className="text-lg" />
-            </Link>
+            </LiveChatTrigger>
             <Link href="/history" className="text-gray-700 hover:text-gray-900">
               <MdHistory className="text-lg" />
             </Link>

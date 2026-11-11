@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import LiveChatTrigger from "./LiveChatTrigger";
 import slot from "@/../public/icons/nav-slot.svg";
 import sport from "@/../public/icons/nav-sport.svg";
 import live from "@/../public/icons/nav-live.svg";
@@ -132,21 +133,44 @@ const SideNav = () => {
   return (
     <div className="h-screen !bg-[black] overflow-y-auto scrollbar-thin scrollbar-thumb-[#006165] scrollbar-track-[#044243]">
       <div className="grid grid-cols-2 items-start gap-2 px-5 py-8  h-auto">
-        {menuData.map((menu, i) => (
-          <Link
-            key={i}
-            href={menu.redirect}
-            className="flex overflow-hidden relative flex-col justify-center items-center px-3 py-2.5 w-full text-base font-bold text-center text-emerald-50 rounded-xl border-emerald-50 bg-[#003840] decoration-emerald-50 h-[93px] outline-emerald-50 shadow-[rgb(0,31,35)_0px_1.328px_0px_0px,rgb(0,97,101)_0px_1.328px_0px_0px_inset]"
-            aria-label={menu.title}
-          >
-            <figure className="overflow-hidden mb-1.5 w-10 h-10 text-base font-bold text-center text-emerald-50 bg-cover border-emerald-50 decoration-emerald-50 fill-[url('#icon_gradient2')] outline-emerald-50">
-              <Image src={menu.icon} alt={menu.title} className="w-[40px]" />
-            </figure>
-            <span className="text-base font-bold text-center text-emerald-50 border-emerald-50 decoration-emerald-50 outline-emerald-50">
-              {menu.title}
-            </span>
-          </Link>
-        ))}
+        {menuData.map((menu, i) => {
+          const itemClassName =
+            "flex overflow-hidden relative flex-col justify-center items-center px-3 py-2.5 w-full text-base font-bold text-center text-emerald-50 rounded-xl border-emerald-50 bg-[#003840] decoration-emerald-50 h-[93px] outline-emerald-50 shadow-[rgb(0,31,35)_0px_1.328px_0px_0px,rgb(0,97,101)_0px_1.328px_0px_0px_inset] cursor-pointer";
+          const content = (
+            <>
+              <figure className="overflow-hidden mb-1.5 w-10 h-10 text-base font-bold text-center text-emerald-50 bg-cover border-emerald-50 decoration-emerald-50 fill-[url('#icon_gradient2')] outline-emerald-50">
+                <Image src={menu.icon} alt={menu.title} className="w-[40px]" />
+              </figure>
+              <span className="text-base font-bold text-center text-emerald-50 border-emerald-50 decoration-emerald-50 outline-emerald-50">
+                {menu.title}
+              </span>
+            </>
+          );
+
+          if (menu.title === "Chat") {
+            return (
+              <LiveChatTrigger
+                key={i}
+                fallbackHref={menu.redirect}
+                ariaLabel={menu.title}
+                className={itemClassName}
+              >
+                {content}
+              </LiveChatTrigger>
+            );
+          }
+
+          return (
+            <Link
+              key={i}
+              href={menu.redirect}
+              className={itemClassName}
+              aria-label={menu.title}
+            >
+              {content}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
