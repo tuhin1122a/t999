@@ -7,9 +7,8 @@ import SiteHeader from "@/components/SiteHeader";
 import SideNavLayout from "@/components/SideNavLayout";
 import TabLayout from "@/components/TabLayout";
 import Footer from "@/components/Footer";
-import useCurrentUser from "@/hook/useCurrentUser";
 import { useGames } from "@/lib/store.zustond";
-import { Categories } from "@/types/game";
+import { Categories, NetEnt } from "@/types/game";
 import { GameCardWithProvider } from "@/components/GameCards";
 import GameLoader from "@/components/loader/GameLoader";
 import LiveChatTrigger from "@/components/LiveChatTrigger";
@@ -24,21 +23,24 @@ import {
   FaChevronDown,
   FaChevronUp,
   FaArrowRight,
+  FaLock,
+  FaCheck,
 } from "react-icons/fa6";
 import {
   RiCustomerService2Fill,
   RiMoneyDollarCircleFill,
   RiVipCrown2Fill,
 } from "react-icons/ri";
-import { MdOutlineVerifiedUser, MdCelebration } from "react-icons/md";
+import { MdCelebration } from "react-icons/md";
 import { HiSparkles } from "react-icons/hi2";
 
-// VIP Tiers Data
+// VIP Tiers Definition
 const VIP_TIERS = [
   {
     level: 1,
     name: "Bronze",
     tag: "Level 1",
+    wagerNumber: 10000,
     wager: "10,000",
     cashback: "2%",
     levelBonus: "500 ৳",
@@ -47,12 +49,18 @@ const VIP_TIERS = [
     borderColor: "border-[#B86B3E]/50",
     textColor: "text-[#E69B6C]",
     icon: "🥉",
-    perks: ["2% Weekly Net Cashback", "500 BDT Level-Up Bonus", "Standard 24/7 Support", "1x Turnover Rules"],
+    perks: [
+      "2% Weekly Net Cashback",
+      "500 BDT Level-Up Bonus",
+      "Priority 24/7 Live Support",
+      "Ultra-Low 1x Turnover Rules",
+    ],
   },
   {
     level: 2,
     name: "Silver",
     tag: "Level 2",
+    wagerNumber: 50000,
     wager: "50,000",
     cashback: "5%",
     levelBonus: "2,500 ৳",
@@ -61,12 +69,18 @@ const VIP_TIERS = [
     borderColor: "border-[#9CA3AF]/50",
     textColor: "text-[#E5E7EB]",
     icon: "🥈",
-    perks: ["5% Weekly Net Cashback", "2,500 BDT Level-Up Bonus", "Priority Fast Withdrawals", "Birthday Gift Drop"],
+    perks: [
+      "5% Weekly Net Cashback",
+      "2,500 BDT Level-Up Bonus",
+      "Express 5-Minute Withdrawals",
+      "Special Birthday Cash Drop",
+    ],
   },
   {
     level: 3,
     name: "Gold",
     tag: "Level 3",
+    wagerNumber: 250000,
     wager: "250,000",
     cashback: "8%",
     levelBonus: "10,000 ৳",
@@ -76,12 +90,18 @@ const VIP_TIERS = [
     textColor: "text-[#FDE68A]",
     icon: "🥇",
     popular: true,
-    perks: ["8% Weekly Net Cashback", "10,000 BDT Level-Up Bonus", "Higher Daily Withdrawal Limit", "Dedicated WhatsApp Support"],
+    perks: [
+      "8% Weekly Net Cashback",
+      "10,000 BDT Level-Up Bonus",
+      "Higher Daily Cashout Cap",
+      "Private WhatsApp VIP Agent",
+    ],
   },
   {
     level: 4,
     name: "Platinum",
     tag: "Level 4",
+    wagerNumber: 1000000,
     wager: "1,000,000",
     cashback: "14%",
     levelBonus: "50,000 ৳",
@@ -90,12 +110,18 @@ const VIP_TIERS = [
     borderColor: "border-[#06B6D4]/60",
     textColor: "text-[#A5F3FC]",
     icon: "💎",
-    perks: ["14% Weekly Net Cashback", "50,000 BDT Level-Up Cash", "Personal VIP Host 24/7", "Exclusive VIP Tournaments"],
+    perks: [
+      "14% Weekly Net Cashback",
+      "50,000 BDT Level-Up Cash",
+      "Personal VIP Host 24/7",
+      "High-Roller Tournaments Access",
+    ],
   },
   {
     level: 5,
     name: "Diamond Elite",
     tag: "Supreme VIP",
+    wagerNumber: 5000000,
     wager: "5,000,000",
     cashback: "20%",
     levelBonus: "200,000 ৳",
@@ -105,7 +131,12 @@ const VIP_TIERS = [
     textColor: "text-[#FBCFE8]",
     icon: "👑",
     elite: true,
-    perks: ["20% Maximum Weekly Cashback", "200,000 BDT Royal Level Bonus", "Unlimited Instant Withdrawals", "Luxury Gifts & Offline Hospitality"],
+    perks: [
+      "20% Maximum Weekly Cashback",
+      "200,000 BDT Royal Level Bonus",
+      "Unlimited Instant Withdrawals",
+      "Custom Luxury Gifts & Offline Events",
+    ],
   },
 ];
 
@@ -147,7 +178,7 @@ const VIP_PERKS = [
 const VIP_FAQS = [
   {
     q: "How do I become a member of the RK444 VIP Club?",
-    a: "Membership is 100% automatic! The moment you register and make your first real-money wager on any game, you are automatically enrolled as a VIP Member. Every bet you place contributes directly to your next VIP tier.",
+    a: "Membership is 100% automatic! The moment you register and place your first real-money wager on any game, you are enrolled as a VIP Member. Every bet you place contributes directly to your next VIP tier.",
   },
   {
     q: "When is the Weekly Cashback credited to my account?",
@@ -163,34 +194,101 @@ const VIP_FAQS = [
   },
 ];
 
+interface VipApiResponse {
+  authenticated: boolean;
+  user?: {
+    id: string;
+    name: string;
+    phone: string;
+    playerId: string;
+  } | null;
+  stats?: {
+    walletBalance: number;
+    totalWagered: number;
+    totalWon: number;
+    totalDepositAmount: number;
+    totalDepositCount: number;
+    estimatedCashback: number;
+  };
+  tier?: {
+    level: number;
+    name: string;
+    tag: string;
+    icon: string;
+    cashbackRate: string;
+    levelBonus: string;
+    minWager: number;
+    targetWager: number;
+    remainingWager: number;
+    progressPercent: number;
+    nextTierName: string;
+  };
+}
+
 const VipPage = () => {
-  const user = useCurrentUser();
-  const [selectedTier, setSelectedTier] = useState<number>(3); // Default Gold
+  const [vipData, setVipData] = useState<VipApiResponse | null>(null);
+  const [loadingVip, setLoadingVip] = useState(true);
+  const [selectedTier, setSelectedTier] = useState<number>(3); // Default Gold preview
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [searchGame, setSearchGame] = useState("");
-  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [hotGamesFallback, setHotGamesFallback] = useState<NetEnt[]>([]);
 
-  // Fetch balance
+  // Fetch real VIP status from backend
   useEffect(() => {
-    if (user?.id) {
-      fetch("/api/wallet", { cache: "no-store" })
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data?.payload?.balance !== undefined) {
-            setWalletBalance(Number(data.payload.balance));
-          }
-        })
-        .catch(() => {});
-    }
-  }, [user]);
+    let isMounted = true;
+    fetch("/api/vip/status", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted || !data) return;
+        setVipData(data);
+        if (data.tier?.level && data.tier.level > 0) {
+          setSelectedTier(data.tier.level);
+        }
+      })
+      .catch((err) => console.error("Error fetching VIP status:", err))
+      .finally(() => {
+        if (isMounted) setLoadingVip(false);
+      });
 
-  // Load VIP / Video Poker / Table games
+    // Fallback games
+    fetch("/api/games/hot", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted || !data) return;
+        if (Array.isArray(data.games)) {
+          setHotGamesFallback(data.games);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Load VIP / High Roller games from Zustand store
   const { getGames } = useGames((state) => state);
-  const vipGames = getGames(Categories.VideoPoker, searchGame, 12);
+  const videoPokerGames = getGames(Categories.VideoPoker, searchGame, 12) || [];
+  const slotGames = getGames(Categories.Slots, searchGame, 12) || [];
+
+  // Combine or fallback to real games
+  const displayGames: NetEnt[] =
+    videoPokerGames.length > 0
+      ? videoPokerGames
+      : hotGamesFallback.length > 0
+      ? hotGamesFallback.filter((g) =>
+          searchGame ? (g.title || (g as any).game_name || "").toLowerCase().includes(searchGame.toLowerCase()) : true
+        ).slice(0, 12)
+      : slotGames;
 
   const toggleFaq = (idx: number) => {
     setOpenFaq(openFaq === idx ? null : idx);
   };
+
+  const user = vipData?.user;
+  const stats = vipData?.stats;
+  const userTier = vipData?.tier;
+  const isAuthenticated = vipData?.authenticated === true;
 
   return (
     <SideNavLayout>
@@ -207,7 +305,7 @@ const VipPage = () => {
 
         <main className="min-h-screen bg-[#070e17] text-white px-3 sm:px-4 py-6 space-y-8 pb-28 md:pb-14 max-w-6xl mx-auto">
           {/* ══════════════════════════════════════════════════════════════════
-              1. HERO BANNER & PLAYER VIP CARD
+              1. HERO BANNER & REAL PLAYER VIP CARD
           ══════════════════════════════════════════════════════════════════ */}
           <div className="relative rounded-3xl p-5 sm:p-8 bg-gradient-to-br from-[#0c1b30] via-[#10243d] to-[#081324] border border-[#1d3d66] shadow-2xl overflow-hidden">
             {/* Ambient Background Glows */}
@@ -237,7 +335,7 @@ const VipPage = () => {
                 {/* Quick stats pills */}
                 <div className="flex flex-wrap gap-2 pt-1 text-xs">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#091524] border border-[#1b385c]">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-gray-300 font-bold">Up to 20% Cashback</span>
                   </div>
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#091524] border border-[#1b385c]">
@@ -251,77 +349,130 @@ const VipPage = () => {
                 </div>
               </div>
 
-              {/* Right Column: Player VIP Status Card */}
+              {/* Right Column: Real Player VIP Status Card */}
               <div className="lg:col-span-5">
                 <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-[#132845] to-[#0a172a] border-2 border-yellow-500/40 shadow-xl space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#1b3558]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center text-white text-lg font-black shadow-md shadow-yellow-500/20">
-                        👑
+                  {isAuthenticated && user ? (
+                    <>
+                      {/* Authenticated Player Header */}
+                      <div className="flex items-center justify-between pb-3 border-b border-[#1b3558]">
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center text-white text-lg font-black shadow-md shadow-yellow-500/20">
+                            {userTier?.icon || "👑"}
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-400 font-medium">Member Profile</div>
+                            <div className="text-sm font-black text-white truncate max-w-[170px]">
+                              {user.name || user.phone}
+                            </div>
+                          </div>
+                        </div>
+
+                        <span className="px-2.5 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-[11px] font-black uppercase tracking-wider">
+                          {userTier ? `${userTier.name} ${userTier.icon}` : "Bronze VIP"}
+                        </span>
                       </div>
-                      <div>
-                        <div className="text-xs text-gray-400 font-medium">Member Status</div>
-                        <div className="text-sm font-black text-white truncate max-w-[170px]">
-                          {user?.name || user?.phone || "RK444 VIP Player"}
+
+                      {/* Real Progress to Next Tier */}
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs font-bold">
+                          <span className="text-gray-300">Level Progress</span>
+                          <span className="text-yellow-400 font-mono">
+                            {userTier ? `${userTier.progressPercent}% to ${userTier.nextTierName}` : "0% Progress"}
+                          </span>
+                        </div>
+                        <div className="w-full h-2.5 rounded-full bg-[#081220] overflow-hidden border border-[#183454]">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 transition-all duration-700"
+                            style={{ width: `${userTier?.progressPercent || 0}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[11px] text-gray-400 pt-0.5 font-mono">
+                          <span>Wagered: {(stats?.totalWagered || 0).toLocaleString()} ৳</span>
+                          <span>Next: {(userTier?.targetWager || 10000).toLocaleString()} ৳</span>
                         </div>
                       </div>
-                    </div>
 
-                    <span className="px-2.5 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-[11px] font-black uppercase tracking-wider">
-                      Tier 1 · Bronze
-                    </span>
-                  </div>
+                      {/* Real Live Stats Grid */}
+                      <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                        <div className="p-2.5 rounded-xl bg-[#071322] border border-[#183454]">
+                          <span className="text-gray-400 text-[10px] uppercase font-bold block">Wallet Balance</span>
+                          <span className="text-white font-black text-sm">
+                            {(stats?.walletBalance || 0).toLocaleString()} ৳
+                          </span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-[#071322] border border-[#183454]">
+                          <span className="text-gray-400 text-[10px] uppercase font-bold block">Cashback Rate</span>
+                          <span className="text-emerald-400 font-black text-sm">
+                            {userTier?.cashbackRate || "2%"} Weekly
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* VIP Progress to Next Level */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-gray-300">Level Progress</span>
-                      <span className="text-yellow-400">45% to Silver VIP</span>
-                    </div>
-                    <div className="w-full h-2.5 rounded-full bg-[#081220] overflow-hidden border border-[#183454]">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 transition-all duration-500"
-                        style={{ width: "45%" }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[11px] text-gray-400 pt-0.5">
-                      <span>Wagered: 22,500 ৳</span>
-                      <span>Target: 50,000 ৳</span>
-                    </div>
-                  </div>
+                      {/* Actions */}
+                      <div className="pt-1 flex items-center gap-2">
+                        <Link
+                          href="/deposit"
+                          className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs text-center shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
+                        >
+                          Deposit & Level Up
+                        </Link>
+                        <LiveChatTrigger
+                          fallbackHref="/support"
+                          className="py-2.5 px-3 rounded-xl bg-[#091524] hover:bg-[#122842] border border-[#1c385c] text-gray-200 text-xs font-bold text-center active:scale-95 transition-all cursor-pointer"
+                        >
+                          Claim VIP Perk
+                        </LiveChatTrigger>
+                      </div>
+                    </>
+                  ) : (
+                    /* Guest View */
+                    <div className="space-y-4 text-center py-2">
+                      <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center text-2xl shadow-lg shadow-yellow-500/20">
+                        👑
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-base font-black text-white">Join the Elite VIP Club</h3>
+                        <p className="text-xs text-gray-300 font-medium">
+                          Log in to view your real wagering progress, weekly cashback rate, and unlocked tier rewards.
+                        </p>
+                      </div>
 
-                  {/* Fast Action CTA */}
-                  <div className="pt-1 flex items-center gap-2">
-                    <Link
-                      href="/deposit"
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs text-center shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
-                    >
-                      Deposit & Level Up
-                    </Link>
-                    <LiveChatTrigger
-                      fallbackHref="/support"
-                      className="py-2.5 px-3 rounded-xl bg-[#091524] hover:bg-[#122842] border border-[#1c385c] text-gray-200 text-xs font-bold text-center active:scale-95 transition-all"
-                    >
-                      Claim VIP Perk
-                    </LiveChatTrigger>
-                  </div>
+                      <div className="pt-2 flex items-center gap-2">
+                        <Link
+                          href="/login?redirect=/vip"
+                          className="flex-1 py-2.5 px-3 rounded-xl bg-[#3888e9] hover:bg-[#2b78d6] text-white font-black text-xs text-center shadow-md active:scale-95 transition-all"
+                        >
+                          Log In
+                        </Link>
+                        <Link
+                          href="/register?redirect=/vip"
+                          className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs text-center shadow-md active:scale-95 transition-all"
+                        >
+                          Register Free
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
           {/* ══════════════════════════════════════════════════════════════════
-              2. VIP TIERS & REWARDS PROGRESSION
+              2. VIP TIERS & REWARDS PROGRESSION (WITH REAL USER UNLOCK STATE)
           ══════════════════════════════════════════════════════════════════ */}
           <section className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
               <div>
                 <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
                   <FaTrophy className="text-yellow-400" />
-                  VIP Tier Progression & Rewards
+                  VIP Tier Progression & Criteria
                 </h2>
                 <p className="text-xs text-gray-400 font-medium">
-                  Choose any tier to inspect exact qualification criteria and lifetime benefits.
+                  {isAuthenticated
+                    ? `Your current wagered volume: ${(stats?.totalWagered || 0).toLocaleString()} ৳. Inspect each level's perks below.`
+                    : "Automatic promotion based on your total real-money betting volume."}
                 </p>
               </div>
 
@@ -332,13 +483,17 @@ const VipPage = () => {
                     key={t.level}
                     type="button"
                     onClick={() => setSelectedTier(t.level)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all duration-200 active:scale-95 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all duration-200 active:scale-95 cursor-pointer flex items-center gap-1 ${
                       selectedTier === t.level
                         ? "bg-[#3888e9] text-white shadow-md shadow-[#3888e9]/30 border border-[#3888e9]"
                         : "bg-[#0a1626] text-gray-300 hover:text-white border border-[#183454] hover:bg-[#11243d]"
                     }`}
                   >
-                    <span>{t.icon}</span> <span className="ml-1">{t.name}</span>
+                    <span>{t.icon}</span>
+                    <span>{t.name}</span>
+                    {userTier && userTier.level >= t.level && (
+                      <span className="text-[10px] text-emerald-400 font-bold ml-0.5">✓</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -348,6 +503,9 @@ const VipPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
               {VIP_TIERS.map((tier) => {
                 const isSelected = selectedTier === tier.level;
+                const isUnlocked = userTier ? userTier.level >= tier.level : false;
+                const isNextTier = userTier ? userTier.level === tier.level - 1 : false;
+
                 return (
                   <div
                     key={tier.level}
@@ -359,12 +517,17 @@ const VipPage = () => {
                     }`}
                   >
                     {/* Badge */}
-                    {tier.popular && (
+                    {isUnlocked && (
+                      <span className="absolute -top-2.5 left-3 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
+                        <FaCheck size={8} /> Unlocked
+                      </span>
+                    )}
+                    {tier.popular && !isUnlocked && (
                       <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-[9px] font-black uppercase tracking-wider shadow-sm">
                         Most Popular
                       </span>
                     )}
-                    {tier.elite && (
+                    {tier.elite && !isUnlocked && (
                       <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
                         Royal Elite
                       </span>
@@ -414,12 +577,22 @@ const VipPage = () => {
                     <div className="pt-4 mt-2">
                       <div
                         className={`w-full py-2 rounded-xl text-center text-[11px] font-black transition-all ${
-                          isSelected
+                          isUnlocked
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                            : isNextTier
+                            ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/40"
+                            : isSelected
                             ? "bg-[#3888e9] text-white shadow-sm"
                             : "bg-[#06101c] text-gray-400 border border-[#162e4a]"
                         }`}
                       >
-                        {isSelected ? "Active Preview" : "View Tier"}
+                        {isUnlocked
+                          ? "Current Status ✓"
+                          : isNextTier
+                          ? "Next Target 🎯"
+                          : isSelected
+                          ? "Active Preview"
+                          : "View Tier"}
                       </div>
                     </div>
                   </div>
@@ -465,7 +638,7 @@ const VipPage = () => {
           </section>
 
           {/* ══════════════════════════════════════════════════════════════════
-              4. EXCLUSIVE VIP HIGH-ROLLER GAMES SHOWCASE
+              4. REAL VIP HIGH-ROLLER GAMES SHOWCASE
           ══════════════════════════════════════════════════════════════════ */}
           <section className="space-y-4 pt-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -475,7 +648,7 @@ const VipPage = () => {
                   VIP High-Roller Games & Tables
                 </h2>
                 <p className="text-xs text-gray-400 font-medium">
-                  Exclusive high-stakes video poker, live VIP blackjack, and private luxury tables.
+                  High-stakes certified slots, live VIP blackjack, and private tables.
                 </p>
               </div>
 
@@ -491,16 +664,18 @@ const VipPage = () => {
               </div>
             </div>
 
-            {/* Games Grid */}
+            {/* Games Grid with real playable games */}
             <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5">
-              {vipGames &&
-                vipGames.map((game, i) => (
+              {displayGames && displayGames.length > 0 ? (
+                displayGames.map((game, i) => (
                   <GameCardWithProvider game={game} key={game.id || i} index={i} />
-                ))}
-              <GameLoader length={6} loading={!vipGames} category="slots" />
+                ))
+              ) : (
+                <GameLoader length={6} loading={true} category="slots" />
+              )}
             </div>
 
-            {vipGames && vipGames.length === 0 && (
+            {displayGames && displayGames.length === 0 && (
               <div className="text-center py-10 bg-[#091524] border border-[#162e4a] rounded-2xl space-y-2">
                 <p className="text-sm font-bold text-gray-300">No VIP games match your search</p>
                 <button
@@ -577,7 +752,7 @@ const VipPage = () => {
               </Link>
               <LiveChatTrigger
                 fallbackHref="/support"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#0e2238] hover:bg-[#153456] border border-[#23456c] text-gray-200 font-bold text-sm active:scale-95 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#0e2238] hover:bg-[#153456] border border-[#23456c] text-gray-200 font-bold text-sm active:scale-95 transition-all cursor-pointer"
               >
                 <RiCustomerService2Fill className="text-[#3888e9] text-base" />
                 <span>Talk with VIP Host</span>
