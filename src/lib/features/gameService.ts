@@ -71,16 +71,20 @@ export const launchSoftAPIGameService = async (game_id: string) => {
         "raw:",
         errorText
       );
-      throw new Error(`HTTP ${res.status}: ${message}`);
+      throw new Error("This game is currently under maintenance. Please try another game or check back shortly.");
     }
 
     const data = await res.json();
     console.log("🎯 launchSoftAPIGame response:", data);
 
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Launch SoftAPI game error:", error);
-    throw error;
+    throw new Error(
+      error?.message?.includes("maintenance") || error?.message?.includes("under maintenance")
+        ? error.message
+        : "This game is currently under maintenance. Please try another game or check back shortly."
+    );
   }
 };
 
@@ -123,10 +127,14 @@ export const launchGameFromAnyAPI = async (
       softApiResponse?.error ||
       softApiResponse?.msg ||
       softApiResponse?.message ||
-      "SoftAPI launch failed.";
+      "This game is currently under maintenance. Please try another game or check back shortly.";
     throw new Error(launchError);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error launching game:", error);
-    throw error;
+    throw new Error(
+      error?.message?.includes("maintenance") || error?.message?.includes("under maintenance")
+        ? error.message
+        : "This game is currently under maintenance. Please try another game or check back shortly."
+    );
   }
 };

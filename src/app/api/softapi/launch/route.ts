@@ -242,18 +242,18 @@ export async function POST(request: NextRequest) {
       if (softData && softData.code !== 0) {
         const remoteMsg = softData.msg || softData.message || "SoftAPI launch failed";
         console.warn(`[SoftAPI] Launch responded with code=${softData.code} from ${baseUrl}: ${remoteMsg}`);
-        if (softData.code === 9) {
-          return NextResponse.json(
-            {
-              success: false,
-              code: softData.code,
-              error: `Game under maintenance: ${remoteMsg}`,
-              msg: remoteMsg,
-              raw: softData,
-            },
-            { status: 502 }
-          );
-        }
+        return NextResponse.json(
+          {
+            success: false,
+            underMaintenance: true,
+            code: softData.code,
+            error: "This game is currently under maintenance. Please try again later.",
+            msg: "Game under maintenance",
+            developerDetails: remoteMsg,
+            raw: softData,
+          },
+          { status: 503 }
+        );
       }
     }
 
@@ -262,16 +262,19 @@ export async function POST(request: NextRequest) {
         softData?.msg ||
         softData?.message ||
         "SoftAPI launch failed";
+      console.warn(`[SoftAPI] Launch failed: ${remoteMsg}`);
       return NextResponse.json(
         {
           success: false,
+          underMaintenance: true,
           code: softData?.code ?? 1,
-          msg: remoteMsg,
-          error: `SoftAPI launch failed: ${remoteMsg}`,
-          status: 502,
+          msg: "Game under maintenance",
+          error: "This game is currently under maintenance. Please try again later.",
+          developerDetails: remoteMsg,
+          status: 503,
           raw: softData ?? rawResponseText?.slice(0, 1000),
         },
-        { status: 502 }
+        { status: 503 }
       );
     }
 
@@ -280,10 +283,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "SoftAPI did not return a launch URL",
+          underMaintenance: true,
+          error: "This game is currently under maintenance. Please try again later.",
+          msg: "Game under maintenance",
           raw: softData,
         },
-        { status: 502 }
+        { status: 503 }
       );
     }
 

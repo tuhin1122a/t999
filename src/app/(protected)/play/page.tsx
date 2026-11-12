@@ -24,6 +24,8 @@ import {
   FiX,
 } from "react-icons/fi";
 import { RiGamepadLine, RiWallet3Line } from "react-icons/ri";
+import { FaTools, FaGamepad, FaHeadset } from "react-icons/fa";
+import { HiWrenchScrewdriver } from "react-icons/hi2";
 
 // ── Live Wallet Balance Fetcher ──────────────────────────────────────────────
 async function fetchLatestBalance(): Promise<number | null> {
@@ -227,8 +229,12 @@ const Play = () => {
       } catch (err: any) {
         console.error("Game launch error:", err);
         setError(true);
-        setErrorMessage(err.message || "Failed to launch game");
-        toast.error(err.message || "Game failed to load");
+        const maintenanceMsg = "This game is currently under maintenance. Please try another game or check back shortly.";
+        setErrorMessage(maintenanceMsg);
+        toast.error("Game Under Maintenance (গেমটি সাময়িক রক্ষণাবেক্ষণে রয়েছে)", {
+          id: "game-maintenance",
+          duration: 4000,
+        });
         setIsLoading(false);
       }
     };
@@ -418,28 +424,75 @@ const Play = () => {
           />
         )}
 
-        {/* Error Screen */}
+        {/* Game Under Maintenance Screen */}
         {error && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 p-4">
-            <div className="w-full max-w-sm bg-[#0a1626] border border-[#1c304a] rounded-xl overflow-hidden shadow-2xl">
-              <div className="bg-[#b91c1c] px-4 py-3 text-white flex items-center gap-2.5">
-                <FiX size={18} />
-                <h2 className="text-sm font-bold">Game Launch Failed</h2>
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+            <div className="w-full max-w-md bg-[#0a1626] border border-[#1f3a5e] rounded-3xl overflow-hidden shadow-2xl">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-[#172c47] via-[#1a3352] to-[#14263d] border-b border-[#22436d] px-5 py-4 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+                    <HiWrenchScrewdriver className="text-xl" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black text-white">Game Under Maintenance</h2>
+                    <span className="text-[11px] text-amber-400 font-semibold">
+                      সাময়িক রক্ষণাবেক্ষণ চলছে
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={executeExit}
+                  className="w-8 h-8 rounded-full bg-[#070e17] hover:bg-[#dc2626] text-gray-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                  title="Close & Exit"
+                >
+                  <FiX size={18} />
+                </button>
               </div>
-              <div className="p-4 text-gray-300 text-xs">
-                <p className="bg-[#050b13] p-3 rounded border border-[#1b3452] text-red-300 mb-4 font-mono">
-                  {errorMessage || "Unable to establish connection with the game server."}
-                </p>
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="px-3 py-1.5 bg-[#14263d] hover:bg-[#1e395b] text-white rounded font-semibold text-xs"
+
+              {/* Body */}
+              <div className="p-5 sm:p-6 space-y-4">
+                <div className="p-4 rounded-2xl bg-[#070e17] border border-[#162e4a] text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-amber-400 mx-auto flex items-center justify-center shadow-lg shadow-amber-500/5">
+                    <FaTools className="text-2xl animate-pulse" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-black text-white">
+                      গেম প্রোভাইডার সার্ভার আপডেট
+                    </h3>
+                    <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
+                      গেম প্রোভাইডার কর্তৃক এই গেমটি বর্তমানে সাময়িক রক্ষণাবেক্ষণ বা কারিগরি আপডেটে রয়েছে। খুব শীঘ্রই গেমটি স্বাভাবিক হবে। অনুগ্রহ করে আমাদের লবি থেকে অন্য যেকোনো আকর্ষণীয় গেম উপভোগ করুন।
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="space-y-2 pt-1">
+                  <Link
+                    href="/games"
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-black text-xs sm:text-sm shadow-lg shadow-amber-400/20 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
                   >
-                    Try Again
-                  </button>
-                  <Link href="/games">
-                    <SecondaryButton>Return to Lobby</SecondaryButton>
+                    <FaGamepad className="text-base" />
+                    <span>অন্য গেম খেলুন (Return to Lobby)</span>
                   </Link>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="py-2.5 rounded-xl bg-[#14263d] hover:bg-[#1e395b] text-white border border-[#234267] text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <FiRefreshCw size={13} />
+                      <span>আবার চেষ্টা করুন</span>
+                    </button>
+
+                    <Link
+                      href="/support"
+                      className="py-2.5 rounded-xl bg-[#14263d] hover:bg-[#1e395b] text-[#3888e9] hover:text-white border border-[#234267] text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                    >
+                      <FaHeadset className="text-xs" />
+                      <span>২৪/৭ সাপোর্ট</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
