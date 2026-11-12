@@ -1,30 +1,172 @@
 "use client";
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { MdVerified } from "react-icons/md";
 import { FiChevronLeft, FiChevronRight, FiArrowRight } from "react-icons/fi";
 
-const providers = [
-  { name: "Pragmatic Play", logo: "/games/provider/PP-WHITE.png", brandId: "12" },
-  { name: "Evolution", logo: "/games/provider/EVO-WHITE.png", brandId: "59" },
-  { name: "JILI", logo: "/games/provider/JL.png", brandId: "99" },
-  { name: "PG Soft", logo: "/games/provider/PG-WHITE.png", brandId: "53" },
-  { name: "Spribe Aviator", logo: "/games/provider/spribe-WHITE.png", brandId: "91" },
-  { name: "NetEnt", logo: "/games/provider/NE-WHITE.png", brandId: "51" },
-  { name: "Play'n GO", logo: "/games/provider/PLAYNGO-WHITE.png", brandId: "77" },
-  { name: "Habanero", logo: "/games/provider/HABANERO.png", brandId: "64" },
-  { name: "JDB", logo: "/games/provider/JDB-WHITE.png", brandId: "49" },
-  { name: "Red Tiger", logo: "/games/provider/RT-WHITE.png", brandId: "52" },
-  { name: "Microgaming", logo: "/games/provider/MG-WHITE.png", brandId: "8" },
-  { name: "EGT Amusnet", logo: "/games/provider/EGT-WHITE.png", brandId: "14" },
-  { name: "Booming Games", logo: "/games/provider/BOOMING.png", brandId: "71" },
-  { name: "Quickspin", logo: "/games/provider/QUICSPIN.png", brandId: "72" },
-  { name: "RubyPlay", logo: "/games/provider/RUBYPLAY.png", brandId: "81" },
-  { name: "Golden Race", logo: "/games/provider/GOLDENRACE.png", brandId: "83" },
+interface ProviderItem {
+  brandId: string;
+  name: string;
+  logo: string;
+}
+
+const fallbackProviders: ProviderItem[] = [
+  {
+    brandId: "53",
+    name: "Pragmatic Play",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/brand_53_1759738767_0RTFI0ruM.png",
+  },
+  {
+    brandId: "45",
+    name: "PG Soft",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/pgsoft__eSCGuSud.png",
+  },
+  {
+    brandId: "49",
+    name: "JILI",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/jili_zCoKdKI0w.png",
+  },
+  {
+    brandId: "57",
+    name: "Spribe",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/spribe_PT57NjKD1.png",
+  },
+  {
+    brandId: "58",
+    name: "Evolution Live",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/brand_58_1759739497_u136bxtGP.png",
+  },
+  {
+    brandId: "50",
+    name: "JDB",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/jdb_bfN7Li8aT.svg",
+  },
+  {
+    brandId: "51",
+    name: "TADA Gaming",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/tadagaming_VODQcWMhZ.png",
+  },
+  {
+    brandId: "52",
+    name: "CQ9",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/cq9_GMWnfJS6j.png",
+  },
+  {
+    brandId: "61",
+    name: "FaChai Gaming",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/fachaigaming_XDlsvQLjm.png",
+  },
+  {
+    brandId: "68",
+    name: "NetEnt",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/netent_PcottkcL9.png",
+  },
+  {
+    brandId: "74",
+    name: "Red Tiger",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/redtiger_GckNg_i4e.png",
+  },
+  {
+    brandId: "73",
+    name: "Play'n GO",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/playngo_M64H004gH.png",
+  },
+  {
+    brandId: "91",
+    name: "Habanero",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/habanero_TzgioUNJE.svg",
+  },
+  {
+    brandId: "67",
+    name: "NoLimit City",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/nolimit-city_dGZqMlHEI.png",
+  },
+  {
+    brandId: "70",
+    name: "Relax Gaming",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/relaxgaming_-Yg8pOo7k.png",
+  },
+  {
+    brandId: "90",
+    name: "Microgaming",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/microgaming_mm5ILoG4V.png",
+  },
+  {
+    brandId: "72",
+    name: "Playtech",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/playtech_kh3OoJoCZ.svg",
+  },
+  {
+    brandId: "62",
+    name: "Big Time Gaming",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/bigtimegaming_R1n1_ixJN.jpg",
+  },
+  {
+    brandId: "78",
+    name: "Ezugi",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/ezugi_YOoNA87AJ.png",
+  },
+  {
+    brandId: "46",
+    name: "SABA Sports",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/sabasports-ibc_jLnyoDVBx.jpg",
+  },
+  {
+    brandId: "48",
+    name: "United Gaming",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/unitedgaming_mNkr4Q5Lu.png",
+  },
+  {
+    brandId: "64",
+    name: "GameArt",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/gameart_NBb8dzy_S.png",
+  },
+  {
+    brandId: "65",
+    name: "BGaming",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/bgaming_pdaAU3WLj.png",
+  },
+  {
+    brandId: "60",
+    name: "YeeBet",
+    logo: "https://ik.imagekit.io/f4rqxekfu/brands/yeebet_Qkd_HP7B1.png",
+  },
 ];
 
 const TrustedProviders = () => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [providerList, setProviderList] = useState<ProviderItem[]>(fallbackProviders);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/softapi/providers")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted || !data) return;
+        const list = Array.isArray(data.providers)
+          ? data.providers
+          : Array.isArray(data.games)
+          ? data.games
+          : [];
+        if (list.length > 0) {
+          const mapped: ProviderItem[] = list
+            .filter((p: { brand_id?: string | number; logo?: string }) => p.brand_id && p.logo)
+            .map((p: { brand_id: string | number; brand_title?: string; name?: string; logo: string }) => ({
+              brandId: String(p.brand_id),
+              name: p.brand_title || p.name || "Provider",
+              logo: p.logo,
+            }));
+          if (mapped.length > 0) {
+            setProviderList(mapped);
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const scrollLeft = () => {
     if (scrollRef.current) {
@@ -86,28 +228,31 @@ const TrustedProviders = () => {
         </div>
       </div>
 
-      {/* ── Providers Horizontal Scroll Strip (4 cards on mobile screen) ── */}
+      {/* ── Providers 2-Row Horizontal Scroll Grid (All Providers Scrollable) ── */}
       <div
         ref={scrollRef}
-        className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto scrollbar-none scroll-smooth pb-1"
+        className="grid grid-rows-2 grid-flow-col auto-cols-[135px] xs:auto-cols-[145px] sm:auto-cols-[160px] gap-2 sm:gap-2.5 overflow-x-auto scrollbar-none scroll-smooth pb-2 pt-1"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        {providers.map((p, i) => (
+        {providerList.map((p, i) => (
           <Link
-            key={i}
+            key={`${p.brandId}-${i}`}
             href={`/slots?providerId=${p.brandId}`}
-            className="group relative flex-shrink-0 flex items-center justify-center w-[calc(25%-6px)] min-w-[74px] sm:w-[120px] md:w-[135px] h-13 sm:h-16 px-1.5 sm:px-3 bg-[#0a1626]/90 hover:bg-[#112338] border border-[#18304e] hover:border-[#3888e9]/60 rounded-xl transition-all duration-200 active:scale-95 shadow-sm overflow-hidden"
+            className="group relative flex items-center justify-center w-full h-[52px] sm:h-[58px] px-2.5 bg-[#0a1626] hover:bg-[#112338] border border-[#162e4a] hover:border-[#3888e9]/60 rounded-lg transition-all duration-200 active:scale-95 shadow-sm overflow-hidden"
             title={`Play ${p.name} Games`}
           >
             {/* Subtle glow on hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#3888e9]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-            <div className="relative w-full h-7 sm:h-8 flex items-center justify-center">
+            <div className="relative w-full h-8 flex items-center justify-center">
               <img
                 src={p.logo}
                 alt={p.name}
-                className="max-h-6 sm:max-h-8 max-w-[62px] sm:max-w-[95px] w-auto h-auto object-contain filter grayscale group-hover:grayscale-0 opacity-80 group-hover:opacity-100 transition-all duration-200 transform group-hover:scale-105"
+                className="max-h-7 sm:max-h-8 max-w-[110px] sm:max-w-[125px] w-auto h-auto object-contain group-hover:scale-105 transition-transform duration-200"
                 loading="lazy"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/games/provider/default-game.png";
+                }}
               />
             </div>
           </Link>
@@ -118,4 +263,3 @@ const TrustedProviders = () => {
 };
 
 export default TrustedProviders;
-
