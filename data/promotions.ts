@@ -6,11 +6,16 @@ import promotion_5 from "../public/promotion/promotion-5.jpeg";
 import promotion_6 from "../public/promotion/promotion-6.jpeg";
 import promotion_7 from "../public/promotion/promotion-7.jpeg";
 import promotion_8 from "../public/promotion/promotion-8.jpeg";
+import sports_1 from "../public/sports/sports-1.png";
+import sports_2 from "../public/sports/sports-2.png";
+import slider_1 from "../public/slider/slider-1.jpg";
+import slider_3 from "../public/slider/slider-3.png";
+import slider_4 from "../public/slider/slider-4.png";
 
 export interface PromotionItem {
   id: number;
   context: string;
-  category: "all" | "welcome" | "slots" | "reload" | "cashback" | "referral";
+  category: "all" | "welcome" | "slots" | "reload" | "cashback" | "referral" | "sports" | "live";
   badge?: string;
   badgeColor?: string;
   image: any;
@@ -317,6 +322,167 @@ Enjoy your 25% extra credit to spin on any Pragmatic, JILI, or PG Soft slot!
 - ✅ Unlimited referrals allowed! Refer 10 friends and earn 3,000 BDT!
 - 💰 Bonuses are credited automatically once your friend completes the minimum deposit.
 - ⚠️ Multiple accounts or self-referral will result in account suspension.
+`,
+  },
+  {
+    id: 1008,
+    context: "Sports & Cricket",
+    category: "sports",
+    badge: "100% SPORTS + FREE BET",
+    badgeColor: "bg-gradient-to-r from-amber-500 to-orange-500 text-white",
+    turnover: "5x Wager",
+    minDeposit: "500 BDT",
+    image: sports_1,
+    title: "Cricket & Sportsbook 100% Welcome Bonus + 500 BDT Free Bet",
+    description:
+      "Back the Tigers in BPL, IPL, and international cricket matches with a 100% match bonus and a guaranteed 500 BDT Risk-Free Bet!",
+    content: `## 🏏 Cricket & Sportsbook 100% Welcome Match
+
+### Step 1:
+Register on **RK444** and visit the Cashier Deposit section.
+
+### Step 2:
+Select **Sports Welcome Bonus: 100% Match + Free Bet** during deposit.
+
+### Step 3:
+Deposit 500 BDT or more and immediately receive your 100% extra balance plus a 500 BDT Free Bet voucher!
+
+---
+
+## 📜 Promotion Rules & Terms
+
+- 🏏 Valid on all Cricket (IPL, BPL, ICC), Football, and Tennis sports markets.
+- 🎯 Minimum qualifying odds for bonus wagering is **1.50 or higher**.
+- 🔁 **Turnover Requirement:** Only **5x** (Deposit + Bonus) on Sports bets.
+- 🎁 Free Bet winnings can be withdrawn directly after 1x turnover!
+- ⚠️ Draw or canceled matches do not count toward turnover calculations.
+`,
+  },
+  {
+    id: 1009,
+    context: "bKash & Nagad Booster",
+    category: "reload",
+    badge: "5% EXTRA CASH",
+    badgeColor: "bg-gradient-to-r from-pink-600 via-rose-600 to-red-600 text-white",
+    turnover: "1x Turnover",
+    minDeposit: "200 BDT",
+    image: slider_3,
+    title: "bKash & Nagad 5% Instant Extra Cash Top-Up Bonus",
+    description:
+      "Deposit using bKash, Nagad, or Rocket and receive an automatic 5% instant cash bonus credited straight into your wallet on every top-up!",
+    content: `## ⚡ 5% Instant Cash on Every bKash / Nagad / Rocket Deposit
+
+### Step 1:
+Go to the **RK444** Deposit page and select **bKash**, **Nagad**, or **Rocket**.
+
+### Step 2:
+Choose **bKash & Nagad 5% Top-Up Bonus** from the bonus selection menu.
+
+### Step 3:
+Complete the deposit with your transaction ID (TrxID) and watch your 5% cash instantly add to your wallet upon admin approval!
+
+---
+
+## 📜 Promotion Rules & Terms
+
+- 🔄 **Unlimited Claims:** Available on every single deposit transaction!
+- 💸 Minimum deposit to qualify is only **200 BDT**.
+- 🔁 **Turnover Requirement:** Ultra-friendly **1x Turnover** before cashout.
+- 🎮 Valid for all casino games, slots, and sports wagering.
+`,
+  },
+  {
+    id: 1010,
+    context: "Live Dealer Tables",
+    category: "live",
+    badge: "50% LIVE BOOSTER",
+    badgeColor: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white",
+    turnover: "12x Wager",
+    minDeposit: "1,000 BDT",
+    image: sports_2,
+    title: "Live Casino & VIP Roulette 50% Weekend Reload Boost",
+    description:
+      "Play with attractive live dealers on Evolution, Sexy Baccarat, and Pragmatic Live with a 50% match bonus up to 10,000 BDT every weekend!",
+    content: `## 💃 50% Weekend Live Casino & Roulette Match
+
+### Step 1:
+Deposit between Friday 00:00 and Sunday 23:59 on **RK444**.
+
+### Step 2:
+Select **Weekend Live Casino 50% Booster** in the cashier.
+
+### Step 3:
+Enjoy live video streaming blackjack, baccarat, roulette, and Crazy Time with 50% extra funds!
+
+---
+
+## 📜 Promotion Rules & Terms
+
+- 🎲 Valid across all Live Dealer suites: Evolution, Sexy Baccarat, Ezugi, Pragmatic Live.
+- 💰 Maximum bonus payout is **10,000 BDT** per weekend.
+- 🔁 **Turnover Requirement:** 12x (Deposit + Bonus) on live table games.
+- 🚫 Opposite betting (e.g., betting on both Red & Black on Roulette) is strictly prohibited.
+`,
+  },
+  {
+    id: 1011,
+    context: "Crash & Aviator",
+    category: "slots",
+    badge: "20% RESCUE CASH",
+    badgeColor: "bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 text-white",
+    turnover: "1x Wager",
+    minDeposit: "Any Flight",
+    image: slider_4,
+    title: "Aviator & Spribe Crash 20% Daily Flight Insurance",
+    description:
+      "Fly high with zero stress! Get 20% instant daily rescue cashback on Spribe Aviator and crash games if your plane flies away early.",
+    content: `## ✈️ 20% Daily Flight Insurance for Aviator Players
+
+### How it works:
+1. Play **Spribe Aviator** or crash games on **RK444**.
+2. If your net daily flight session doesn't go your way, claim **20% Flight Insurance Cashback**!
+3. The insurance cash is credited daily straight into your main wallet with a light 1x turnover.
+
+---
+
+## 📜 Promotion Rules & Terms
+
+- ✈️ Exclusively valid on **Spribe Aviator**, JetX, and certified crash games.
+- 💸 Minimum cashback amount is **50 BDT**, maximum up to **5,000 BDT** daily.
+- 🔁 **Turnover Requirement:** Ultra-fast **1x** before cashout.
+`,
+  },
+  {
+    id: 1012,
+    context: "Royal VIP Level-Up",
+    category: "welcome",
+    badge: "200,000 BDT PRIZE",
+    badgeColor: "bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-black",
+    turnover: "1x Turnover",
+    minDeposit: "Play & Unlock",
+    image: slider_1,
+    title: "RK444 VIP Royal Tier Level-Up Cash Drops & Birthday Gifts",
+    description:
+      "Climb through Bronze, Silver, Gold, Platinum and Diamond Elite to unlock automatic cash gifts up to 200,000 BDT directly into your account!",
+    content: `## 👑 Royal VIP Tier Progression Rewards
+
+### 🏆 Level-Up Cash Drops Breakdown:
+
+| VIP Tier | Required Volume | Level-Up Cash Drop | Weekly Cashback |
+|:---------|:----------------|:-------------------|:----------------|
+| **Bronze VIP** | 10,000 ৳ | **500 ৳** | 2.0% |
+| **Silver VIP** | 50,000 ৳ | **2,500 ৳** | 5.0% |
+| **Gold VIP** | 250,000 ৳ | **10,000 ৳** | 8.0% |
+| **Platinum VIP** | 1,000,000 ৳ | **50,000 ৳** | 14.0% |
+| **Diamond Elite** | 5,000,000 ৳ | **200,000 ৳** | **20.0%** |
+
+---
+
+## 📜 Promotion Rules & Terms
+
+- 👑 Tier advancement is 100% automated based on your real wagering activity.
+- 🎁 Cash drops are instantly credited upon crossing each tier threshold.
+- 🔁 **Turnover Requirement:** Only **1x** before withdrawal!
 `,
   },
 ];

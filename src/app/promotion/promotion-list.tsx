@@ -22,7 +22,9 @@ import { RiMoneyDollarCircleFill } from "react-icons/ri";
 const CATEGORIES = [
   { id: "all", label: "All Offers" },
   { id: "welcome", label: "Welcome Bonus" },
-  { id: "slots", label: "Slots" },
+  { id: "sports", label: "Sports & Cricket" },
+  { id: "slots", label: "Slots & Crash" },
+  { id: "live", label: "Live Casino" },
   { id: "reload", label: "Deposit Reload" },
   { id: "cashback", label: "Cashback" },
   { id: "referral", label: "Refer & Earn" },

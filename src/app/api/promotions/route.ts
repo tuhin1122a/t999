@@ -31,6 +31,16 @@ export async function GET() {
         } else if (p.category === "referral") {
           actionUrl = "/login?redirect=/invite-friends";
           actionLabel = "Log In to Refer";
+        } else if (p.category === "sports") {
+          actionUrl = "/login?redirect=/promotion";
+          actionLabel = "Log In for Sports";
+          statusBadge = "Cricket & Sports 🏏";
+          statusBadgeColor = "bg-orange-500/20 text-orange-300 border border-orange-500/40";
+        } else if (p.category === "live") {
+          actionUrl = "/login?redirect=/promotion";
+          actionLabel = "Log In for Live";
+          statusBadge = "Live Casino 🎲";
+          statusBadgeColor = "bg-teal-500/20 text-teal-300 border border-teal-500/40";
         }
 
         return {
@@ -166,6 +176,18 @@ export async function GET() {
         statusBadgeColor = "bg-amber-500/20 text-amber-300 border border-amber-500/40";
         actionUrl = "/deposit";
         actionLabel = "Deposit for Slots";
+      } else if (p.category === "sports") {
+        userStatus = "AVAILABLE";
+        statusBadge = "Cricket & Football 🏏";
+        statusBadgeColor = "bg-orange-500/20 text-orange-300 border border-orange-500/40";
+        actionUrl = "/deposit";
+        actionLabel = "Claim Sports Match";
+      } else if (p.category === "live") {
+        userStatus = "AVAILABLE";
+        statusBadge = "Live Dealer 50% 🎲";
+        statusBadgeColor = "bg-teal-500/20 text-teal-300 border border-teal-500/40";
+        actionUrl = "/deposit";
+        actionLabel = "Claim Live Booster";
       }
 
       return {
@@ -211,3 +233,4 @@ export async function GET() {
     );
   }
 }
+
