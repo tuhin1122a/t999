@@ -31,7 +31,7 @@ import {
   RiMoneyDollarCircleFill,
   RiVipCrown2Fill,
 } from "react-icons/ri";
-import { MdCelebration } from "react-icons/md";
+import { MdCelebration, MdOutlineSupportAgent } from "react-icons/md";
 import { HiSparkles } from "react-icons/hi2";
 
 // VIP Tiers Definition
@@ -285,6 +285,16 @@ const VipPage = () => {
     setOpenFaq(openFaq === idx ? null : idx);
   };
 
+  const handleSelectTier = (lvl: number) => {
+    setSelectedTier(lvl);
+    if (typeof document !== "undefined") {
+      const el = document.getElementById(`tier-card-${lvl}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    }
+  };
+
   const user = vipData?.user;
   const stats = vipData?.stats;
   const userTier = vipData?.tier;
@@ -296,79 +306,45 @@ const VipPage = () => {
         <SiteHeader title="VIP Club Lounge" fallbackUrl="/">
           <LiveChatTrigger
             fallbackHref="/support"
-            className="flex items-center gap-1.5 text-xs font-bold text-gray-300 hover:text-white px-2.5 py-1 rounded-lg bg-[#142842] border border-[#23456e] transition-all active:scale-95 cursor-pointer"
+            title="VIP Host & Support"
+            ariaLabel="VIP Host & Support"
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#14263d] hover:bg-[#1e395b] active:scale-95 text-[#3888e9] hover:text-white border border-[#234267] transition-all cursor-pointer relative"
           >
-            <RiCustomerService2Fill className="text-[#3888e9] text-base" />
-            <span className="hidden sm:inline">VIP Host</span>
+            <MdOutlineSupportAgent className="text-xl" />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-[#0a1626]" />
           </LiveChatTrigger>
         </SiteHeader>
 
-        <main className="min-h-screen bg-[#070e17] text-white px-3 sm:px-4 py-6 space-y-8 pb-28 md:pb-14 max-w-6xl mx-auto">
+        <main className="min-h-screen bg-[#070e17] text-white px-2.5 sm:px-4 py-3 sm:py-6 space-y-6 sm:space-y-8 pb-28 md:pb-14 max-w-6xl mx-auto">
           {/* ══════════════════════════════════════════════════════════════════
               1. HERO BANNER & REAL PLAYER VIP CARD
           ══════════════════════════════════════════════════════════════════ */}
-          <div className="relative rounded-3xl p-5 sm:p-8 bg-gradient-to-br from-[#0c1b30] via-[#10243d] to-[#081324] border border-[#1d3d66] shadow-2xl overflow-hidden">
+          <div className="relative rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 lg:p-8 bg-gradient-to-br from-[#0c1b30] via-[#10243d] to-[#081324] border border-[#1d3d66] shadow-xl overflow-hidden">
             {/* Ambient Background Glows */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-[#3888e9]/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-72 h-72 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-72 h-72 bg-[#3888e9]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-              {/* Left Column: Headline */}
-              <div className="lg:col-span-7 space-y-3 sm:space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs font-extrabold uppercase tracking-widest shadow-sm">
-                  <FaCrown className="text-yellow-400 text-sm animate-pulse" />
-                  <span>RK444 ROYAL VIP CLUB</span>
-                </div>
-
-                <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-                  Play Like Royalty.{" "}
-                  <span className="bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent">
-                    Earn Infinite Rewards.
-                  </span>
-                </h1>
-
-                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-xl font-medium">
-                  Step inside Bangladesh’s most prestigious online gaming VIP lounge. Enjoy up to{" "}
-                  <strong className="text-white">20% Weekly Cashback</strong>, instant level-up cash drops, priority withdrawals, and a personal 24/7 VIP concierge.
-                </p>
-
-                {/* Quick stats pills */}
-                <div className="flex flex-wrap gap-2 pt-1 text-xs">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#091524] border border-[#1b385c]">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-gray-300 font-bold">Up to 20% Cashback</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#091524] border border-[#1b385c]">
-                    <HiSparkles className="text-yellow-400 text-sm" />
-                    <span className="text-gray-300 font-bold">200,000 BDT Level Bonus</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#091524] border border-[#1b385c]">
-                    <FaBolt className="text-[#3888e9] text-xs" />
-                    <span className="text-gray-300 font-bold">5-Min Fast Cashouts</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Real Player VIP Status Card */}
-              <div className="lg:col-span-5">
-                <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-[#132845] to-[#0a172a] border-2 border-yellow-500/40 shadow-xl space-y-4">
+            <div className="relative z-10 flex flex-col lg:grid lg:grid-cols-12 gap-4 sm:gap-6 items-stretch lg:items-center">
+              {/* Top on Mobile (Right on Desktop): Real Player VIP Status Card */}
+              <div className="w-full lg:col-span-5 lg:order-2">
+                <div className="rounded-xl sm:rounded-2xl p-3.5 sm:p-5 bg-gradient-to-b from-[#132845] to-[#0a172a] border border-yellow-500/40 shadow-xl space-y-3 sm:space-y-4">
                   {isAuthenticated && user ? (
                     <>
                       {/* Authenticated Player Header */}
-                      <div className="flex items-center justify-between pb-3 border-b border-[#1b3558]">
-                        <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center text-white text-lg font-black shadow-md shadow-yellow-500/20">
+                      <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-[#1b3558]">
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center text-white text-base sm:text-lg font-black shadow-md shadow-yellow-500/20 flex-shrink-0">
                             {userTier?.icon || "👑"}
                           </div>
                           <div>
-                            <div className="text-xs text-gray-400 font-medium">Member Profile</div>
-                            <div className="text-sm font-black text-white truncate max-w-[170px]">
+                            <div className="text-[11px] sm:text-xs text-gray-400 font-medium">VIP Member</div>
+                            <div className="text-xs sm:text-sm font-black text-white truncate max-w-[140px] xs:max-w-[180px] sm:max-w-[200px]">
                               {user.name || user.phone}
                             </div>
                           </div>
                         </div>
 
-                        <span className="px-2.5 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-[11px] font-black uppercase tracking-wider">
+                        <span className="px-2.5 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-[10px] sm:text-[11px] font-black uppercase tracking-wider whitespace-nowrap">
                           {userTier ? `${userTier.name} ${userTier.icon}` : "Bronze VIP"}
                         </span>
                       </div>
@@ -377,49 +353,49 @@ const VipPage = () => {
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-xs font-bold">
                           <span className="text-gray-300">Level Progress</span>
-                          <span className="text-yellow-400 font-mono">
+                          <span className="text-yellow-400 font-mono text-[11px] sm:text-xs">
                             {userTier ? `${userTier.progressPercent}% to ${userTier.nextTierName}` : "0% Progress"}
                           </span>
                         </div>
-                        <div className="w-full h-2.5 rounded-full bg-[#081220] overflow-hidden border border-[#183454]">
+                        <div className="w-full h-2 sm:h-2.5 rounded-full bg-[#081220] overflow-hidden border border-[#183454]">
                           <div
                             className="h-full rounded-full bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 transition-all duration-700"
                             style={{ width: `${userTier?.progressPercent || 0}%` }}
                           />
                         </div>
-                        <div className="flex justify-between text-[11px] text-gray-400 pt-0.5 font-mono">
+                        <div className="flex justify-between text-[10px] sm:text-[11px] text-gray-400 pt-0.5 font-mono">
                           <span>Wagered: {(stats?.totalWagered || 0).toLocaleString()} ৳</span>
                           <span>Next: {(userTier?.targetWager || 10000).toLocaleString()} ৳</span>
                         </div>
                       </div>
 
                       {/* Real Live Stats Grid */}
-                      <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
-                        <div className="p-2.5 rounded-xl bg-[#071322] border border-[#183454]">
-                          <span className="text-gray-400 text-[10px] uppercase font-bold block">Wallet Balance</span>
-                          <span className="text-white font-black text-sm">
+                      <div className="grid grid-cols-2 gap-2 pt-0.5 text-xs">
+                        <div className="p-2 sm:p-2.5 rounded-xl bg-[#071322] border border-[#183454]">
+                          <span className="text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold block">Wallet Balance</span>
+                          <span className="text-white font-black text-xs sm:text-sm">
                             {(stats?.walletBalance || 0).toLocaleString()} ৳
                           </span>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-[#071322] border border-[#183454]">
-                          <span className="text-gray-400 text-[10px] uppercase font-bold block">Cashback Rate</span>
-                          <span className="text-emerald-400 font-black text-sm">
+                        <div className="p-2 sm:p-2.5 rounded-xl bg-[#071322] border border-[#183454]">
+                          <span className="text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold block">Cashback Rate</span>
+                          <span className="text-emerald-400 font-black text-xs sm:text-sm">
                             {userTier?.cashbackRate || "2%"} Weekly
                           </span>
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="pt-1 flex items-center gap-2">
+                      <div className="pt-0.5 flex items-center gap-2">
                         <Link
                           href="/deposit"
-                          className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs text-center shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
+                          className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs text-center shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
                         >
-                          Deposit & Level Up
+                          Deposit & Boost
                         </Link>
                         <LiveChatTrigger
                           fallbackHref="/support"
-                          className="py-2.5 px-3 rounded-xl bg-[#091524] hover:bg-[#122842] border border-[#1c385c] text-gray-200 text-xs font-bold text-center active:scale-95 transition-all cursor-pointer"
+                          className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl bg-[#091524] hover:bg-[#122842] border border-[#1c385c] text-gray-200 text-xs font-bold text-center active:scale-95 transition-all cursor-pointer"
                         >
                           Claim VIP Perk
                         </LiveChatTrigger>
@@ -427,27 +403,27 @@ const VipPage = () => {
                     </>
                   ) : (
                     /* Guest View */
-                    <div className="space-y-4 text-center py-2">
-                      <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center text-2xl shadow-lg shadow-yellow-500/20">
+                    <div className="space-y-3 text-center py-2">
+                      <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center text-xl shadow-lg shadow-yellow-500/20">
                         👑
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-base font-black text-white">Join the Elite VIP Club</h3>
-                        <p className="text-xs text-gray-300 font-medium">
+                        <h3 className="text-sm sm:text-base font-black text-white">Join the Elite VIP Club</h3>
+                        <p className="text-[11px] sm:text-xs text-gray-300 font-medium">
                           Log in to view your real wagering progress, weekly cashback rate, and unlocked tier rewards.
                         </p>
                       </div>
 
-                      <div className="pt-2 flex items-center gap-2">
+                      <div className="pt-1 flex items-center gap-2">
                         <Link
                           href="/login?redirect=/vip"
-                          className="flex-1 py-2.5 px-3 rounded-xl bg-[#3888e9] hover:bg-[#2b78d6] text-white font-black text-xs text-center shadow-md active:scale-95 transition-all"
+                          className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl bg-[#3888e9] hover:bg-[#2b78d6] text-white font-black text-xs text-center shadow-md active:scale-95 transition-all"
                         >
                           Log In
                         </Link>
                         <Link
                           href="/register?redirect=/vip"
-                          className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs text-center shadow-md active:scale-95 transition-all"
+                          className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs text-center shadow-md active:scale-95 transition-all"
                         >
                           Register Free
                         </Link>
@@ -456,20 +432,56 @@ const VipPage = () => {
                   )}
                 </div>
               </div>
+
+              {/* Bottom on Mobile (Left on Desktop): Headline & Club Overview */}
+              <div className="w-full lg:col-span-7 lg:order-1 space-y-2.5 sm:space-y-4">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[10px] sm:text-xs font-extrabold uppercase tracking-widest shadow-sm">
+                  <FaCrown className="text-yellow-400 text-xs sm:text-sm animate-pulse" />
+                  <span>RK444 ROYAL VIP CLUB</span>
+                </div>
+
+                <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
+                  Play Like Royalty.{" "}
+                  <span className="bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent">
+                    Earn Infinite Rewards.
+                  </span>
+                </h1>
+
+                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-medium">
+                  Step inside Bangladesh’s most prestigious VIP lounge. Enjoy up to{" "}
+                  <strong className="text-white">20% Weekly Cashback</strong>, instant level cash drops, priority 5-min withdrawals, and a personal 24/7 VIP concierge.
+                </p>
+
+                {/* Quick stats pills (Clean 3-col on Mobile) */}
+                <div className="grid grid-cols-3 gap-1.5 pt-0.5 sm:flex sm:flex-wrap sm:gap-2 text-[10px] sm:text-xs">
+                  <div className="flex items-center justify-center sm:justify-start gap-1 py-1.5 px-2 rounded-xl bg-[#091524] border border-[#1b385c]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                    <span className="text-gray-300 font-bold truncate">20% Cashback</span>
+                  </div>
+                  <div className="flex items-center justify-center sm:justify-start gap-1 py-1.5 px-2 rounded-xl bg-[#091524] border border-[#1b385c]">
+                    <HiSparkles className="text-yellow-400 text-xs flex-shrink-0" />
+                    <span className="text-gray-300 font-bold truncate">200K Bonus</span>
+                  </div>
+                  <div className="flex items-center justify-center sm:justify-start gap-1 py-1.5 px-2 rounded-xl bg-[#091524] border border-[#1b385c]">
+                    <FaBolt className="text-[#3888e9] text-[10px] flex-shrink-0" />
+                    <span className="text-gray-300 font-bold truncate">5m Fast Pay</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* ══════════════════════════════════════════════════════════════════
               2. VIP TIERS & REWARDS PROGRESSION (WITH REAL USER UNLOCK STATE)
           ══════════════════════════════════════════════════════════════════ */}
-          <section className="space-y-4">
+          <section className="space-y-3 sm:space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
               <div>
-                <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-                  <FaTrophy className="text-yellow-400" />
+                <h2 className="text-base sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <FaTrophy className="text-yellow-400 text-base sm:text-lg" />
                   VIP Tier Progression & Criteria
                 </h2>
-                <p className="text-xs text-gray-400 font-medium">
+                <p className="text-[11px] sm:text-xs text-gray-400 font-medium">
                   {isAuthenticated
                     ? `Your current wagered volume: ${(stats?.totalWagered || 0).toLocaleString()} ৳. Inspect each level's perks below.`
                     : "Automatic promotion based on your total real-money betting volume."}
@@ -477,13 +489,13 @@ const VipPage = () => {
               </div>
 
               {/* Tier selector chips */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none w-full sm:w-auto -mx-1 px-1 sm:mx-0 sm:px-0">
                 {VIP_TIERS.map((t) => (
                   <button
                     key={t.level}
                     type="button"
-                    onClick={() => setSelectedTier(t.level)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all duration-200 active:scale-95 cursor-pointer flex items-center gap-1 ${
+                    onClick={() => handleSelectTier(t.level)}
+                    className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black whitespace-nowrap transition-all duration-200 active:scale-95 cursor-pointer flex items-center gap-1 ${
                       selectedTier === t.level
                         ? "bg-[#3888e9] text-white shadow-md shadow-[#3888e9]/30 border border-[#3888e9]"
                         : "bg-[#0a1626] text-gray-300 hover:text-white border border-[#183454] hover:bg-[#11243d]"
@@ -492,15 +504,21 @@ const VipPage = () => {
                     <span>{t.icon}</span>
                     <span>{t.name}</span>
                     {userTier && userTier.level >= t.level && (
-                      <span className="text-[10px] text-emerald-400 font-bold ml-0.5">✓</span>
+                      <span className="text-[9px] text-emerald-400 font-bold ml-0.5">✓</span>
                     )}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* 5 Tiers Grid Showcase */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            {/* Mobile swipe hint */}
+            <div className="flex sm:hidden items-center justify-between text-[11px] text-gray-400 px-0.5">
+              <span className="text-yellow-400/90 font-bold">👆 Swipe cards sideways</span>
+              <span className="text-gray-400 text-[10px]">5 VIP Tiers</span>
+            </div>
+
+            {/* 5 Tiers: Smooth Horizontal Swipeable Carousel on Mobile, Grid on Tablet/Desktop */}
+            <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-3.5 overflow-x-auto sm:overflow-visible pb-2 sm:pb-0 snap-x snap-mandatory scroll-smooth no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
               {VIP_TIERS.map((tier) => {
                 const isSelected = selectedTier === tier.level;
                 const isUnlocked = userTier ? userTier.level >= tier.level : false;
@@ -509,10 +527,11 @@ const VipPage = () => {
                 return (
                   <div
                     key={tier.level}
-                    onClick={() => setSelectedTier(tier.level)}
-                    className={`relative rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 active:scale-98 ${
+                    id={`tier-card-${tier.level}`}
+                    onClick={() => handleSelectTier(tier.level)}
+                    className={`relative rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 active:scale-98 w-[78vw] max-w-[280px] flex-shrink-0 snap-center sm:w-auto ${
                       isSelected
-                        ? "bg-gradient-to-b from-[#112845] to-[#091729] border-2 border-[#3888e9] shadow-xl shadow-[#3888e9]/20 -translate-y-1"
+                        ? "bg-gradient-to-b from-[#112845] to-[#091729] border-2 border-[#3888e9] shadow-xl shadow-[#3888e9]/20 -translate-y-0.5"
                         : "bg-[#091524] border border-[#152e4c] hover:border-[#3888e9]/50 hover:bg-[#0d1e34]"
                     }`}
                   >
@@ -535,8 +554,8 @@ const VipPage = () => {
 
                     <div>
                       {/* Tier Icon & Title */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#06101c] border border-[#1a385c] flex items-center justify-center text-xl shadow-inner">
+                      <div className="flex items-center justify-between mb-2.5 sm:mb-3">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#06101c] border border-[#1a385c] flex items-center justify-center text-lg sm:text-xl shadow-inner">
                           {tier.icon}
                         </div>
                         <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">
@@ -548,7 +567,7 @@ const VipPage = () => {
                         {tier.name} VIP
                       </h3>
 
-                      <div className="mt-2.5 space-y-1.5 py-2.5 border-y border-[#162e4a] text-xs">
+                      <div className="mt-2 space-y-1.5 py-2 sm:py-2.5 border-y border-[#162e4a] text-xs">
                         <div className="flex justify-between items-center">
                           <span className="text-gray-400 font-medium">Weekly Cashback:</span>
                           <span className="font-black text-emerald-400">{tier.cashback}</span>
@@ -564,19 +583,19 @@ const VipPage = () => {
                       </div>
 
                       {/* Key Perks */}
-                      <ul className="mt-3 space-y-1.5 text-[11px] text-gray-300">
+                      <ul className="mt-2.5 space-y-1 text-[11px] text-gray-300">
                         {tier.perks.map((p, pIdx) => (
                           <li key={pIdx} className="flex items-center gap-1.5">
-                            <span className="text-emerald-400 text-xs">✓</span>
+                            <span className="text-emerald-400 text-xs flex-shrink-0">✓</span>
                             <span className="truncate">{p}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    <div className="pt-4 mt-2">
+                    <div className="pt-3 mt-1.5">
                       <div
-                        className={`w-full py-2 rounded-xl text-center text-[11px] font-black transition-all ${
+                        className={`w-full py-1.5 sm:py-2 rounded-xl text-center text-[10px] sm:text-[11px] font-black transition-all ${
                           isUnlocked
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                             : isNextTier
@@ -604,31 +623,31 @@ const VipPage = () => {
           {/* ══════════════════════════════════════════════════════════════════
               3. VIP CORE PRIVILEGES & BENEFITS GRID
           ══════════════════════════════════════════════════════════════════ */}
-          <section className="space-y-4">
+          <section className="space-y-3 sm:space-y-4">
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-                <FaGem className="text-[#3888e9]" />
+              <h2 className="text-base sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <FaGem className="text-[#3888e9] text-base sm:text-lg" />
                 Exclusive VIP Privileges
               </h2>
-              <p className="text-xs text-gray-400 font-medium">
+              <p className="text-[11px] sm:text-xs text-gray-400 font-medium">
                 Standard players gamble. RK444 VIP members get rewarded on every move.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3.5">
               {VIP_PERKS.map((perk, idx) => (
                 <div
                   key={idx}
-                  className="rounded-2xl p-4 sm:p-5 bg-[#091524] border border-[#162e4a] hover:border-[#3888e9]/50 transition-all duration-200 group shadow-sm flex flex-col justify-between"
+                  className="rounded-xl sm:rounded-2xl p-3 sm:p-5 bg-[#091524] border border-[#162e4a] hover:border-[#3888e9]/50 transition-all duration-200 group shadow-sm flex flex-col justify-between"
                 >
-                  <div className="space-y-2.5">
-                    <div className="w-12 h-12 rounded-xl bg-[#06101c] border border-[#1b385a] flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                  <div className="space-y-2 sm:space-y-2.5">
+                    <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-[#06101c] border border-[#1b385a] flex items-center justify-center group-hover:scale-105 transition-transform shadow-inner">
                       {perk.icon}
                     </div>
-                    <h3 className="text-sm font-black text-white tracking-wide group-hover:text-[#3888e9] transition-colors">
+                    <h3 className="text-xs sm:text-sm font-black text-white tracking-wide group-hover:text-[#3888e9] transition-colors leading-snug">
                       {perk.title}
                     </h3>
-                    <p className="text-xs text-gray-400 leading-relaxed font-medium">
+                    <p className="text-[10px] sm:text-xs text-gray-400 leading-relaxed font-medium line-clamp-2 sm:line-clamp-none">
                       {perk.desc}
                     </p>
                   </div>
@@ -640,14 +659,14 @@ const VipPage = () => {
           {/* ══════════════════════════════════════════════════════════════════
               4. REAL VIP HIGH-ROLLER GAMES SHOWCASE
           ══════════════════════════════════════════════════════════════════ */}
-          <section className="space-y-4 pt-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <section className="space-y-3 sm:space-y-4 pt-1 sm:pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
               <div>
-                <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-                  <RiVipCrown2Fill className="text-yellow-400 text-xl" />
+                <h2 className="text-base sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <RiVipCrown2Fill className="text-yellow-400 text-lg sm:text-xl" />
                   VIP High-Roller Games & Tables
                 </h2>
-                <p className="text-xs text-gray-400 font-medium">
+                <p className="text-[11px] sm:text-xs text-gray-400 font-medium">
                   High-stakes certified slots, live VIP blackjack, and private tables.
                 </p>
               </div>
@@ -665,7 +684,7 @@ const VipPage = () => {
             </div>
 
             {/* Games Grid with real playable games */}
-            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5">
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-2.5">
               {displayGames && displayGames.length > 0 ? (
                 displayGames.map((game, i) => (
                   <GameCardWithProvider game={game} key={game.id || i} index={i} />
@@ -676,8 +695,8 @@ const VipPage = () => {
             </div>
 
             {displayGames && displayGames.length === 0 && (
-              <div className="text-center py-10 bg-[#091524] border border-[#162e4a] rounded-2xl space-y-2">
-                <p className="text-sm font-bold text-gray-300">No VIP games match your search</p>
+              <div className="text-center py-8 sm:py-10 bg-[#091524] border border-[#162e4a] rounded-2xl space-y-2">
+                <p className="text-xs sm:text-sm font-bold text-gray-300">No VIP games match your search</p>
                 <button
                   type="button"
                   onClick={() => setSearchGame("")}
@@ -692,18 +711,18 @@ const VipPage = () => {
           {/* ══════════════════════════════════════════════════════════════════
               5. VIP FAQ ACCORDION
           ══════════════════════════════════════════════════════════════════ */}
-          <section className="space-y-4 pt-2">
+          <section className="space-y-3 sm:space-y-4 pt-1 sm:pt-2">
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-                <FaShieldHalved className="text-emerald-400" />
+              <h2 className="text-base sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <FaShieldHalved className="text-emerald-400 text-base sm:text-lg" />
                 VIP Club Rules & Questions
               </h2>
-              <p className="text-xs text-gray-400 font-medium">
+              <p className="text-[11px] sm:text-xs text-gray-400 font-medium">
                 Everything you need to know about level-ups, cashback calculations, and rewards.
               </p>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {VIP_FAQS.map((faq, idx) => {
                 const isOpen = openFaq === idx;
                 return (
@@ -714,7 +733,7 @@ const VipPage = () => {
                     <button
                       type="button"
                       onClick={() => toggleFaq(idx)}
-                      className="w-full p-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-white hover:text-[#3888e9] transition-colors"
+                      className="w-full p-3.5 sm:p-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-white hover:text-[#3888e9] transition-colors"
                     >
                       <span>{faq.q}</span>
                       <span className="text-gray-400 text-xs">
@@ -722,7 +741,7 @@ const VipPage = () => {
                       </span>
                     </button>
                     {isOpen && (
-                      <div className="px-4 pb-4 pt-1 text-xs text-gray-300 leading-relaxed border-t border-[#12263d] font-medium bg-[#06101c]">
+                      <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4 pt-1 text-xs text-gray-300 leading-relaxed border-t border-[#12263d] font-medium bg-[#06101c]">
                         {faq.a}
                       </div>
                     )}
@@ -735,24 +754,24 @@ const VipPage = () => {
           {/* ══════════════════════════════════════════════════════════════════
               6. ROYAL CTA BANNER
           ══════════════════════════════════════════════════════════════════ */}
-          <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-emerald-950/60 via-[#0a1e36] to-[#0c182b] border border-emerald-500/40 text-center space-y-4 shadow-xl">
-            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+          <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-8 bg-gradient-to-r from-emerald-950/60 via-[#0a1e36] to-[#0c182b] border border-emerald-500/40 text-center space-y-3 sm:space-y-4 shadow-xl">
+            <h3 className="text-lg sm:text-2xl font-black text-white tracking-tight">
               Ready to Claim Your VIP Throne?
             </h3>
             <p className="text-xs sm:text-sm text-gray-300 max-w-lg mx-auto font-medium">
               Start playing with real money now. Your bets automatically count towards your next level-up cash drop and weekly cashback!
             </p>
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3">
               <Link
                 href="/deposit"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-sm shadow-lg shadow-emerald-500/25 active:scale-95 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/25 active:scale-95 transition-all"
               >
                 <span>Deposit & Boost VIP Level</span>
                 <FaArrowRight size={13} />
               </Link>
               <LiveChatTrigger
                 fallbackHref="/support"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#0e2238] hover:bg-[#153456] border border-[#23456c] text-gray-200 font-bold text-sm active:scale-95 transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:py-3 rounded-xl bg-[#0e2238] hover:bg-[#153456] border border-[#23456c] text-gray-200 font-bold text-xs sm:text-sm active:scale-95 transition-all cursor-pointer"
               >
                 <RiCustomerService2Fill className="text-[#3888e9] text-base" />
                 <span>Talk with VIP Host</span>
