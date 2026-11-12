@@ -3,93 +3,100 @@ import { findCurrentUser } from "@/data/user";
 import { INTERNAL_SERVER_ERROR } from "@/error";
 import { db } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export const GET = async () => {
   try {
     const user: any = await findCurrentUser();
 
-    const claimedSigninRewards = await db.claimedSigninReward.findMany({
-      where: { userId: user!.id },
-      include: {
-        reward: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const rewards: any = await db.signinBonusRewards.findMany();
+    // Sort rewards numerically by day
+    rewards.sort((a: any, b: any) => Number(a.day) - Number(b.day));
+
+    if (!user) {
+      return Response.json({
+        authenticated: false,
+        user: null,
+        statictic: {
+          totalSigninIncome: 0,
+          lastSigninIncome: 0,
+        },
+        lastClaimed: null,
+        nextClaimAvailable: rewards[0] || null,
+        rewards: rewards.map((r: any) => ({ ...r, status: "AVAILABLE" })),
+      });
+    }
+
+    const [claimedSigninRewards, userApprovedDeposits, wallet] = await Promise.all([
+      db.claimedSigninReward.findMany({
+        where: { userId: user.id },
+        include: { reward: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      db.deposit.findMany({
+        where: { userId: user.id, status: "APPROVED" },
+        select: { id: true, amount: true, createdAt: true },
+      }),
+      db.wallet.findUnique({
+        where: { userId: user.id },
+        select: { balance: true },
+      }),
+    ]);
 
     const totalSigninIncome = claimedSigninRewards.reduce(
-      (acc, claimedSigninReward) => {
-        if (claimedSigninReward.isClamed) {
-          return acc + claimedSigninReward.reward.prize;
-        }
-        return acc;
-      },
+      (acc, c) => (c.isClamed ? acc + c.reward.prize : acc),
       0
     );
 
-    const lastSignin = claimedSigninRewards.find(
-      (claimedSigninReward) => claimedSigninReward.isClamed
-    );
+    const lastSignin = claimedSigninRewards.find((c) => c.isClamed);
 
-    const rewards: any = await db.signinBonusRewards.findMany({ where: {} });
-
-    const deposits = await db.deposit.findMany({
-      where: { status: "APPROVED" },
-      include: { ClaimedSigninReward: true },
-    });
-
-    rewards.map((reward: any) => {
-      const id = reward.id;
-
+    // Compute status for each day:
+    // CLAIMED: already claimed
+    // CLAIM: eligible to claim right now (has qualifying deposit)
+    // AVAILABLE: needs deposit to unlock
+    rewards.forEach((reward: any) => {
       const alreadyClaimed = claimedSigninRewards.find(
-        (claimedSigninReward) =>
-          claimedSigninReward.reward.id == id && claimedSigninReward.isClamed
+        (c) => c.rewardId === reward.id && c.isClamed
       );
 
       if (alreadyClaimed) {
         reward.status = "CLAIMED";
-        return reward;
+        return;
       }
 
-      const readyToClaim = deposits.find((deposit) => {
-        if (!deposit.ClaimedSigninReward) {
-          return false;
-        } else {
-          return deposit.ClaimedSigninReward.rewardId == id;
-        }
-      });
+      const hasQualifyingDeposit = userApprovedDeposits.some(
+        (d) => Number(d.amount) >= Number(reward.deposit)
+      );
 
-      if (readyToClaim) {
+      if (hasQualifyingDeposit) {
         reward.status = "CLAIM";
-        return reward;
-      }
-
-      reward.status = "AVAILABLE";
-      return reward;
-    });
-
-    const nextClaimAvailable = rewards.find((reward: any) => {
-      if (claimedSigninRewards.length == 0) {
-        return true;
       } else {
-        const unclaimed = claimedSigninRewards.find(
-          (claimedSigninReward) => claimedSigninReward.reward.id !== reward.id
-        );
-        return !!unclaimed;
+        reward.status = "AVAILABLE";
       }
     });
+
+    const nextClaimAvailable =
+      rewards.find((r: any) => r.status !== "CLAIMED") || rewards[rewards.length - 1] || null;
 
     return Response.json({
+      authenticated: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        playerId: user.playerId,
+        balance: wallet?.balance ? Number(wallet.balance) : 0,
+      },
       statictic: {
         totalSigninIncome,
-        lastSigninIncome: lastSignin?.reward.prize || 0,
+        lastSigninIncome: lastSignin?.reward?.prize || 0,
       },
-      lastClaimed: lastSignin,
+      lastClaimed: lastSignin || null,
       nextClaimAvailable,
-      rewards: rewards,
+      rewards,
     });
   } catch (error) {
-    console.log({ error });
+    console.error("Error in signin-bonus GET API:", error);
     return Response.json({ error: INTERNAL_SERVER_ERROR }, { status: 500 });
   }
 };

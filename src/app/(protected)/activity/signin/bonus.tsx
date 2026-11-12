@@ -1,43 +1,68 @@
-"use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
 import React from "react";
 import Header from "./header";
 import SigninBonusPlan from "./plan";
 import BonusCards from "./bonus-cards";
+import Rules from "./rules";
 import useCurrentUser from "@/hook/useCurrentUser";
 import { useFindSigninBonusRewardsDataQuery } from "@/lib/features/rewardApiSlice";
-import Rules from "./rules";
 
 const SigninBonus = () => {
   const user: any = useCurrentUser();
-
   const { data, isLoading } = useFindSigninBonusRewardsDataQuery();
-  console.log({ data });
-  const statictic = data?.statictic;
 
+  const statictic = data?.statictic;
   const nextClaimAvailable = data?.nextClaimAvailable;
+  const rewards = data?.rewards || [];
+  const isAuthenticated = Boolean(user && user.id) || Boolean(data?.authenticated);
+
+  const balance = user?.wallet?.balance
+    ? Number(user.wallet.balance)
+    : data?.user?.balance
+    ? Number(data.user.balance)
+    : 0;
+
+  const lastSigninBonus = statictic?.lastSigninIncome || 0;
+  const totalSigninBonus = statictic?.totalSigninIncome || 0;
+
+  if (isLoading && !data) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-48 rounded-2xl bg-[#0a1626] border border-[#162e4a]" />
+        <div className="h-28 rounded-2xl bg-[#0a1626] border border-[#162e4a]" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+          {[...Array(7)].map((_, i) => (
+            <div
+              key={i}
+              className="h-36 rounded-2xl bg-[#0a1626] border border-[#162e4a]"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      {(data || !isLoading) && (
-        <>
-          <Header
-            balance={user.wallet ? +user.wallet.balance : 0}
-            lastSigninBonus={statictic?.lastSigninIncome || 0}
-            playerId={user.playerId}
-            profile="https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png"
-            totalSigninBonus={statictic?.totalSigninIncome || 0}
-          />
-          <SigninBonusPlan nextClaimAvailable={nextClaimAvailable} />
-          <BonusCards rewards={data.rewards} />
-          <Rules />
-        </>
-      )}
-      {!data && isLoading && (
-        <div className="w-full h-screen flex justify-center items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      )}
+    <div className="space-y-5 sm:space-y-6">
+      <Header
+        balance={balance}
+        lastSigninBonus={lastSigninBonus}
+        totalSigninBonus={totalSigninBonus}
+        playerId={user?.playerId || data?.user?.playerId}
+        userName={user?.name || user?.phone || data?.user?.name}
+        isAuthenticated={isAuthenticated}
+      />
+
+      <SigninBonusPlan
+        nextClaimAvailable={nextClaimAvailable}
+        isAuthenticated={isAuthenticated}
+      />
+
+      <BonusCards rewards={rewards} isAuthenticated={isAuthenticated} />
+
+      <Rules />
     </div>
   );
 };
