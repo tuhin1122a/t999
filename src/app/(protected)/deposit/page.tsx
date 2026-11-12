@@ -8,14 +8,15 @@ import PaymentMethod from "@/components/PaymentMethod";
 import SiteHeader from "@/components/SiteHeader";
 import useGetCurrentUser from "@/hook/useCurrentUser";
 import {
-    useGetDepositPaymentDataQuery,
-    useMakeDepositeMutation,
+  useGetDepositPaymentDataQuery,
+  useMakeDepositeMutation,
 } from "@/lib/features/depositApiSlice";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FaCheck, FaChevronLeft } from "react-icons/fa";
-import { MdHistory, MdOutlineSupportAgent } from "react-icons/md";
+import { MdHistory, MdOutlineSupportAgent, MdSecurity } from "react-icons/md";
+import { HiSparkles } from "react-icons/hi2";
 import { PulseLoader } from "react-spinners";
 
 type BonusOption = {
@@ -67,10 +68,6 @@ const DepositPage: React.FC = () => {
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDepositAmount(e.target.value);
     setSelectedAmountButton(null);
-  };
-
-  const handleWalletNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWalletNumber(e.target.value);
   };
 
   const calculateBonus = (amount: number) => {
@@ -152,11 +149,12 @@ const DepositPage: React.FC = () => {
   const totalAmount = parseFloat(depositAmount) || 0;
   const bonusAmount = calculateBonus(totalAmount);
   const grandTotal = totalAmount + bonusAmount;
-  
+
   // Validation checks for UI steps
-  const isValidAmount = totalAmount >= (selectedPaymentMethod?.min_deposit || 100) && 
-                        totalAmount <= (selectedPaymentMethod?.max_deposit || 50000);
-  
+  const isValidAmount =
+    totalAmount >= (selectedPaymentMethod?.min_deposit || 100) &&
+    totalAmount <= (selectedPaymentMethod?.max_deposit || 50000);
+
   const isStep1Valid = selectedPaymentMethod && isValidAmount;
   const isFormValid = isStep1Valid && trxId.trim() !== "" && selectedAgentNumber !== "";
 
@@ -177,8 +175,10 @@ const DepositPage: React.FC = () => {
     if (bonus && user) {
       setBonusOptions((prev) =>
         prev.map((b) => {
-          if (b.id === "signinBonus") return { ...b, value: bonus.signinBonus, disable: !(bonus.signinBonus > 0) };
-          if (b.id === "referralBonus") return { ...b, value: bonus.referralBonus, disable: !(bonus.referralBonus > 0) };
+          if (b.id === "signinBonus")
+            return { ...b, value: bonus.signinBonus, disable: !(bonus.signinBonus > 0) };
+          if (b.id === "referralBonus")
+            return { ...b, value: bonus.referralBonus, disable: !(bonus.referralBonus > 0) };
           return b;
         })
       );
@@ -196,68 +196,93 @@ const DepositPage: React.FC = () => {
   return (
     <>
       {data && !isLoading && user ? (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-[#070e17] flex flex-col text-white pb-28">
+          {/* Header */}
           <SiteHeader title="Deposit">
             <LiveChatTrigger
               fallbackHref="/support"
               title="Live Chat Support"
               ariaLabel="Live Chat Support"
-              className="text-gray-700 hover:text-gray-900 cursor-pointer flex items-center"
+              className="text-gray-300 hover:text-[#3888e9] cursor-pointer flex items-center transition-colors"
             >
-              <MdOutlineSupportAgent className="text-lg" />
+              <MdOutlineSupportAgent className="text-xl" />
             </LiveChatTrigger>
-            <Link href="/history" className="text-gray-700 hover:text-gray-900">
-              <MdHistory className="text-lg" />
+            <Link
+              href="/history"
+              className="text-gray-300 hover:text-[#3888e9] transition-colors flex items-center"
+            >
+              <MdHistory className="text-xl" />
             </Link>
           </SiteHeader>
 
           {/* Premium Step Progress Indicator */}
-          <div className="bg-white border-b border-gray-100 py-4 px-6 shadow-sm">
+          <div className="bg-[#0a1626] border-b border-[#142944] py-3.5 px-6 shadow-md select-none">
             <div className="max-w-md mx-auto flex items-center justify-between">
               {/* Step 1 Indicator */}
               <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                  step === 1 
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-200 ring-4 ring-blue-50" 
-                    : "bg-green-500 text-white shadow-md shadow-green-200"
-                }`}>
-                  {step > 1 ? <FaCheck size={10} /> : "1"}
+                <div
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-black text-xs sm:text-sm transition-all duration-300 ${
+                    step === 1
+                      ? "bg-[#3888e9] text-white shadow-md shadow-[#3888e9]/40 ring-4 ring-[#3888e9]/20"
+                      : "bg-emerald-500 text-white shadow-md shadow-emerald-500/30"
+                  }`}
+                >
+                  {step > 1 ? <FaCheck size={11} /> : "1"}
                 </div>
-                <span className={`text-xs font-bold uppercase tracking-wider ${
-                  step === 1 ? "text-blue-600 font-extrabold" : "text-gray-400"
-                }`}>Method & Amount</span>
+                <span
+                  className={`text-[10px] sm:text-xs font-black uppercase tracking-wider ${
+                    step === 1 ? "text-[#3888e9]" : "text-gray-400"
+                  }`}
+                >
+                  Method & Amount
+                </span>
               </div>
 
               {/* Step Connection Bar */}
-              <div className={`flex-1 h-0.5 mx-3 rounded transition-all duration-500 ${
-                step > 1 ? "bg-green-400" : "bg-gray-200"
-              }`} />
+              <div
+                className={`flex-1 h-0.5 mx-3 rounded transition-all duration-500 ${
+                  step > 1 ? "bg-emerald-500" : "bg-[#183454]"
+                }`}
+              />
 
               {/* Step 2 Indicator */}
               <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                  step === 2 
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-200 ring-4 ring-blue-50" 
-                    : "bg-gray-200 text-gray-400"
-                }`}>
-                  "2"
+                <div
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-black text-xs sm:text-sm transition-all duration-300 ${
+                    step === 2
+                      ? "bg-[#3888e9] text-white shadow-md shadow-[#3888e9]/40 ring-4 ring-[#3888e9]/20"
+                      : "bg-[#142840] border border-[#1e3c60] text-gray-500"
+                  }`}
+                >
+                  2
                 </div>
-                <span className={`text-xs font-bold uppercase tracking-wider ${
-                  step === 2 ? "text-blue-600 font-extrabold" : "text-gray-400"
-                }`}>Transfer Details</span>
+                <span
+                  className={`text-[10px] sm:text-xs font-black uppercase tracking-wider ${
+                    step === 2 ? "text-[#3888e9]" : "text-gray-500"
+                  }`}
+                >
+                  Transfer Details
+                </span>
               </div>
             </div>
           </div>
 
-          <main className="w-full px-4 py-6 space-y-6">
-            
+          <main className="w-full max-w-md mx-auto px-4 py-6 space-y-5">
             {/* STEP 1: Select Method and Enter Amount */}
             {step === 1 && (
-              <div className="space-y-6 animate-fade-in">
-                {/* Payment Methods */}
-                <section className="bg-white rounded-lg shadow-sm p-4">
-                  <h2 className="text-lg font-medium text-gray-800 mb-4">Select Payment Method</h2>
-                  <div className="flex overflow-x-auto pb-2 -mx-1 hide-scrollbar">
+              <div className="space-y-5 animate-fade-in">
+                {/* 1. Payment Methods */}
+                <section className="bg-[#0a1626] border border-[#162e4a] rounded-2xl p-4 shadow-md">
+                  <div className="flex items-center justify-between mb-3.5">
+                    <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      Select Payment Method
+                    </h2>
+                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                      0% Fee · Fast
+                    </span>
+                  </div>
+                  <div className="flex overflow-x-auto pb-1 -mx-1 scrollbar-none">
                     {wallets.map((wallet, i) => (
                       <PaymentMethod
                         key={i}
@@ -269,85 +294,100 @@ const DepositPage: React.FC = () => {
                   </div>
                 </section>
 
-                {/* Amount Input */}
-                <section className="bg-white rounded-lg shadow-sm p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-medium text-gray-800">Deposit Amount</h2>
+                {/* 2. Amount Input */}
+                <section className="bg-[#0a1626] border border-[#162e4a] rounded-2xl p-4 shadow-md">
+                  <div className="flex justify-between items-center mb-3.5">
+                    <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
+                      Deposit Amount
+                    </h2>
                     {selectedPaymentMethod && (
-                      <span className="text-xs text-gray-500 font-semibold bg-gray-100 px-2.5 py-1 rounded-full">
-                        Min: {selectedPaymentMethod.min_deposit} BDT | Max: {selectedPaymentMethod.max_deposit} BDT
+                      <span className="text-[11px] text-[#3888e9] font-bold bg-[#3888e9]/10 border border-[#3888e9]/25 px-2.5 py-0.5 rounded-full">
+                        Min: {selectedPaymentMethod.min_deposit} | Max: {selectedPaymentMethod.max_deposit} BDT
                       </span>
                     )}
                   </div>
-                  
+
                   {/* Deposit Amount Input */}
-                  <div className="relative mb-4">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <span className="text-gray-500 font-bold">BDT</span>
+                  <div className="relative mb-3.5">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <span className="text-xs font-black text-[#3888e9] bg-[#122844] px-2 py-1 rounded-md border border-[#1e426d]">
+                        BDT
+                      </span>
                     </div>
                     <input
                       disabled={pending}
                       type="number"
-                      className="block w-full pl-16 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-semibold text-lg text-gray-800"
-                      placeholder="Enter amount"
+                      className="block w-full pl-16 pr-4 py-3.5 bg-[#06101c] border border-[#1b385a] focus:border-[#3888e9] rounded-xl text-white font-black text-xl placeholder-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-[#3888e9]/30"
+                      placeholder="0.00"
                       value={depositAmount}
                       onChange={handleAmountChange}
                     />
                   </div>
 
-                  {error && <div className="text-sm text-red-600 font-medium mb-3">{error}</div>}
+                  {error && (
+                    <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg font-bold mb-3">
+                      {error}
+                    </div>
+                  )}
 
+                  {/* Quick Amount Chips */}
                   <div className="grid grid-cols-3 gap-2">
                     {quickAmounts.map((amount) => (
                       <button
                         key={amount}
+                        type="button"
                         disabled={pending}
                         onClick={() => handleAmountButtonClick(amount)}
-                        className={`py-2.5 px-3 border rounded-lg text-center whitespace-nowrap text-sm font-semibold transition-all ${
+                        className={`py-2.5 px-2 rounded-xl text-center whitespace-nowrap text-xs font-bold transition-all active:scale-95 ${
                           selectedAmountButton === amount
-                            ? "bg-blue-50 border-blue-500 text-blue-700"
-                            : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                            ? "bg-[#3888e9]/20 border-2 border-[#3888e9] text-white shadow-md shadow-[#3888e9]/20 font-black"
+                            : "bg-[#0c1a2d] border border-[#183454] text-gray-300 hover:text-white hover:bg-[#11243d]"
                         }`}
                       >
-                        {amount} BDT
+                        {amount.toLocaleString()} ৳
                       </button>
                     ))}
                   </div>
                 </section>
 
-                {/* Bonus Selection */}
-                <section className="bg-white rounded-lg shadow-sm p-4">
-                  <h2 className="text-lg font-medium text-gray-800 mb-4">Select Bonus</h2>
-                  <div className="space-y-3">
+                {/* 3. Bonus Selection */}
+                <section className="bg-[#0a1626] border border-[#162e4a] rounded-2xl p-4 shadow-md">
+                  <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <HiSparkles className="text-yellow-400 text-base" />
+                    Select Bonus
+                  </h2>
+                  <div className="space-y-2.5">
                     {bonusOptions.map((option) => (
                       <div
                         key={option.id}
-                        className={`flex items-start p-3 border rounded-lg cursor-pointer ${
+                        className={`flex items-start p-3 rounded-xl cursor-pointer transition-all ${
                           option.disable
-                            ? "opacity-50 cursor-not-allowed"
+                            ? "opacity-40 cursor-not-allowed border border-[#142944] bg-[#08121f]"
                             : selectedBonus.id === option.id
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-gray-200 hover:border-gray-300"
+                            ? "border-2 border-yellow-500/80 bg-gradient-to-r from-yellow-500/15 via-[#0c1a2d] to-[#0c1a2d] shadow-md shadow-yellow-500/10"
+                            : "border border-[#183454] bg-[#0c1a2d] hover:border-[#234b79]"
                         }`}
                         onClick={() => !option.disable && !pending && setSelectedBonus(option)}
                       >
                         <div className="flex-shrink-0 mt-0.5">
                           <div
-                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                              selectedBonus.id === option.id ? "border-blue-500" : "border-gray-400"
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              selectedBonus.id === option.id ? "border-yellow-400" : "border-gray-500"
                             }`}
                           >
                             {selectedBonus.id === option.id && (
-                              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                              <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
                             )}
                           </div>
                         </div>
                         <div className="ml-3 flex-1">
-                          <div className="font-medium text-gray-800">{option.label}</div>
-                          <div className="text-sm text-gray-600">
-                            {option.id === "signinBonus" && `Get ${option.value}% extra on first deposit`}
-                            {option.id === "referralBonus" && `${option.value}% Bonus from referral`}
-                            {option.id === "none" && `Proceed without any bonus`}
+                          <div className="text-xs font-extrabold text-white">{option.label}</div>
+                          <div className="text-[11px] text-gray-400 mt-0.5">
+                            {option.id === "signinBonus" &&
+                              `Get ${option.value}% extra bonus on your first deposit`}
+                            {option.id === "referralBonus" &&
+                              `${option.value}% bonus from friend referral`}
+                            {option.id === "none" && `Proceed without deposit bonus`}
                           </div>
                         </div>
                       </div>
@@ -357,70 +397,86 @@ const DepositPage: React.FC = () => {
 
                 {/* Next Button */}
                 <button
-                  className={`w-full py-4 px-6 rounded-lg font-bold text-white text-lg shadow-sm transition-all ${
-                    isStep1Valid ? "bg-blue-600 hover:bg-blue-700 active:scale-[0.99]" : "bg-gray-400 cursor-not-allowed"
+                  type="button"
+                  className={`w-full py-4 px-6 rounded-xl font-black text-white text-base tracking-wide shadow-lg transition-all duration-200 ${
+                    isStep1Valid
+                      ? "bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-400 hover:to-green-500 shadow-emerald-500/25 active:scale-[0.99] cursor-pointer"
+                      : "bg-[#183250] text-gray-500 cursor-not-allowed border border-[#204066]"
                   }`}
                   disabled={!isStep1Valid}
                   onClick={handleNextStep}
                 >
-                  Next Step
+                  Continue to Transfer Details →
                 </button>
               </div>
             )}
 
             {/* STEP 2: Transfer Details & Transaction ID */}
             {step === 2 && (
-              <div className="space-y-6 animate-fade-in">
+              <div className="space-y-5 animate-fade-in">
                 {/* Back Button */}
-                <button 
+                <button
+                  type="button"
                   onClick={() => setStep(1)}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-semibold bg-white border border-gray-200 rounded-lg py-2 px-4 shadow-sm w-fit transition-all hover:bg-gray-50"
+                  className="flex items-center gap-2 text-xs text-gray-300 hover:text-white font-bold bg-[#0a1626] border border-[#183454] hover:border-[#3888e9] rounded-xl py-2 px-3.5 shadow-sm transition-all active:scale-95"
                 >
-                  <FaChevronLeft className="text-xs" />
-                  Back to Step 1
+                  <FaChevronLeft className="text-[10px]" />
+                  <span>Back to Amount</span>
                 </button>
 
-                {/* Admin Wallet Numbers & Instructions */}
+                {/* Receiver Account & Instructions */}
                 {selectedPaymentMethod && (
-                  <section className="bg-white rounded-lg shadow-sm p-4 space-y-4">
+                  <section className="bg-[#0a1626] border border-[#162e4a] rounded-2xl p-4 space-y-4 shadow-md">
                     <div className="flex justify-between items-center">
-                      <h2 className="text-lg font-medium text-gray-800">
+                      <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
                         Send Money to Agent Account
                       </h2>
-                      <span className="text-xs text-blue-600 font-bold bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full uppercase">
+                      <span className="text-xs font-black text-[#3888e9] bg-[#3888e9]/10 border border-[#3888e9]/30 px-3 py-1 rounded-full uppercase">
                         {selectedPaymentMethod.name}
                       </span>
                     </div>
-                    
-                    {selectedPaymentMethod.walletsNumber && selectedPaymentMethod.walletsNumber.length > 0 ? (
+
+                    {selectedPaymentMethod.walletsNumber &&
+                    selectedPaymentMethod.walletsNumber.length > 0 ? (
                       <div className="space-y-2">
-                        <p className="text-sm text-gray-600">Please select and send money to one of the following numbers:</p>
+                        <p className="text-xs text-gray-400 font-medium">
+                          Select one of the official receiver numbers below to send:
+                        </p>
                         <div className="grid gap-2">
                           {selectedPaymentMethod.walletsNumber.map((num: string, idx: number) => (
-                            <div 
-                              key={idx} 
+                            <div
+                              key={idx}
                               onClick={() => setSelectedAgentNumber(num)}
-                              className={`flex justify-between items-center border rounded-lg p-3 cursor-pointer transition-all ${
+                              className={`flex justify-between items-center border rounded-xl p-3 cursor-pointer transition-all ${
                                 selectedAgentNumber === num
-                                  ? "bg-blue-50 border-blue-500 shadow-sm"
-                                  : "bg-gray-50 border-gray-200 hover:border-gray-300"
+                                  ? "bg-gradient-to-r from-[#142944] to-[#0c1a2d] border-2 border-[#3888e9] shadow-md shadow-[#3888e9]/20"
+                                  : "bg-[#06101c] border border-[#183454] hover:border-[#3888e9]/50"
                               }`}
                             >
                               <div className="flex items-center gap-3">
-                                <div className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center ${
-                                  selectedAgentNumber === num ? "border-blue-500" : "border-gray-400"
-                                }`}>
-                                  {selectedAgentNumber === num && <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>}
+                                <div
+                                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                    selectedAgentNumber === num
+                                      ? "border-[#3888e9]"
+                                      : "border-gray-500"
+                                  }`}
+                                >
+                                  {selectedAgentNumber === num && (
+                                    <div className="w-2.5 h-2.5 rounded-full bg-[#3888e9]" />
+                                  )}
                                 </div>
-                                <span className="font-mono text-gray-800 font-bold">{num}</span>
+                                <span className="font-mono text-base font-black text-white tracking-wider">
+                                  {num}
+                                </span>
                               </div>
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   navigator.clipboard.writeText(num);
                                   toast.success("Number copied to clipboard!");
                                 }}
-                                className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-3 rounded-md transition-colors"
+                                className="text-xs font-black bg-[#3888e9] hover:bg-[#2c77d4] text-white py-1.5 px-3 rounded-lg active:scale-95 shadow-sm transition-all"
                               >
                                 Copy
                               </button>
@@ -429,28 +485,28 @@ const DepositPage: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-red-500 font-medium">
+                      <p className="text-xs text-red-400 font-bold bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
                         No active receiver number found. Please contact support.
                       </p>
                     )}
 
                     {selectedPaymentMethod.instructions && (
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                        <h3 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">
-                          Instructions
+                      <div className="bg-[#0e223a] border border-[#1b4372] rounded-xl p-3">
+                        <h3 className="text-[10px] font-black text-[#3888e9] uppercase tracking-wider mb-1 flex items-center gap-1">
+                          <MdSecurity /> Instructions
                         </h3>
-                        <p className="text-sm text-blue-700 leading-relaxed">
+                        <p className="text-xs text-blue-200 leading-relaxed font-medium">
                           {selectedPaymentMethod.instructions}
                         </p>
                       </div>
                     )}
 
                     {selectedPaymentMethod.warning && (
-                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                        <h3 className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">
-                          Warning
+                      <div className="bg-amber-950/40 border border-amber-600/40 rounded-xl p-3">
+                        <h3 className="text-[10px] font-black text-amber-400 uppercase tracking-wider mb-1">
+                          Notice
                         </h3>
-                        <p className="text-sm text-amber-700 leading-relaxed">
+                        <p className="text-xs text-amber-200 leading-relaxed font-medium">
                           {selectedPaymentMethod.warning}
                         </p>
                       </div>
@@ -459,73 +515,94 @@ const DepositPage: React.FC = () => {
                 )}
 
                 {/* Transfer Details Form */}
-                <section className="bg-white rounded-lg shadow-sm p-4">
-                  <h2 className="text-lg font-medium text-gray-800 mb-4">Submit Payment Details</h2>
-                  
+                <section className="bg-[#0a1626] border border-[#162e4a] rounded-2xl p-4 shadow-md">
+                  <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider mb-3">
+                    Submit Payment Details
+                  </h2>
+
                   {/* Transaction ID */}
-                  <div className="relative mb-4">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <span className="text-gray-500 font-bold">TRX</span>
+                  <div className="relative mb-3">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <span className="text-xs font-black text-[#3888e9] bg-[#122844] px-2 py-1 rounded-md border border-[#1e426d]">
+                        TRX
+                      </span>
                     </div>
                     <input
                       disabled={pending}
                       type="text"
-                      className="block w-full pl-16 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-mono font-bold uppercase placeholder-gray-400"
+                      className="block w-full pl-16 pr-4 py-3.5 bg-[#06101c] border border-[#1b385a] focus:border-[#3888e9] rounded-xl text-white font-mono font-bold tracking-wider placeholder-gray-500 uppercase transition-all focus:outline-none focus:ring-2 focus:ring-[#3888e9]/30"
                       placeholder="Transaction ID (TrxID)"
                       value={trxId}
                       onChange={(e) => setTrxId(e.target.value)}
                     />
                   </div>
 
-                  {error && <div className="text-sm text-red-600 font-medium mb-3">{error}</div>}
+                  {error && (
+                    <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg font-bold mb-3">
+                      {error}
+                    </div>
+                  )}
                 </section>
 
                 {/* Summary */}
-                <section className="bg-white rounded-lg shadow-sm p-4 animate-fade-in">
-                  <h2 className="text-lg font-medium text-gray-800 mb-4">Summary</h2>
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 font-medium">Selected Method:</span>
-                      <span className="font-semibold text-gray-800 capitalize">{selectedPaymentMethod?.name || "None"}</span>
+                <section className="bg-[#0a1626] border border-[#162e4a] rounded-2xl p-4 shadow-md animate-fade-in">
+                  <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider mb-3.5 pb-2 border-b border-[#162e4a]">
+                    Deposit Summary
+                  </h2>
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 font-medium">Selected Method:</span>
+                      <span className="font-extrabold text-white capitalize">
+                        {selectedPaymentMethod?.name || "None"}
+                      </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 font-medium">Agent Number:</span>
-                      <span className="font-mono font-bold text-gray-800">{selectedAgentNumber || "Not Selected"}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 font-medium">Agent Number:</span>
+                      <span className="font-mono font-black text-[#3888e9]">
+                        {selectedAgentNumber || "Not Selected"}
+                      </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 font-medium">Deposit Amount:</span>
-                      <span className="font-semibold text-gray-800">{totalAmount.toLocaleString()} BDT</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 font-medium">Deposit Amount:</span>
+                      <span className="font-extrabold text-white">
+                        {totalAmount.toLocaleString()} BDT
+                      </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 font-medium">Bonus Amount:</span>
-                      <span className="font-semibold text-green-600">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 font-medium">Bonus Amount:</span>
+                      <span className="font-black text-emerald-400">
                         +{bonusAmount.toLocaleString()} BDT
                       </span>
                     </div>
-                    <div className="border-t pt-2 mt-2 flex justify-between">
-                      <span className="text-gray-800 font-bold">Total:</span>
-                      <span className="font-bold text-lg text-blue-600">{grandTotal.toLocaleString()} BDT</span>
+                    <div className="border-t border-[#183454] pt-2.5 mt-2 flex justify-between items-center">
+                      <span className="text-white font-black text-sm">Total Credit:</span>
+                      <span className="font-black text-xl text-emerald-400">
+                        {grandTotal.toLocaleString()} BDT
+                      </span>
                     </div>
                   </div>
                 </section>
 
-                {/* Action Button */}
+                {/* Submit Action Button */}
                 <button
-                  className={`w-full py-4 px-6 rounded-lg font-bold text-white text-lg shadow-sm transition-all ${
-                    isFormValid && !redirecting ? "bg-blue-600 hover:bg-blue-700 active:scale-[0.99]" : "bg-gray-400 cursor-not-allowed"
+                  type="button"
+                  className={`w-full py-4 px-6 rounded-xl font-black text-white text-base tracking-wide shadow-lg transition-all duration-200 ${
+                    isFormValid && !redirecting && !pending
+                      ? "bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-400 hover:to-green-500 shadow-emerald-500/25 active:scale-[0.99] cursor-pointer"
+                      : "bg-[#183250] text-gray-500 cursor-not-allowed border border-[#204066]"
                   }`}
                   disabled={!isFormValid || pending || redirecting}
                   onClick={handleSubmit}
                 >
                   {redirecting ? (
-                    <div className="flex items-center justify-center">
-                      <PulseLoader size={12} color="#fff" />
-                      <span className="ml-2">Submitting request...</span>
+                    <div className="flex items-center justify-center gap-2">
+                      <PulseLoader size={8} color="#fff" />
+                      <span>Submitting request...</span>
                     </div>
                   ) : pending ? (
-                    <div className="flex items-center justify-center">
-                      <PulseLoader size={12} color="#fff" />
-                      <span className="ml-2">Processing Submission...</span>
+                    <div className="flex items-center justify-center gap-2">
+                      <PulseLoader size={8} color="#fff" />
+                      <span>Processing Submission...</span>
                     </div>
                   ) : (
                     "Submit Deposit Request"
