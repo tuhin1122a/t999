@@ -9,7 +9,9 @@ import useGetCurrentUser from "@/hook/useCurrentUser";
 import { LocalArrayStorage } from "@/lib/favorites";
 import { NetEnt } from "@/types/game";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { LiaHeartSolid } from "react-icons/lia";
 import { PlaceholderCard } from "./loader/GameLoader";
 
@@ -21,6 +23,7 @@ interface GameCardWithProviderProps {
 }
 
 export const GameCardWithProvider = ({ game, index }: GameCardWithProviderProps) => {
+  const router = useRouter();
   const [imageLoaded, setImageLoad] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isFav, setFav] = useState(false);
@@ -28,6 +31,15 @@ export const GameCardWithProvider = ({ game, index }: GameCardWithProviderProps)
   const user: any = useGetCurrentUser();
 
   const [imageSrc, setImageSrc] = useState<string>("/games/provider/default-game.png");
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault();
+      toast.error("Please login to play this game");
+      const redirectUrl = encodeURIComponent(`/play?gameId=${id}`);
+      router.push(`/login?redirect=${redirectUrl}`);
+    }
+  };
 
   const handleImageLoad = () => {
     setImageLoad(true);
@@ -57,7 +69,8 @@ export const GameCardWithProvider = ({ game, index }: GameCardWithProviderProps)
       style={{ animationDelay: index ? `${index * 70}ms` : "0ms" }}
     >
       <Link
-        href={`/play?gameId=${id}`}
+        href={user ? `/play?gameId=${id}` : `/login?redirect=${encodeURIComponent(`/play?gameId=${id}`)}`}
+        onClick={handleCardClick}
         className="relative game-main overflow-hidden block rounded-2xl h-40 bg-[#002632]"
       >
         {/* Category placeholder */}

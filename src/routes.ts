@@ -20,7 +20,6 @@ export const publicRoutes = [
   "/table",
   "/fish",
   "/lottery",
-  "/play",
   "/api/open-game",
   "/api/game/32328e87f8592ed205bbaa065dbacce4",
   "/live-casino",

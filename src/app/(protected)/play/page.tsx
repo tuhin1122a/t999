@@ -163,9 +163,28 @@ const Play = () => {
     );
   };
 
+  // ── Redirect to login if user is not authenticated ───────────────────────
+  useEffect(() => {
+    // If auth state has resolved (user hook returns undefined if loading or not logged in)
+    // Wait briefly or check session
+    if (typeof window !== "undefined" && user === null) {
+      toast.error("Please login first to play");
+      const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      router.replace(`/login?redirect=${redirectUrl}`);
+    }
+  }, [user, router]);
+
   // ── Launch Game ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!user || !gameId) return;
+    if (!gameId) return;
+
+    if (!user) {
+      // User is not logged in
+      setIsLoading(false);
+      setError(true);
+      setErrorMessage("Please login to your account to play this game.");
+      return;
+    }
 
     const launch = async () => {
       try {
