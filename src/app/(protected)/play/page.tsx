@@ -128,6 +128,12 @@ const Play = () => {
       // ignore
     }
     setIframe("");
+    try {
+      // Fetch fresh balance right as user exits game
+      await fetchLatestBalance();
+    } catch {
+      // ignore
+    }
     router.replace("/games");
   }, [router]);
 

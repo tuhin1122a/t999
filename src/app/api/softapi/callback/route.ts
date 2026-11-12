@@ -4,7 +4,23 @@ import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const DEFAULT_SOFTAPI_SECRET = "0d6e277db0020770476bb22a8a075ca5";
+
+// In-memory LRU cache to prevent duplicate processing of same serial_number / settle ID
+const processedSerials = new Set<string>();
+const MAX_SERIAL_CACHE_SIZE = 10000;
+
+function rememberSerial(serial: string) {
+  if (!serial) return;
+  if (processedSerials.size >= MAX_SERIAL_CACHE_SIZE) {
+    const firstItem = processedSerials.values().next().value;
+    if (firstItem) processedSerials.delete(firstItem);
+  }
+  processedSerials.add(serial);
+}
 
 function decryptPayloadECB(payloadBase64: string, key32: string) {
   if (!key32 || Buffer.byteLength(key32, "utf8") !== 32) {
@@ -55,12 +71,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const game_uid = String(event.game_uid ?? "");
+    const game_uid = String(event.game_uid ?? event.game_id ?? "");
     const game_round = String(event.game_round ?? "");
-    const member_account = String(event.member_account ?? "");
+    const member_account = String(event.member_account ?? event.user_id ?? "");
     const bet_amount = parseFloat(String(event.bet_amount ?? "0")) || 0;
     const win_amount = parseFloat(String(event.win_amount ?? "0")) || 0;
-    const notify_only = Boolean(event.notify_only);
+    const serial_number = String(event.serial_number || event.game_round || "");
+
+    // Extract credit_amount (SoftAPI official source of truth for in-game balance after round)
+    const credit_amount_raw = event.credit_amount;
+    const credit_amount =
+      credit_amount_raw !== undefined &&
+      credit_amount_raw !== null &&
+      credit_amount_raw !== "" &&
+      !isNaN(Number(credit_amount_raw))
+        ? Number(Number(credit_amount_raw).toFixed(2))
+        : null;
 
     if (!member_account) {
       return NextResponse.json(
@@ -69,14 +95,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Deduplication: If this serial_number was already processed, respond 200 OK immediately
+    if (serial_number && processedSerials.has(serial_number)) {
+      console.log(`[SoftAPI Callback] Skipping duplicate round (already processed): ${serial_number}`);
+      return NextResponse.json(
+        {
+          code: 0,
+          msg: "OK",
+          credit_amount: credit_amount !== null ? credit_amount : 0,
+          timestamp: Math.round(Date.now()),
+        },
+        { status: 200 }
+      );
+    }
+
     // Match user by phone variations, id, or playerId
     const normalized = (s: string) => (s || "").toString().replace(/[^0-9+]/g, "");
     const raw = normalized(member_account);
-    const withoutLeadingZeros = raw.replace(/^0+/, "");
+    const digitsOnly = raw.replace(/\D/g, "");
+    const withoutLeadingZeros = digitsOnly.replace(/^0+/, "");
+    const last10Digits = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : digitsOnly;
+
     const phoneCandidates = Array.from(
       new Set(
         [
           raw,
+          digitsOnly,
           withoutLeadingZeros,
           withoutLeadingZeros ? `0${withoutLeadingZeros}` : raw,
           withoutLeadingZeros ? `88${withoutLeadingZeros}` : raw,
@@ -91,7 +135,12 @@ export async function POST(request: NextRequest) {
       ...phoneCandidates.map((p) => ({ phone: p })),
       { id: member_account },
       { playerId: member_account },
+      { gameXAPlayerId: member_account },
     ];
+
+    if (last10Digits && last10Digits.length >= 8) {
+      orConditions.push({ phone: { endsWith: last10Digits } });
+    }
 
     const user = await prisma.user.findFirst({
       where: { OR: orConditions },
@@ -99,7 +148,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user || !user.wallet) {
-      console.error("[SoftAPI Callback] User not found:", member_account);
+      console.error("[SoftAPI Callback] User not found for member_account:", member_account);
       return NextResponse.json(
         { code: 1, msg: "user not found", credit_amount: -1, error: "User not found" },
         { status: 404 }
@@ -108,7 +157,13 @@ export async function POST(request: NextRequest) {
 
     const current_balance = Number(user.wallet.balance);
     const current_turnover = Number(user.wallet.turnOver || 0);
-    const new_balance = Math.max(0, Number((current_balance - bet_amount + win_amount).toFixed(2)));
+
+    // SoftAPI Docs Rule #8: Update YOUR books from credit_amount; do not invent balances
+    const new_balance =
+      credit_amount !== null && credit_amount >= 0
+        ? credit_amount
+        : Math.max(0, Number((current_balance - bet_amount + win_amount).toFixed(2)));
+
     const new_turnover =
       bet_amount > 0 ? Math.max(0, Number((current_turnover - bet_amount).toFixed(2))) : current_turnover;
 
@@ -116,11 +171,12 @@ export async function POST(request: NextRequest) {
       game_uid,
       game_round,
       member_account,
+      serial_number,
       current_balance,
       bet_amount,
       win_amount,
+      credit_amount,
       new_balance,
-      notify_only,
     });
 
     await prisma.$transaction(async (tx) => {
@@ -146,7 +202,11 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    console.log("[SoftAPI Callback] Balance & betting record updated.");
+    if (serial_number) {
+      rememberSerial(serial_number);
+    }
+
+    console.log("[SoftAPI Callback] Balance & betting record updated successfully. New balance:", new_balance);
 
     return NextResponse.json(
       {

@@ -24,15 +24,24 @@ function encryptPayloadECB(data: Record<string, unknown>, key32: string): string
 }
 
 function toNumericUserId(phone?: string | null, fallbackId?: string | null): number | string {
-  const digits = (phone || fallbackId || "").replace(/\D/g, "");
-  if (digits) {
+  const digits = (phone || "").replace(/\D/g, "");
+  if (digits && digits.length >= 6) {
     const asNumber = Number(digits);
     if (Number.isSafeInteger(asNumber) && asNumber > 0) {
       return asNumber;
     }
     return digits;
   }
-  return 1001;
+
+  if (fallbackId) {
+    let hash = 0;
+    for (let i = 0; i < fallbackId.length; i++) {
+      hash = (hash * 31 + fallbackId.charCodeAt(i)) >>> 0;
+    }
+    return 10000000 + (hash % 90000000);
+  }
+
+  return 10001234;
 }
 
 export async function POST(request: NextRequest) {
@@ -79,6 +88,28 @@ export async function POST(request: NextRequest) {
 
     if (rawGameUid.includes(":::")) {
       rawGameUid = rawGameUid.split(":::")[1] || rawGameUid;
+    }
+
+    // Prevent launching a curated/known game whose provider has been disabled by Admin
+    const hotEntry = await db.hotGame
+      .findUnique({
+        where: { gameUid: rawGameUid },
+        select: { brandId: true },
+      })
+      .catch(() => null);
+    if (hotEntry?.brandId) {
+      const providerSetting = await db.gameProviderSetting
+        .findUnique({
+          where: { brandId: hotEntry.brandId },
+          select: { isActive: true },
+        })
+        .catch(() => null);
+      if (providerSetting && providerSetting.isActive === false) {
+        return NextResponse.json(
+          { error: "This game provider is currently unavailable" },
+          { status: 403 }
+        );
+      }
     }
 
     // Fetch fresh user & wallet balance from DB
@@ -151,8 +182,7 @@ export async function POST(request: NextRequest) {
       new Set([SOFTAPI_SERVER_URL, SOFTAPI_FALLBACK_URL].filter(Boolean))
     );
 
-    let softData: any = null;
-    let softStatus = 502;
+    let softData: { code?: number; msg?: string; message?: string; data?: { url?: string } } | null = null;
     let rawResponseText: string | null = null;
 
     for (const baseUrl of tryUrls) {
@@ -171,7 +201,6 @@ export async function POST(request: NextRequest) {
         });
 
         const postText = await postRes.text();
-        softStatus = postRes.status;
         rawResponseText = postText;
 
         if (postText.trim().startsWith("{")) {
@@ -198,7 +227,6 @@ export async function POST(request: NextRequest) {
         });
 
         const getText = await getRes.text();
-        softStatus = getRes.status;
         rawResponseText = getText;
 
         if (getText.trim().startsWith("{")) {
@@ -289,9 +317,10 @@ export async function GET() {
       outbound_ip: ipData.ip,
       note: "Whitelist this outbound_ip in your SoftAPI dashboard",
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to detect outbound IP";
     return NextResponse.json(
-      { success: false, error: err?.message || "Failed to detect outbound IP" },
+      { success: false, error: message },
       { status: 500 }
     );
   }

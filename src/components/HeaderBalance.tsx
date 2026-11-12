@@ -32,11 +32,11 @@ const UserBalance = ({
     setCurrentBalance(initialBalance);
   }, [initialBalance]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = React.useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
-      const res = await fetch("/api/wallet");
+      const res = await fetch("/api/wallet", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         if (data?.payload?.balance !== undefined) {
@@ -48,7 +48,23 @@ const UserBalance = ({
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [isRefreshing]);
+
+  // Auto-refresh balance on tab focus and every 20 seconds
+  React.useEffect(() => {
+    const onFocus = () => {
+      handleRefresh();
+    };
+    window.addEventListener("focus", onFocus);
+    const interval = setInterval(() => {
+      handleRefresh();
+    }, 20_000);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
+    };
+  }, [handleRefresh]);
 
   return (
     <section className="flex relative items-center h-full ">

@@ -2,6 +2,9 @@ import { findCurrentUser } from "@/data/user";
 import { INTERNAL_SERVER_ERROR } from "@/error";
 import { db } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const GET = async () => {
   try {
     const user = await findCurrentUser();
