@@ -424,75 +424,109 @@ const Play = () => {
           />
         )}
 
-        {/* Game Under Maintenance Screen */}
+        {/* World-Class Casino "Game Under Maintenance" Screen */}
         {error && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-            <div className="w-full max-w-md bg-[#0a1626] border border-[#1f3a5e] rounded-3xl overflow-hidden shadow-2xl">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-[#172c47] via-[#1a3352] to-[#14263d] border-b border-[#22436d] px-5 py-4 text-white flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center">
-                    <HiWrenchScrewdriver className="text-xl" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-black text-white">Game Under Maintenance</h2>
-                    <span className="text-[11px] text-amber-400 font-semibold">
-                      সাময়িক রক্ষণাবেক্ষণ চলছে
-                    </span>
-                  </div>
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#03070e]/95 backdrop-blur-xl p-4 overflow-y-auto">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-80 h-80 bg-[#3888e9]/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative w-full max-w-md bg-gradient-to-b from-[#0d1d32] via-[#091524] to-[#060e19] border border-[#1e3b63] rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] text-center overflow-hidden my-auto animate-scale-up">
+              {/* Top Golden Accent Glow Line */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+
+              {/* Close Button Top Right */}
+              <button
+                onClick={executeExit}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#112338] hover:bg-[#1a375a] active:scale-95 text-gray-400 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-[#22436d]"
+                title="Back to Lobby"
+              >
+                <FiX size={16} />
+              </button>
+
+              {/* 3D Casino Floating Centerpiece */}
+              <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-4">
+                <div className="absolute inset-0 rounded-3xl bg-amber-500/20 blur-xl animate-pulse" />
+                <div className="relative w-full h-full rounded-3xl bg-gradient-to-b from-[#182d49] via-[#0f2035] to-[#0a1626] border border-[#2b5182] shadow-2xl flex items-center justify-center">
+                  <RiGamepadLine className="text-3xl sm:text-4xl text-amber-300" />
                 </div>
-                <button
-                  onClick={executeExit}
-                  className="w-8 h-8 rounded-full bg-[#070e17] hover:bg-[#dc2626] text-gray-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                  title="Close & Exit"
-                >
-                  <FiX size={18} />
-                </button>
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-black flex items-center justify-center shadow-lg font-bold">
+                  <HiWrenchScrewdriver className="text-xs sm:text-sm" />
+                </div>
               </div>
 
-              {/* Body */}
-              <div className="p-5 sm:p-6 space-y-4">
-                <div className="p-4 rounded-2xl bg-[#070e17] border border-[#162e4a] text-center space-y-3">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-amber-400 mx-auto flex items-center justify-center shadow-lg shadow-amber-500/5">
-                    <FaTools className="text-2xl animate-pulse" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-black text-white">
-                      গেম প্রোভাইডার সার্ভার আপডেট
-                    </h3>
-                    <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
-                      গেম প্রোভাইডার কর্তৃক এই গেমটি বর্তমানে সাময়িক রক্ষণাবেক্ষণ বা কারিগরি আপডেটে রয়েছে। খুব শীঘ্রই গেমটি স্বাভাবিক হবে। অনুগ্রহ করে আমাদের লবি থেকে অন্য যেকোনো আকর্ষণীয় গেম উপভোগ করুন।
-                    </p>
-                  </div>
-                </div>
+              {/* Status Badge */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/25 text-amber-300 text-[10px] sm:text-[11px] font-black uppercase tracking-wider mb-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <span>SERVER MAINTENANCE • রক্ষণাবেক্ষণ চলছে</span>
+              </div>
 
-                {/* Actions */}
-                <div className="space-y-2 pt-1">
+              {/* Headings */}
+              <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+                Game Temporarily Unavailable
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-300 mt-1 leading-relaxed max-w-sm mx-auto">
+                গেম প্রোভাইডার কর্তৃক এই গেমটি বর্তমানে সাময়িক আপডেটে রয়েছে। খুব শীঘ্রই গেমটি স্বাভাবিক হবে। অনুগ্রহ করে আমাদের লবি থেকে অন্য যেকোনো জনপ্রিয় গেম উপভোগ করুন।
+              </p>
+
+              {/* Popular Alternatives Quick Links */}
+              <div className="py-2.5 px-3 rounded-2xl bg-[#060f1b] border border-[#162e4a] my-4 text-left">
+                <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider block mb-2">
+                  জনপ্রিয় বিকল্প গেমস খেলুন:
+                </span>
+                <div className="grid grid-cols-3 gap-1.5 text-xs">
                   <Link
-                    href="/games"
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-black text-xs sm:text-sm shadow-lg shadow-amber-400/20 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+                    href="/games?category=Slots"
+                    className="py-2 px-1.5 rounded-xl bg-[#0d1c2e] hover:bg-[#142c48] border border-[#1c385c] text-gray-200 hover:text-white font-bold text-center transition-all flex flex-col items-center gap-1 group"
                   >
-                    <FaGamepad className="text-base" />
-                    <span>অন্য গেম খেলুন (Return to Lobby)</span>
+                    <span className="text-base group-hover:scale-110 transition-transform">🎰</span>
+                    <span className="text-[10px] sm:text-[11px] truncate w-full">স্লট গেমস</span>
                   </Link>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="py-2.5 rounded-xl bg-[#14263d] hover:bg-[#1e395b] text-white border border-[#234267] text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-                    >
-                      <FiRefreshCw size={13} />
-                      <span>আবার চেষ্টা করুন</span>
-                    </button>
+                  <Link
+                    href="/games?category=Live"
+                    className="py-2 px-1.5 rounded-xl bg-[#0d1c2e] hover:bg-[#142c48] border border-[#1c385c] text-gray-200 hover:text-white font-bold text-center transition-all flex flex-col items-center gap-1 group"
+                  >
+                    <span className="text-base group-hover:scale-110 transition-transform">🎲</span>
+                    <span className="text-[10px] sm:text-[11px] truncate w-full">লাইভ ক্যাসিনো</span>
+                  </Link>
 
-                    <Link
-                      href="/support"
-                      className="py-2.5 rounded-xl bg-[#14263d] hover:bg-[#1e395b] text-[#3888e9] hover:text-white border border-[#234267] text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
-                    >
-                      <FaHeadset className="text-xs" />
-                      <span>২৪/৭ সাপোর্ট</span>
-                    </Link>
-                  </div>
+                  <Link
+                    href="/games?category=Crash"
+                    className="py-2 px-1.5 rounded-xl bg-[#0d1c2e] hover:bg-[#142c48] border border-[#1c385c] text-gray-200 hover:text-white font-bold text-center transition-all flex flex-col items-center gap-1 group"
+                  >
+                    <span className="text-base group-hover:scale-110 transition-transform">🚀</span>
+                    <span className="text-[10px] sm:text-[11px] truncate w-full">ক্র্যাশ / এভিয়েটর</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <Link
+                  href="/games"
+                  className="w-full py-3 sm:py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-black text-xs sm:text-sm shadow-lg shadow-amber-400/25 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+                >
+                  <FaGamepad className="text-base" />
+                  <span>ক্যাসিনো লবিতে ফিরে যান (Explore All Games)</span>
+                </Link>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="py-2.5 rounded-xl bg-[#0f2136] hover:bg-[#183454] text-white border border-[#234267] text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <FiRefreshCw size={13} />
+                    <span>আবার চেষ্টা করুন</span>
+                  </button>
+
+                  <Link
+                    href="/support"
+                    className="py-2.5 rounded-xl bg-[#0f2136] hover:bg-[#183454] text-[#3888e9] hover:text-white border border-[#234267] text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                  >
+                    <FaHeadset className="text-xs" />
+                    <span>২৪/৭ সাপোর্ট</span>
+                  </Link>
                 </div>
               </div>
             </div>
