@@ -1,20 +1,20 @@
 /* eslint-disable @next/next/no-img-element */
+import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { db } from "@/lib/db";
 import LiveChatTrigger from "./LiveChatTrigger";
-import { RiShieldCheckFill, RiCustomerService2Line, RiLockPasswordLine } from "react-icons/ri";
+import { RiShieldCheckFill, RiCustomerService2Line } from "react-icons/ri";
 import { MdVerifiedUser } from "react-icons/md";
 import { SiTether } from "react-icons/si";
 
-const Footer = async ({
-  showPaymentMethods = true,
-}: {
+interface FooterProps {
   showPaymentMethods?: boolean;
-} = {}) => {
-  const siteSettings = await db.siteSetting.findFirst().catch(() => null);
-  const promotionsLogo = siteSettings?.promotionsLogo;
+  promotionsLogo?: string | null;
+}
 
+const Footer: React.FC<FooterProps> = ({
+  showPaymentMethods = true,
+  promotionsLogo = "/logo.png",
+}) => {
   return (
     <footer className="w-full bg-[#050b13] border-t border-[#132840] pt-8 pb-28 md:pb-12 text-gray-400 font-sans select-none">
       <div className="max-w-6xl mx-auto px-4 space-y-8">
