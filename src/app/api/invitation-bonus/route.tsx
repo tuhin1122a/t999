@@ -6,8 +6,27 @@ export const GET = async () => {
   try {
     const user = await findCurrentUser();
 
-    if (!user)
-      return Response.json({ error: "Refresh the page" }, { status: 401 });
+    if (!user) {
+      const rewards = await db.invitationRewards.findMany().catch(() => []);
+      return Response.json(
+        {
+          authenticated: false,
+          rewards: rewards.map((r) => ({
+            ...r,
+            completedReferral: 0,
+            isClaimed: false,
+          })),
+          statistic: {
+            registersCount: 0,
+            todayIncome: 0,
+            validReferral: 0,
+            totalIncome: 0,
+          },
+          referredUsers: [],
+        },
+        { status: 200 }
+      );
+    }
 
     let userInvitationBonus = await db.invitationBonus.findUnique({
       where: { userId: user.id },

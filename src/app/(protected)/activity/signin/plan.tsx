@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
+import gift_box from "@/../public/icons/rewards/gift-box.png";
+import { useClaimSignRewardMutation } from "@/lib/features/rewardApiSlice";
 import Image from "next/image";
 import Link from "next/link";
-import { FaGift, FaArrowRight, FaCheckCircle, FaLock, FaBolt } from "react-icons/fa";
-import { HiSparkles } from "react-icons/hi2";
-import { useClaimSignRewardMutation } from "@/lib/features/rewardApiSlice";
 import toast from "react-hot-toast";
-import gift_box from "@/../public/icons/rewards/gift-box.png";
+import { FaArrowRight, FaCheckCircle, FaLock } from "react-icons/fa";
+import { HiSparkles } from "react-icons/hi2";
 
 interface SigninBonusPlanProps {
   nextClaimAvailable?: any;
