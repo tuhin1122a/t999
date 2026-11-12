@@ -6,6 +6,25 @@ import authConfig from "./auth.config";
 const { auth } = NextAuth({
   ...authConfig,
   secret: process.env.AUTH_SECRET || "LQcRGPS3mr4RoxYioGcwHQhkHDmrFKve3IVy8jll3Yg=",
+  cookies: {
+    sessionToken: {
+      name: "t999.session-token",
+    },
+    callbackUrl: {
+      name: "t999.callback-url",
+    },
+    csrfToken: {
+      name: "t999.csrf-token",
+    },
+  },
+  logger: {
+    error(error) {
+      if ((error as { type?: string })?.type === "JWTSessionError") {
+        return;
+      }
+      console.error("[t999 middleware auth][error]", error);
+    },
+  },
 });
 
 export default auth(async (req) => {
@@ -16,21 +35,33 @@ export default auth(async (req) => {
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   const isPublicRoute =
     publicRoutes.includes(nextUrl.pathname) ||
+    nextUrl.pathname.startsWith("/api/auth") ||
+    nextUrl.pathname.startsWith("/api/games/list") ||
     nextUrl.pathname.startsWith("/api/softapi/games") ||
     nextUrl.pathname.startsWith("/api/softapi/providers") ||
     nextUrl.pathname.startsWith("/api/softapi/callback") ||
     nextUrl.pathname.startsWith("/api/softapi/launch") ||
+    nextUrl.pathname.startsWith("/api/games/hot") ||
+    nextUrl.pathname.startsWith("/api/sub-admins/resolve") ||
     nextUrl.pathname.startsWith("/api/gamexa/games/providers") ||
     // ✅ Mobile app API routes — no browser session, authenticated via JWT Bearer token
     nextUrl.pathname.startsWith("/api/auth/mobile/");
   const isProvider = nextUrl.pathname.startsWith(providerApiPrefix);
 
-  // Check if any NextAuth session cookies are present in the request
-  const hasSessionCookie =
-    req.cookies.has("authjs.session-token") ||
-    req.cookies.has("next-auth.session-token") ||
-    req.cookies.has("__Secure-authjs.session-token") ||
-    req.cookies.has("__Secure-next-auth.session-token");
+  const stalePrefixes = [
+    "t999.session-token",
+    "authjs.session-token",
+    "next-auth.session-token",
+    "__Secure-authjs.session-token",
+    "__Secure-next-auth.session-token",
+  ];
+
+  const matchingSessionCookies = req.cookies
+    .getAll()
+    .map((c) => c.name)
+    .filter((name) => stalePrefixes.some((prefix) => name === prefix || name.startsWith(`${prefix}.`)));
+
+  const hasSessionCookie = matchingSessionCookies.length > 0;
 
   let response: NextResponse;
 
@@ -39,10 +70,9 @@ export default auth(async (req) => {
     response = NextResponse.redirect(
       new URL("/login?error=Your%20account%20has%20been%20banned", nextUrl)
     );
-    response.cookies.set("authjs.session-token", "", { maxAge: 0, path: "/" });
-    response.cookies.set("next-auth.session-token", "", { maxAge: 0, path: "/" });
-    response.cookies.set("__Secure-authjs.session-token", "", { maxAge: 0, path: "/" });
-    response.cookies.set("__Secure-next-auth.session-token", "", { maxAge: 0, path: "/" });
+    for (const name of matchingSessionCookies) {
+      response.cookies.set(name, "", { maxAge: 0, path: "/" });
+    }
     return response;
   }
 
@@ -54,18 +84,31 @@ export default auth(async (req) => {
     response = NextResponse.redirect(
       new URL(`/login?redirect=${encodeCallbackUrl}`, nextUrl)
     );
+  } else if (!session && hasSessionCookie) {
+    // Strip broken/legacy session cookies before forwarding so Server Components never trigger JWTSessionError
+    const requestHeaders = new Headers(req.headers);
+    const cleanedCookieHeader = req.cookies
+      .getAll()
+      .filter((c) => !matchingSessionCookies.includes(c.name))
+      .map((c) => `${c.name}=${c.value}`)
+      .join("; ");
+    if (cleanedCookieHeader) {
+      requestHeaders.set("cookie", cleanedCookieHeader);
+    } else {
+      requestHeaders.delete("cookie");
+    }
+    response = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   } else {
     response = NextResponse.next();
   }
 
-  // If there is no valid session but browser has sent invalid/expired/corrupt session cookies,
-  // delete them immediately to prevent JWTSessionError: no matching decryption secret spam.
+  // Delete invalid/expired/legacy session cookies on the browser response as well
   if (!session && hasSessionCookie) {
-    console.log("🧹 [Middleware] Cleaning up invalid/expired session cookies from browser...");
-    response.cookies.set("authjs.session-token", "", { maxAge: 0, path: "/" });
-    response.cookies.set("next-auth.session-token", "", { maxAge: 0, path: "/" });
-    response.cookies.set("__Secure-authjs.session-token", "", { maxAge: 0, path: "/" });
-    response.cookies.set("__Secure-next-auth.session-token", "", { maxAge: 0, path: "/" });
+    for (const name of matchingSessionCookies) {
+      response.cookies.set(name, "", { maxAge: 0, path: "/" });
+    }
   }
 
   return response;

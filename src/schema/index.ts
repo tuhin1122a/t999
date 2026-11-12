@@ -12,6 +12,7 @@ export const registerSchema = zod
     ageCheck: zod.optional(zod.boolean()),
     bonusCheck: zod.optional(zod.boolean()),
     referralId: zod.optional(zod.string()),
+    agentCode: zod.optional(zod.string()),
   })
   .refine(
     ({ password, confirmPassword }) => {

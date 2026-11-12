@@ -59,6 +59,12 @@ model User {
   // Affiliate system relations
   affiliateReferrals AffiliateReferral[] @relation("AffiliateReferrals")
   affiliate          Affiliate?
+
+  // Sub-Admin (Master Agent) relation
+  subAdminId         String?
+  subAdmin           Admin?              @relation("SubAdminPlayers", fields: [subAdminId], references: [id])
+
+  @@index([subAdminId])
 }
 
 model BettingRecord {
@@ -171,6 +177,12 @@ model DepositWallet {
   maximumDeposit  Decimal   @db.Decimal(10, 2)
   isActive        Boolean   @default(true)
   deposits        Deposit[] @relation("WalletDeposits")
+
+  // Sub-Admin (Master Agent) custom wallet numbers
+  subAdminId      String?
+  subAdmin        Admin?    @relation("SubAdminWallets", fields: [subAdminId], references: [id])
+
+  @@index([subAdminId])
 }
 
 enum DepositStatus {
@@ -291,11 +303,19 @@ enum ManagementRole {
 }
 
 model Admin {
-  id       String         @id @default(cuid())
-  name     String
-  role     ManagementRole @default(ADMIN)
-  email    String         @unique
-  password String
+  id             String         @id @default(cuid())
+  name           String
+  role           ManagementRole @default(ADMIN)
+  email          String         @unique
+  password       String
+  agentCode      String?        @unique
+  phone          String?
+  isActive       Boolean        @default(true)
+  commissionRate Decimal        @db.Decimal(5, 2) @default(0.00)
+  createdAt      DateTime       @default(now())
+
+  subAdminUsers  User[]          @relation("SubAdminPlayers")
+  depositWallets DepositWallet[] @relation("SubAdminWallets")
 }
 
 model EmailVerificationToken {
@@ -509,4 +529,40 @@ model Transaction {
   status        String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+// ====================== Provider & Hot Games Management ======================
+model GameProviderSetting {
+  id                String   @id @default(cuid())
+  brandId           String   @unique
+  name              String
+  customName        String?
+  logo              String?
+  category          String   @default("slots")
+  categories        String[]
+  isActive          Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  gameCount         Int      @default(0)
+  currencySupported Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model HotGame {
+  id           String   @id @default(cuid())
+  gameUid      String   @unique
+  brandId      String
+  name         String
+  providerName String?
+  category     String   @default("slots")
+  img          String?
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([brandId])
 }

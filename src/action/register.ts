@@ -1,6 +1,6 @@
 "use server";
 import { signIn } from "@/auth";
-import { findUserByPhone, findUserByReferId } from "@/data/user";
+import { findUserByPhone } from "@/data/user";
 import { INTERNAL_SERVER_ERROR } from "@/error";
 import { createPlayer } from "@/lib/api/gamexaApi";
 import { db } from "@/lib/db";
@@ -8,11 +8,12 @@ import { referIdGenerate } from "@/lib/helpers";
 import { registerSchema } from "@/schema";
 import { LOGIN_SUCCESS } from "@/success";
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import zod from "zod";
 
 export const register = async (data: zod.infer<typeof registerSchema>) => {
   try {
-    const { password, confirmPassword, phone, ageCheck, bonusCheck, referralId } = data;
+    const { password, confirmPassword, phone, ageCheck, bonusCheck, agentCode } = data;
 
     // ---------------- Validations ----------------
     if (password !== confirmPassword) return { error: "Confirm Password did not match" };
@@ -21,45 +22,34 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
     const existingUser = await findUserByPhone(phone);
     if (existingUser) return { error: "Number is already registered" };
 
-    // ---------------- Referral Setup ----------------
-    let invitedBy = {};
-    let isReferralBonusActive = false;
-
-    const referralUser = referralId ? await findUserByReferId(referralId) : null;
-    if (referralUser) {
-      // Ensure the referrer has an Invitation record
-      let referralInvitation = await db.invitation.findUnique({
-        where: { userId: referralUser.id },
-      });
-      if (!referralInvitation) {
-        referralInvitation = await db.invitation.create({
-          data: { userId: referralUser.id },
-        });
+    // ---------------- Sub-Admin (?agent=CODE) Attribution ----------------
+    let assignedSubAdminId: string | null = null;
+    let resolvedAgentCode = agentCode?.trim() || "";
+    if (!resolvedAgentCode) {
+      try {
+        const cookieStore = await cookies();
+        resolvedAgentCode =
+          cookieStore.get("subadmin_agent_code")?.value?.trim() || "";
+      } catch {
+        // ignore cookie access error
       }
+    }
 
-      // Ensure the referrer has an InvitationBonus record
-      const referralInvitationBonus = await db.invitationBonus.findUnique({
-        where: { userId: referralUser.id },
-      });
-      if (!referralInvitationBonus) {
-        await db.invitationBonus.create({
-          data: {
-            userId: referralUser.id,
-            totalRegisters: 1,
-            totalValidreferral: 0,
+    if (resolvedAgentCode) {
+      const subAdmin = await db.admin.findFirst({
+        where: {
+          role: "SUBADMIN",
+          isActive: true,
+          agentCode: {
+            equals: resolvedAgentCode,
+            mode: "insensitive",
           },
-        });
-      } else {
-        await db.invitationBonus.update({
-          where: { userId: referralUser.id },
-          data: { totalRegisters: { increment: 1 } },
-        });
+        },
+        select: { id: true },
+      });
+      if (subAdmin) {
+        assignedSubAdminId = subAdmin.id;
       }
-
-      isReferralBonusActive = true;
-      invitedBy = {
-        connect: { id: referralInvitation.id },
-      };
     }
 
     // ---------------- Hash Password + Generate referId ----------------
@@ -136,13 +126,13 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
         gameXAPlayerId: newPlayer.playerId,
         referId,
         isBanned: false,
-        invitedBy,
+        subAdminId: assignedSubAdminId,
         bettingRecord: { create: {} },
         wallet: {
           create: {
             balance: 0,
             signinBonus: bonusCheck,
-            referralBonus: isReferralBonusActive,
+            referralBonus: false,
             currency: "BDT",
             playerId: newPlayer.id,   // Fix: Use newPlayer.id (database ID) instead of newPlayer.playerId (GameXA ID)
           },

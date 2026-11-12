@@ -2,6 +2,7 @@
 import { findCurrentUser } from "@/data/user";
 import { INTERNAL_SERVER_ERROR } from "@/error";
 import { db } from "@/lib/db";
+import { getScopedDepositWalletsForUser } from "@/lib/depositWallets";
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,18 +16,25 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ success: false, message: "Missing required fields: amount, trxID, walletId, and walletNumber are required." }, { status: 400 });
     }
 
-    const user: any = await findCurrentUser();
+    const user = await findCurrentUser();
     if (!user) {
       return NextResponse.json({ success: false, message: "Authentication failed" }, { status: 401 });
     }
 
-    // 1️⃣ Validate deposit wallet and limits
-    const wallet = await db.depositWallet.findUnique({
-      where: { id: walletId },
-    });
+    // 1️⃣ Validate deposit wallet belongs to user's allowed wallet scope and limits
+    const { depositWallets: allowedWallets } = await getScopedDepositWalletsForUser(user.id);
+    const wallet = allowedWallets.find((w) => w.id === walletId);
 
     if (!wallet) {
-      return NextResponse.json({ success: false, message: "Invalid payment method wallet selected." }, { status: 400 });
+      return NextResponse.json({ success: false, message: "Invalid or unavailable payment method wallet selected." }, { status: 400 });
+    }
+
+    if (
+      Array.isArray(wallet.walletsNumber) &&
+      wallet.walletsNumber.length > 0 &&
+      !wallet.walletsNumber.includes(walletNumber)
+    ) {
+      return NextResponse.json({ success: false, message: "Selected receiver number does not match this payment gateway." }, { status: 400 });
     }
 
     const minDeposit = parseFloat(wallet.minDeposit.toString());
@@ -104,7 +112,7 @@ export const POST = async (req: NextRequest) => {
       },
     }, { status: 200 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Manual deposit submission error:", error);
     return NextResponse.json({ message: INTERNAL_SERVER_ERROR }, { status: 500 });
   }

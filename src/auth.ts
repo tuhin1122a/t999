@@ -13,6 +13,26 @@ export const { signIn, signOut, auth, handlers } = NextAuth({
     signIn: "/login",
   },
   trustHost: true,
+  cookies: {
+    sessionToken: {
+      name: "t999.session-token",
+    },
+    callbackUrl: {
+      name: "t999.callback-url",
+    },
+    csrfToken: {
+      name: "t999.csrf-token",
+    },
+  },
+  logger: {
+    error(error) {
+      if ((error as { type?: string })?.type === "JWTSessionError") {
+        console.warn("[t999 auth] Ignoring undecryptable/expired session cookie.");
+        return;
+      }
+      console.error("[t999 auth][error]", error);
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

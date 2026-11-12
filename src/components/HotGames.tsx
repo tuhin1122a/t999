@@ -1,151 +1,56 @@
 "use client";
-import React, { useRef } from "react";
-
-// import aviator from "@/../public/games/aviator.png";
-// import boxingKing from "@/../public/games/JL-boxing-king.png";
-// import fortuneGems from "@/../public/games/JL-fortune-gems.png";
-// import moneyComing from "@/../public/games/JL-money-coming.png";
-// import crazyTime from "@/../public/games/crazy-time.png";
-// import superAce from "@/../public/games/super-ace.png";
-
-// import jl from "@/../public/games/JL.png";
-// import spb from "@/../public/games/SPB.png";
-// import evo from "@/../public/games/evo.png";
-// import { GameCardWithProvider } from "./GameCards";
-// const hotGamesData = [
-//   {
-//     gameName: "Aviator",
-//     gameImage: aviator,
-//     providerImage: spb,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Boxing King",
-//     gameImage: boxingKing,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Fortune Gems",
-//     gameImage: fortuneGems,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Money Coming",
-//     gameImage: moneyComing,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Crazy Time",
-//     gameImage: crazyTime,
-//     providerImage: evo,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Super Ace",
-//     gameImage: superAce,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Aviator",
-//     gameImage: aviator,
-//     providerImage: spb,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Boxing King",
-//     gameImage: boxingKing,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Fortune Gems",
-//     gameImage: fortuneGems,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Money Coming",
-//     gameImage: moneyComing,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Crazy Time",
-//     gameImage: crazyTime,
-//     providerImage: evo,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Super Ace",
-//     gameImage: superAce,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Aviator",
-//     gameImage: aviator,
-//     providerImage: spb,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Boxing King",
-//     gameImage: boxingKing,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Fortune Gems",
-//     gameImage: fortuneGems,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Money Coming",
-//     gameImage: moneyComing,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Crazy Time",
-//     gameImage: crazyTime,
-//     providerImage: evo,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Super Ace",
-//     gameImage: superAce,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Aviator",
-//     gameImage: aviator,
-//     providerImage: spb,
-//     redirect: "#",
-//   },
-//   {
-//     gameName: "Boxing King",
-//     gameImage: boxingKing,
-//     providerImage: jl,
-//     redirect: "#",
-//   },
-// ];
-
+import React, { useEffect, useRef, useState } from "react";
+import { GameCardWithProvider } from "./GameCards";
 import GameSelectionHeader from "./GameSelectionHeader";
+import GameLoader from "./loader/GameLoader";
+import { NetEnt } from "@/types/game";
 
-const HotGames = () => {
+interface HotGamesProps {
+  initialGames?: NetEnt[];
+}
+
+const HotGames = ({ initialGames }: HotGamesProps) => {
   const gamesContainer = useRef<HTMLDivElement | null>(null);
+  const [games, setGames] = useState<NetEnt[]>(initialGames || []);
+  const [loading, setLoading] = useState(!initialGames);
+
+  useEffect(() => {
+    let active = true;
+    async function syncHotGames() {
+      try {
+        const res = await fetch("/api/games/hot", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (active && data?.success && Array.isArray(data.games)) {
+          setGames(data.games);
+        }
+      } catch (err) {
+        console.error("Failed to fetch hot games:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    syncHotGames();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleRightButtonClick = () => {
-    gamesContainer.current!.scrollLeft += -130;
+    if (gamesContainer.current) {
+      gamesContainer.current.scrollLeft += -130;
+    }
   };
   const handleLeftButtonClick = () => {
-    gamesContainer.current!.scrollLeft += 130;
+    if (gamesContainer.current) {
+      gamesContainer.current.scrollLeft += 130;
+    }
   };
+
+  if (!loading && games.length === 0) {
+    return null;
+  }
+
   return (
     <div
       className="my-4"
@@ -157,22 +62,18 @@ const HotGames = () => {
         title="Hot Games"
         leftAction={handleLeftButtonClick}
         rightAction={handleRightButtonClick}
-        seeMoreLink="#"
+        seeMoreLink="/hot"
       />
       <div
         className="max-w-full w-full overflow-x-auto scrollbar-none scroll-smooth"
         ref={gamesContainer}
       >
         <div className="hot-games-list">
-          {/* {hotGamesData.map((g, i) => (
-            <GameCardWithProvider
-              gameImage={g.gameImage}
-              gameName={g.gameName}
-              providerImage={g.providerImage}
-              redirect={g.redirect}
-              key={i}
-            />
-          ))} */}
+          {games.map((g, i) => (
+            <GameCardWithProvider game={g} index={i} key={g.id || i} />
+          ))}
+
+          {loading && games.length === 0 && <GameLoader length={10} loading={true} />}
         </div>
       </div>
     </div>

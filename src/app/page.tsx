@@ -5,6 +5,8 @@ import HomeApp from "@/components/HomeApp";
 import SideNavLayout from "@/components/SideNavLayout";
 import TabLayout from "@/components/TabLayout";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
     <SideNavLayout>

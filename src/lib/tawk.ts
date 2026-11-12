@@ -152,3 +152,4 @@ export function openTawkChat(): boolean {
 
   return false;
 }
+

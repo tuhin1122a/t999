@@ -1,7 +1,8 @@
 import { findCurrentUser } from "@/data/user";
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getScopedDepositWalletsForUser } from "@/lib/depositWallets";
 import { getPaymentMethodImage, getPaymentMethodLabel } from "@/lib/utils/paymentMethodUtils";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -10,15 +11,12 @@ export async function GET() {
       return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
     }
 
-    // Get payment wallets and active deposit wallets directly from database
-    const [dbPaymentWallets, dbDepositWallets] = await Promise.all([
+    // Get payment wallets and scoped active deposit wallets (sub-admin custom or default fallback)
+    const [dbPaymentWallets, scoped] = await Promise.all([
       db.paymentWallet.findMany(),
-      db.depositWallet.findMany({
-        where: {
-          isActive: true,
-        },
-      }),
+      getScopedDepositWalletsForUser(user.id),
     ]);
+    const dbDepositWallets = scoped.depositWallets;
 
     // Map deposit wallets to UI payment method objects
     const wallets = dbDepositWallets.map((dw) => {

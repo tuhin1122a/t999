@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
 import { getPaymentMethodImage, getPaymentMethodLabel } from "@/lib/utils/paymentMethodUtils";
+import React, { useEffect, useState } from "react";
 
 // Wallet type
 interface Wallet {
@@ -24,6 +24,12 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
   onClick,
 }) => {
   const isSelected = selectedPaymentMethod?.id === method.id;
+  const fallbackImg = getPaymentMethodImage(method.name);
+  const [imgSrc, setImgSrc] = useState<string>(method.image || fallbackImg);
+
+  useEffect(() => {
+    setImgSrc(method.image || fallbackImg);
+  }, [method.image, fallbackImg]);
 
   return (
     <div
@@ -36,12 +42,16 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
         }`}
       >
         {/* Image of payment method */}
-        <div className="relative w-12 h-12">
-          <Image
-            src={getPaymentMethodImage(method.name)}
+        <div className="relative w-12 h-12 flex items-center justify-center">
+          <img
+            src={imgSrc}
             alt={getPaymentMethodLabel(method.name)}
-            fill
-            className="object-contain"
+            className="w-12 h-12 object-contain"
+            onError={() => {
+              if (imgSrc !== fallbackImg) {
+                setImgSrc(fallbackImg);
+              }
+            }}
           />
         </div>
 

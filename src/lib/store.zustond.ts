@@ -54,11 +54,12 @@ export const useGames = create<GameType>((set, get) => ({
     // If provider games are available and a provider is selected, use them
     if (provider && provider !== "all" && state.providerGames && state.providerGames[provider]) {
       console.log(`Using provider-specific games for ${provider}`);
-      let providerGames = state.providerGames[provider];
+      const allProviderGames = state.providerGames[provider];
+      let providerGames = allProviderGames;
       
-      // Apply category filter if provided
+      // Apply category filter if provided (fall back to all provider games if Admin mapped category explicitly)
       if (category) {
-        providerGames = providerGames.filter((game) => {
+        const catFiltered = allProviderGames.filter((game) => {
           if (category === Categories.Slots) {
             return (
               game.categories === category ||
@@ -68,6 +69,7 @@ export const useGames = create<GameType>((set, get) => ({
             return game.categories === category;
           }
         });
+        providerGames = catFiltered.length > 0 ? catFiltered : allProviderGames;
       }
 
       // Apply search filter if provided
@@ -126,7 +128,11 @@ export const useGames = create<GameType>((set, get) => ({
     console.log(`Games filtered by category ${category}: ${flitedGames.length}`);
 
     if (provider && provider !== "all") {
-      const providerFiltered = allGamesArrays!.filter((game) => game.title === provider);
+      const providerFiltered = allGamesArrays!.filter(
+        (game: any) =>
+          String(game.brand_id || "") === String(provider) ||
+          game.title === provider
+      );
       console.log(`Games filtered by provider ${provider}: ${providerFiltered.length}`);
       flitedGames = providerFiltered;
     }

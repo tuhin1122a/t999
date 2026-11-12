@@ -1,6 +1,7 @@
 import { findCurrentUser } from "@/data/user";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getScopedDepositWalletsForUser } from "@/lib/depositWallets";
 
 export async function GET() {
   try {
@@ -28,23 +29,23 @@ export async function GET() {
     });
     const isSigninBonusActive = wallet.signinBonus || approvedDepositsCount === 0;
 
-    // Get payment wallets from database
-    const paymentWallets = await db.paymentWallet.findMany();
+    // Get payment wallets and scoped deposit wallets
+    const [paymentWallets, scoped, bonus] = await Promise.all([
+      db.paymentWallet.findMany(),
+      getScopedDepositWalletsForUser(user.id),
+      db.bonus.findFirst(),
+    ]);
+    const depositWallets = scoped.depositWallets;
 
-    // Get deposit wallets separately
-    const depositWallets = await db.depositWallet.findMany();
-
-    // Get bonus settings
-    const bonus = await db.bonus.findFirst();
-
-    // Combine payment wallets with their deposit settings
-    const wallets = paymentWallets.map(pw => {
-      const depositWallet = depositWallets.find(dw => dw.paymentWalletId === pw.id);
+    // Combine scoped deposit wallets with their payment wallet details
+    const wallets = depositWallets.map((depositWallet) => {
+      const pw = paymentWallets.find((p) => p.id === depositWallet.paymentWalletId);
       return {
-        id: pw.id,
-        name: pw.walletName,
-        image: pw.walletLogo,
-        label: pw.walletName,
+        id: depositWallet.id,
+        paymentWalletId: depositWallet.paymentWalletId,
+        name: pw?.walletName || "Unknown",
+        image: pw?.walletLogo || "",
+        label: pw?.walletName || "Unknown",
         min_deposit: depositWallet?.minDeposit ? parseFloat(depositWallet.minDeposit.toString()) : 100,
         max_deposit: depositWallet?.maximumDeposit ? parseFloat(depositWallet.maximumDeposit.toString()) : 50000,
         instructions: depositWallet?.instructions || "",

@@ -1,15 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from "react";
 import "swiper/css";
 import "swiper/css/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { useGames } from "@/lib/store.zustond";
 
 type ProviderItem = {
   brand_id: string;
   brand_title: string;
   logo: string;
+  category?: string;
+  categories?: string[];
 };
 
 const CATEGORY_BRANDS: Record<string, string[]> = {
@@ -43,7 +44,6 @@ const FilterProivder = ({
   const [selectedProvider, setProvider] = useState<string>("all");
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
-  const isLoading = useGames((state) => state.isLoading);
 
   const selectorStyle = {
     active: {
@@ -74,37 +74,45 @@ const FilterProivder = ({
   };
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const providerParam = new URLSearchParams(window.location.search).get(
+      "providerId"
+    );
+    if (providerParam) {
+      setProvider(providerParam);
+    }
+  }, []);
+
+  useEffect(() => {
     onSelect(selectedProvider);
   }, [selectedProvider, onSelect]);
 
   useEffect(() => {
     async function loadProviders() {
       try {
-        const res = await fetch("/api/softapi/providers");
+        const res = await fetch("/api/softapi/providers", {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error("Failed to load provider list");
         const data = await res.json();
 
-        let fetchedProviders: ProviderItem[] = data.providers || data.games || [];
-        if (category && CATEGORY_BRANDS[category]) {
-          const allowedBrands = CATEGORY_BRANDS[category];
-          fetchedProviders = fetchedProviders.filter((p) =>
-            allowedBrands.includes(String(p.brand_id))
-          );
-        }
+        let fetchedProviders: ProviderItem[] =
+          data.providers || data.games || [];
 
-        // Only filter out empty providers once loading is complete
-        if (!isLoading && category) {
-          const gamesState = useGames.getState();
-          const allGames = gamesState.games ? Object.values(gamesState.games).flat() : [];
-
+        if (category) {
           fetchedProviders = fetchedProviders.filter((p) => {
-            const hasGamesInMain = allGames.some(
-              (game: any) => game && String(game.brand_id) === String(p.brand_id) && game.categories === category
-            );
-            const hasGamesInProvider = gamesState.providerGames[p.brand_id]?.some(
-              (game: any) => game && game.categories === category
-            );
-            return hasGamesInMain || hasGamesInProvider;
+            if (Array.isArray(p.categories) && p.categories.length > 0) {
+              return (
+                p.categories.includes(category) || p.category === category
+              );
+            }
+            if (p.category) {
+              return p.category === category;
+            }
+            if (CATEGORY_BRANDS[category]) {
+              return CATEGORY_BRANDS[category].includes(String(p.brand_id));
+            }
+            return true;
           });
         }
 
@@ -115,7 +123,7 @@ const FilterProivder = ({
     }
 
     loadProviders();
-  }, [category, isLoading]);
+  }, [category]);
 
   return (
     <div>

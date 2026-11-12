@@ -1,8 +1,13 @@
 // src/app/api/softapi/games/route.ts
-// Fetches games for a specific brand from SoftAPI (https://igamingapis.com/provider/brands/?brand_id=...)
 import { promises as fs } from "fs";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
+import {
+  fetchLiveSoftGamesForBrand,
+  getBrandProviderSetting,
+} from "@/lib/gameCatalog";
+
+export const dynamic = "force-dynamic";
 
 const IGAMING_BRANDS_URLS = [
   "https://igamingapis.com/provider/brands/",
@@ -10,8 +15,11 @@ const IGAMING_BRANDS_URLS = [
   "https://igamingapis.live/provider/brands/",
   "https://igamingapis.live/provider/brands.php",
 ];
-const SOFTAPI_CACHE_DIR = path.join(process.cwd(), "data", "softapi-brand-cache");
-const SERVED_LOCAL_CACHE_LOGGED = new Set<string>();
+const SOFTAPI_CACHE_DIR = path.join(
+  process.cwd(),
+  "data",
+  "softapi-brand-cache"
+);
 
 async function ensureCacheDir() {
   try {
@@ -41,24 +49,44 @@ async function writeLocalCache(brandId: string, payload: unknown) {
     const cachePath = await getCacheFilePath(brandId);
     await fs.writeFile(cachePath, JSON.stringify(payload, null, 2), "utf8");
   } catch (err) {
-    console.warn(`[SoftAPI] Failed to write local cache for brand_id=${brandId}:`, err);
+    console.warn(
+      `[SoftAPI] Failed to write local cache for brand_id=${brandId}:`,
+      err
+    );
   }
 }
 
-// Map igamingapis category → our app category
-function mapCategory(cat: string): string {
-  const c = cat?.toLowerCase() || "";
-  if (c.includes("slot") || c === "flash" || c === "video slot") return "slots";
-  if (c.includes("live") || c.includes("casino") || c.includes("baccarat") || c.includes("roulette")) return "live_dealers";
+function mapCategory(rawCat: string, adminCategory?: string | null): string {
+  const c = (rawCat || "").toLowerCase().trim();
+  if (
+    c.includes("live") ||
+    c.includes("casino") ||
+    c.includes("baccarat") ||
+    c.includes("roulette")
+  ) {
+    return "live_dealers";
+  }
   if (c.includes("fish") || c.includes("shoot")) return "fishing";
   if (c.includes("sport")) return "sport";
-  if (c.includes("poker") || c.includes("table") || c.includes("card")) return "live_dealers";
-  if (c.includes("lottery") || c.includes("keno") || c.includes("bingo")) return "lottery";
-  if (c.includes("mini") || c.includes("crash") || c.includes("instant")) return "slots";
+  if (c.includes("poker") || c.includes("table") || c.includes("card")) {
+    return adminCategory === "card" ? "card" : "live_dealers";
+  }
+  if (c.includes("lottery") || c.includes("keno") || c.includes("bingo")) {
+    return "lottery";
+  }
+  if (c === "arcade") return "arcade";
+  if (
+    (c === "" || c === "flash" || c === "mini" || c === "crash" || c === "instant") &&
+    adminCategory &&
+    ["arcade", "lottery", "sport", "live_dealers", "fishing"].includes(adminCategory)
+  ) {
+    return adminCategory;
+  }
+  if (c.includes("slot") || c === "flash" || c === "video slot") return "slots";
+  if (adminCategory) return adminCategory;
   return "slots";
 }
 
-// Map SoftAPI brand_id to our app provider title
 function mapBrandToTitle(brandId: string): string {
   const mapping: Record<string, string> = {
     "49": "jili_gaming",
@@ -77,14 +105,33 @@ function mapBrandToTitle(brandId: string): string {
   return mapping[brandId] || `softapi_${brandId}`;
 }
 
-function parseGames(data: any, brand_id: string, category: string) {
-  const rawGames = data.games || data.data || [];
+function normalizeGames(
+  rawGames: Record<string, unknown>[],
+  brand_id: string,
+  adminCategory?: string | null
+) {
   const providerTitle = mapBrandToTitle(brand_id);
-  let games = rawGames.map((g: any) => {
-    const gameCode = String(g.game_code || g.gameID || g.game_id || g.id || "");
-    const gameName = g.game_name || g.gameNameEn || g.name || "Unknown Game";
-    const gameImg = g.game_img || g.img || g.image || "";
-    const mappedCat = g.categories || mapCategory(g.category || g.game_type || "");
+  const games = rawGames.map((g) => {
+    const gameCode = String(
+      g.game_uid || g.game_code || g.gameID || g.game_id || g.id || ""
+    );
+    const gameName = String(
+      g.game_name || g.gameNameEn || g.name || "Unknown Game"
+    );
+    const gameImg = String(
+      g.game_img ||
+        g.img ||
+        g.logo ||
+        g.image ||
+        (gameCode ? `https://igamingapis.com/img/${gameCode}.png` : "")
+    );
+    const rawCat = String(g.raw_category || g.category || g.game_type || "");
+    const existingCats = typeof g.categories === "string" ? g.categories : "";
+    const mappedCat = g.raw_category
+      ? mapCategory(String(g.raw_category), adminCategory)
+      : existingCats && !["flash", "mini"].includes(existingCats)
+      ? existingCats
+      : mapCategory(rawCat, adminCategory);
 
     return {
       id: gameCode,
@@ -96,19 +143,15 @@ function parseGames(data: any, brand_id: string, category: string) {
       device: "mobile,desktop",
       title: providerTitle,
       categories: mappedCat,
-      category: g.category || mappedCat,
+      category: rawCat || mappedCat,
       bm: "0",
       demo: "1",
       rewriterule: "0",
       exitButton: "1",
       brand_id: String(brand_id),
-      raw_category: g.category || mappedCat,
+      raw_category: rawCat || mappedCat,
     };
   });
-
-  if (category && category !== "all") {
-    games = games.filter((g: any) => g.categories === category);
-  }
 
   return { games, providerTitle };
 }
@@ -123,9 +166,8 @@ async function fetchWithTimeout(url: string, timeoutMs = 10000) {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Accept: "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
       },
-      next: { revalidate: 3600 },
+      cache: "no-store",
     });
     clearTimeout(timeoutId);
     return res;
@@ -138,7 +180,8 @@ async function fetchWithTimeout(url: string, timeoutMs = 10000) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const brand_id = searchParams.get("brand_id") || searchParams.get("provider");
+    const brand_id =
+      searchParams.get("brand_id") || searchParams.get("provider");
     const category = searchParams.get("category") || "";
     const refresh = searchParams.get("refresh") === "1";
 
@@ -149,47 +192,98 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Check Admin's GameProviderSetting active flag first
+    const providerSetting = await getBrandProviderSetting(brand_id);
+    if (providerSetting && providerSetting.isActive === false) {
+      return NextResponse.json(
+        {
+          status: true,
+          success: true,
+          disabled: true,
+          brand_id,
+          provider_title: mapBrandToTitle(brand_id),
+          total_games: 0,
+          games: [],
+        },
+        {
+          status: 200,
+          headers: { "Cache-Control": "no-store" },
+        }
+      );
+    }
+
+    const adminCategory = providerSetting?.category || null;
+
     if (!refresh) {
       const cachedSoftApiPayload = await readLocalCache(brand_id);
-      if (cachedSoftApiPayload && Array.isArray(cachedSoftApiPayload.games) && cachedSoftApiPayload.games.length > 0) {
-        if (!SERVED_LOCAL_CACHE_LOGGED.has(brand_id)) {
-          console.log(`[SoftAPI] Serving local cache for brand_id=${brand_id}`);
-          SERVED_LOCAL_CACHE_LOGGED.add(brand_id);
-        }
-        if (category && category !== "all") {
-          const filteredGames = cachedSoftApiPayload.games.filter(
-            (g: any) => g.categories === category
-          );
-          return NextResponse.json(
-            {
-              ...cachedSoftApiPayload,
-              status: true,
-              success: true,
-              total_games: filteredGames.length,
-              games: filteredGames,
-            },
-            {
-              status: 200,
-              headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
-            }
-          );
-        }
+      if (
+        cachedSoftApiPayload &&
+        Array.isArray(cachedSoftApiPayload.games) &&
+        cachedSoftApiPayload.games.length > 0
+      ) {
+        const { games: normalized } = normalizeGames(
+          cachedSoftApiPayload.games,
+          brand_id,
+          adminCategory
+        );
+        const finalGames =
+          category && category !== "all"
+            ? normalized.filter((g) => g.categories === category)
+            : normalized;
 
         return NextResponse.json(
           {
             ...cachedSoftApiPayload,
             status: true,
             success: true,
+            total_games: finalGames.length,
+            games: finalGames,
           },
           {
             status: 200,
-            headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
+            headers: { "Cache-Control": "no-store" },
           }
         );
       }
     }
 
-    // Live fetch from SoftAPI catalog endpoint: https://igamingapis.com/provider/brands/?brand_id=131
+    // Try live SoftAPI v1 (/api/v1/games) first so new providers always work
+    const liveSoftGames = await fetchLiveSoftGamesForBrand(brand_id, refresh);
+    if (liveSoftGames.length > 0) {
+      const { games: allBrandGames, providerTitle } = normalizeGames(
+        liveSoftGames,
+        brand_id,
+        adminCategory
+      );
+      const payloadToCache = {
+        status: true,
+        success: true,
+        brand_id,
+        provider_title: providerTitle,
+        total_games: allBrandGames.length,
+        games: allBrandGames,
+      };
+      await writeLocalCache(brand_id, payloadToCache);
+
+      const finalGames =
+        category && category !== "all"
+          ? allBrandGames.filter((g) => g.categories === category)
+          : allBrandGames;
+
+      return NextResponse.json(
+        {
+          ...payloadToCache,
+          total_games: finalGames.length,
+          games: finalGames,
+        },
+        {
+          status: 200,
+          headers: { "Cache-Control": "no-store" },
+        }
+      );
+    }
+
+    // Legacy fallback: https://igamingapis.com/provider/brands/?brand_id=...
     for (const baseUrl of IGAMING_BRANDS_URLS) {
       try {
         const url = `${baseUrl}?brand_id=${encodeURIComponent(brand_id)}`;
@@ -200,8 +294,13 @@ export async function GET(req: NextRequest) {
         if (!text.trim().startsWith("{")) continue;
 
         const data = JSON.parse(text);
-        if (data?.status && Array.isArray(data.games)) {
-          const { games: allBrandGames, providerTitle } = parseGames(data, brand_id, "");
+        const rawList = data?.games || data?.data;
+        if (data?.status && Array.isArray(rawList)) {
+          const { games: allBrandGames, providerTitle } = normalizeGames(
+            rawList,
+            brand_id,
+            adminCategory
+          );
           const payloadToCache = {
             status: true,
             success: true,
@@ -215,7 +314,7 @@ export async function GET(req: NextRequest) {
 
           const finalGames =
             category && category !== "all"
-              ? allBrandGames.filter((g: any) => g.categories === category)
+              ? allBrandGames.filter((g) => g.categories === category)
               : allBrandGames;
 
           return NextResponse.json(
@@ -226,16 +325,18 @@ export async function GET(req: NextRequest) {
             },
             {
               status: 200,
-              headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
+              headers: { "Cache-Control": "no-store" },
             }
           );
         }
       } catch (err) {
-        console.warn(`[SoftAPI] Failed fetching brand_id=${brand_id} from ${baseUrl}:`, err);
+        console.warn(
+          `[SoftAPI] Failed fetching brand_id=${brand_id} from ${baseUrl}:`,
+          err
+        );
       }
     }
 
-    console.warn(`[SoftAPI] Could not load games for brand_id=${brand_id}. Returning empty games.`);
     return NextResponse.json(
       {
         status: false,
@@ -248,10 +349,16 @@ export async function GET(req: NextRequest) {
       },
       { status: 404 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unexpected error";
     console.error("[SoftAPI] Games Error:", error);
     return NextResponse.json(
-      { status: false, success: false, error: error.message || "Unexpected error", games: [] },
+      {
+        status: false,
+        success: false,
+        error: message,
+        games: [],
+      },
       { status: 500 }
     );
   }

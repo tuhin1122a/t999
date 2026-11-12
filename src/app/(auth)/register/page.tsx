@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import AuthContainer from "@/components/auth/AuthContainer";
 import RegisterForm from "@/components/auth/RegisterForm";
 
@@ -11,7 +11,9 @@ const Register = () => {
         formRedirectText="You already have an account"
         formRedirectLink="/login"
       >
-        <RegisterForm />
+        <Suspense fallback={<div className="py-6 text-center text-sm text-[#23ffc8]">Loading...</div>}>
+          <RegisterForm />
+        </Suspense>
       </AuthContainer>
     </div>
   );

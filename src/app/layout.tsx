@@ -2,6 +2,7 @@
 import { auth } from "@/auth";
 import { NotificationToaster } from "@/components/notifications/notification-toaster";
 import TawkToWidget from "@/components/TawkToWidget";
+import AgentTracker from "@/components/AgentTracker";
 import { db } from "@/lib/db";
 import { parseTawkConfig, TAWK_CONFIG_KEY } from "@/lib/tawk";
 import type { Metadata } from "next";
@@ -68,6 +69,7 @@ export default async function RootLayout({
               <Toaster />
               <ShadcnToastProvider />
               <StoreProvider>
+                <AgentTracker />
                 <GamesLoader />
                 {children}
                 <TawkToWidget
