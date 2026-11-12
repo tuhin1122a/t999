@@ -586,7 +586,7 @@ const VipPage = () => {
           </div>
         </main>
 
-        <Footer />
+        <Footer showPaymentMethods={false} />
       </TabLayout>
     </SideNavLayout>
   );

@@ -7,7 +7,11 @@ import { RiShieldCheckFill, RiCustomerService2Line, RiLockPasswordLine } from "r
 import { MdVerifiedUser } from "react-icons/md";
 import { SiTether } from "react-icons/si";
 
-const Footer = async () => {
+const Footer = async ({
+  showPaymentMethods = true,
+}: {
+  showPaymentMethods?: boolean;
+} = {}) => {
   const siteSettings = await db.siteSetting.findFirst().catch(() => null);
   const promotionsLogo = siteSettings?.promotionsLogo;
 
@@ -18,74 +22,76 @@ const Footer = async () => {
         {/* ══════════════════════════════════════════════════════════════════
             1. ACCEPTED PAYMENT METHODS
         ══════════════════════════════════════════════════════════════════ */}
-        <div className="p-3.5 sm:p-4 rounded-xl bg-[#091524] border border-[#162e4a] shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <div>
-              <h4 className="text-xs sm:text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Accepted Payment Methods
-              </h4>
-              <p className="text-[11px] text-gray-400 font-medium">
-                Instant Automatic Deposit & 10-Minute Fast Withdrawals · 100% Safe
-              </p>
-            </div>
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 rounded-full">
-                0% Fee
-              </span>
-              <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/25 px-2.5 py-0.5 rounded-full">
-                24/7 Live
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-2.5">
-            {/* bKash */}
-            <div className="flex items-center justify-center h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
-              <img
-                src="/wallet/bkash.png"
-                alt="bKash"
-                className="max-h-7 max-w-[85px] w-auto h-auto object-contain group-hover:scale-105 transition-transform"
-              />
+        {showPaymentMethods && (
+          <div className="p-3.5 sm:p-4 rounded-xl bg-[#091524] border border-[#162e4a] shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <div>
+                <h4 className="text-xs sm:text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Accepted Payment Methods
+                </h4>
+                <p className="text-[11px] text-gray-400 font-medium">
+                  Instant Automatic Deposit & 10-Minute Fast Withdrawals · 100% Safe
+                </p>
+              </div>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 rounded-full">
+                  0% Fee
+                </span>
+                <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/25 px-2.5 py-0.5 rounded-full">
+                  24/7 Live
+                </span>
+              </div>
             </div>
 
-            {/* Nagad */}
-            <div className="flex items-center justify-center h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
-              <img
-                src="/wallet/nagad.png"
-                alt="Nagad"
-                className="max-h-7 max-w-[85px] w-auto h-auto object-contain group-hover:scale-105 transition-transform"
-              />
-            </div>
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-2.5">
+              {/* bKash */}
+              <div className="flex items-center justify-center h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
+                <img
+                  src="/wallet/bkash.png"
+                  alt="bKash"
+                  className="max-h-7 max-w-[85px] w-auto h-auto object-contain group-hover:scale-105 transition-transform"
+                />
+              </div>
 
-            {/* Rocket */}
-            <div className="flex items-center justify-center h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
-              <img
-                src="/wallet/rocket.png"
-                alt="Rocket"
-                className="max-h-7 max-w-[85px] w-auto h-auto object-contain group-hover:scale-105 transition-transform"
-              />
-            </div>
+              {/* Nagad */}
+              <div className="flex items-center justify-center h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
+                <img
+                  src="/wallet/nagad.png"
+                  alt="Nagad"
+                  className="max-h-7 max-w-[85px] w-auto h-auto object-contain group-hover:scale-105 transition-transform"
+                />
+              </div>
 
-            {/* Upay */}
-            <div className="flex items-center justify-center h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
-              <img
-                src="/wallet/upay.png"
-                alt="Upay"
-                className="max-h-7 max-w-[85px] w-auto h-auto object-contain group-hover:scale-105 transition-transform"
-              />
-            </div>
+              {/* Rocket */}
+              <div className="flex items-center justify-center h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
+                <img
+                  src="/wallet/rocket.png"
+                  alt="Rocket"
+                  className="max-h-7 max-w-[85px] w-auto h-auto object-contain group-hover:scale-105 transition-transform"
+                />
+              </div>
 
-            {/* USDT Crypto */}
-            <div className="col-span-2 xs:col-span-1 flex items-center justify-center gap-1.5 h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
-              <SiTether className="text-[#26a17b] text-xl group-hover:scale-110 transition-transform flex-shrink-0" />
-              <div className="flex flex-col text-left leading-none">
-                <span className="text-xs font-black text-gray-900 tracking-tight">USDT</span>
-                <span className="text-[9px] text-[#26a17b] font-bold">TRC20 / BEP20</span>
+              {/* Upay */}
+              <div className="flex items-center justify-center h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
+                <img
+                  src="/wallet/upay.png"
+                  alt="Upay"
+                  className="max-h-7 max-w-[85px] w-auto h-auto object-contain group-hover:scale-105 transition-transform"
+                />
+              </div>
+
+              {/* USDT Crypto */}
+              <div className="col-span-2 xs:col-span-1 flex items-center justify-center gap-1.5 h-11 sm:h-12 bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 group">
+                <SiTether className="text-[#26a17b] text-xl group-hover:scale-110 transition-transform flex-shrink-0" />
+                <div className="flex flex-col text-left leading-none">
+                  <span className="text-xs font-black text-gray-900 tracking-tight">USDT</span>
+                  <span className="text-[9px] text-[#26a17b] font-bold">TRC20 / BEP20</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* ══════════════════════════════════════════════════════════════════
             2. BRAND & QUICK LINKS GRID
