@@ -12,8 +12,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
-  FiArrowLeft,
   FiChevronDown,
+  FiChevronLeft,
   FiChevronUp,
   FiMaximize,
   FiMinimize,
@@ -249,11 +249,10 @@ const Play = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={executeExit}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#dc2626] hover:bg-[#b91c1c] active:scale-95 text-white rounded-md border border-red-500/40 text-xs font-bold transition-all shadow-sm"
-              title="Instant Exit to Lobby"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-[#14263d] hover:bg-[#dc2626] active:scale-90 text-white border border-[#234267] hover:border-red-500/50 transition-all shadow-md"
+              title="Back to Lobby"
             >
-              <FiArrowLeft size={16} />
-              <span>Exit</span>
+              <FiChevronLeft size={20} className="stroke-[2.5] -ml-0.5" />
             </button>
 
             {/* Platform Logo */}
@@ -350,11 +349,10 @@ const Play = () => {
           <div className="absolute top-2 left-2 z-50">
             <button
               onClick={executeExit}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#dc2626]/90 hover:bg-[#dc2626] text-white rounded-full shadow-2xl backdrop-blur-md transition-all active:scale-95 text-xs font-bold border border-red-500/40"
-              title="Instant Exit to Lobby"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-[#0a1626]/85 hover:bg-[#dc2626] text-white shadow-2xl backdrop-blur-md transition-all active:scale-90 border border-[#1c304a] hover:border-red-500/50"
+              title="Back to Lobby"
             >
-              <FiArrowLeft size={15} />
-              <span>Exit</span>
+              <FiChevronLeft size={20} className="stroke-[2.5] -ml-0.5" />
             </button>
           </div>
 
