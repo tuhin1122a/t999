@@ -15,7 +15,6 @@ import {
   FiArrowLeft,
   FiChevronDown,
   FiChevronUp,
-  FiHelpCircle,
   FiMaximize,
   FiMinimize,
   FiPlus,
@@ -60,7 +59,6 @@ const Play = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [displayBalance, setDisplayBalance] = useState<string | null>(null);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
@@ -120,17 +118,36 @@ const Play = () => {
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
 
-  // ── Safe Exit to Lobby ────────────────────────────────────────────────────
+  // ── Instant Safe Exit to Lobby (No hassle, 1-tap exit) ────────────────────
   const executeExit = useCallback(async () => {
-    if (document.fullscreenElement) {
-      try {
+    try {
+      if (typeof document !== "undefined" && document.fullscreenElement) {
         await document.exitFullscreen();
-      } catch {
-        // ignore
       }
+    } catch {
+      // ignore
     }
-    router.push("/games");
+    setIframe("");
+    router.replace("/games");
   }, [router]);
+
+  // ── Handle Mobile Back Button & Gestures ──────────────────────────────────
+  useEffect(() => {
+    try {
+      window.history.pushState({ inGame: true }, "", window.location.href);
+    } catch {
+      // ignore
+    }
+
+    const handlePopState = () => {
+      executeExit();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [executeExit]);
 
   // ── Game Iframe Reload ────────────────────────────────────────────────────
   const handleReloadGame = useCallback(() => {
@@ -231,12 +248,12 @@ const Play = () => {
           {/* LEFT: Back to Casino & Brand */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
-              onClick={() => setShowExitConfirm(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#14263d] hover:bg-[#1e395b] active:scale-95 text-[#a3c2e6] hover:text-white rounded-md border border-[#234267] text-xs font-semibold transition-all"
-              title="Back to Casino Games"
+              onClick={executeExit}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#dc2626] hover:bg-[#b91c1c] active:scale-95 text-white rounded-md border border-red-500/40 text-xs font-bold transition-all shadow-sm"
+              title="Instant Exit to Lobby"
             >
-              <FiArrowLeft size={16} className="text-[#3888e9]" />
-              <span className="hidden sm:inline">Lobby</span>
+              <FiArrowLeft size={16} />
+              <span>Exit</span>
             </button>
 
             {/* Platform Logo */}
@@ -328,16 +345,31 @@ const Play = () => {
           MINIMAL FLOATING TOP TRIGGER (When Header is Hidden)
       ══════════════════════════════════════════════════════════════════════ */}
       {!showHeader && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40">
-          <button
-            onClick={() => setShowHeader(true)}
-            className="group flex items-center gap-1.5 px-3 py-1 bg-[#0a1626]/90 hover:bg-[#14263d] border-b border-x border-[#1c304a] rounded-b-lg shadow-xl backdrop-blur-md transition-all active:scale-95"
-            title="Expand 1xBet Controls"
-          >
-            <span className="text-[11px] font-bold text-yellow-400">৳ {balanceValue}</span>
-            <FiChevronDown size={14} className="text-teal-400 group-hover:translate-y-0.5 transition-transform" />
-          </button>
-        </div>
+        <>
+          {/* Quick Floating Exit Button on top-left so player is never trapped */}
+          <div className="absolute top-2 left-2 z-50">
+            <button
+              onClick={executeExit}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#dc2626]/90 hover:bg-[#dc2626] text-white rounded-full shadow-2xl backdrop-blur-md transition-all active:scale-95 text-xs font-bold border border-red-500/40"
+              title="Instant Exit to Lobby"
+            >
+              <FiArrowLeft size={15} />
+              <span>Exit</span>
+            </button>
+          </div>
+
+          {/* Balance & Header Re-open Toggle */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40">
+            <button
+              onClick={() => setShowHeader(true)}
+              className="group flex items-center gap-1.5 px-3 py-1 bg-[#0a1626]/90 hover:bg-[#14263d] border-b border-x border-[#1c304a] rounded-b-lg shadow-xl backdrop-blur-md transition-all active:scale-95"
+              title="Expand 1xBet Controls"
+            >
+              <span className="text-[11px] font-bold text-yellow-400">৳ {balanceValue}</span>
+              <FiChevronDown size={14} className="text-teal-400 group-hover:translate-y-0.5 transition-transform" />
+            </button>
+          </div>
+        </>
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════
@@ -363,10 +395,10 @@ const Play = () => {
             </p>
 
             <button
-              onClick={() => setShowExitConfirm(true)}
-              className="px-5 py-1.5 bg-[#14263d] hover:bg-[#1e395b] text-[#a3c2e6] text-xs font-semibold rounded-md border border-[#234267] transition-all"
+              onClick={executeExit}
+              className="px-5 py-2 bg-[#dc2626] hover:bg-[#b91c1c] text-white text-xs font-bold rounded-md border border-red-500/40 transition-all shadow"
             >
-              Cancel
+              Cancel & Exit
             </button>
           </div>
         )}
@@ -411,39 +443,6 @@ const Play = () => {
           </div>
         )}
       </main>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          1XBET EXIT CONFIRMATION MODAL
-      ══════════════════════════════════════════════════════════════════════ */}
-      {showExitConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-          <div className="w-full max-w-xs bg-[#0a1626] border border-[#1c304a] rounded-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="p-4 text-center">
-              <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-[#14263d] flex items-center justify-center text-yellow-400">
-                <FiHelpCircle size={24} />
-              </div>
-              <h3 className="text-sm font-bold text-white mb-1">Exit to Lobby?</h3>
-              <p className="text-xs text-gray-400 mb-4">
-                Your current session winnings will be safely credited to your main balance.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowExitConfirm(false)}
-                  className="flex-1 py-2 bg-[#14263d] hover:bg-[#1e395b] text-gray-300 rounded-lg text-xs font-semibold transition-all"
-                >
-                  Stay & Play
-                </button>
-                <button
-                  onClick={executeExit}
-                  className="flex-1 py-2 bg-[#dc2626] hover:bg-[#b91c1c] text-white rounded-lg text-xs font-bold transition-all shadow"
-                >
-                  Yes, Exit
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
