@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import LiveChatTrigger from "@/components/LiveChatTrigger";
 import { FaChevronLeft, FaArrowRight, FaBolt, FaShieldAlt } from "react-icons/fa";
 import { RiCustomerService2Fill } from "react-icons/ri";
+import { MdOutlineSupportAgent } from "react-icons/md";
 
 const fetchPromotion = (id: number) => {
   return promotions.find((promotion) => promotion.id === id);
@@ -26,7 +27,17 @@ const PromotionDetail = async ({ params }: { params: Params }) => {
   return (
     <SideNavLayout>
       <TabLayout>
-        <SiteHeader title={promotion?.title || "Promotion Details"} fallbackUrl="/promotion" />
+        <SiteHeader title={promotion?.title || "Promotion Details"} fallbackUrl="/promotion">
+          <LiveChatTrigger
+            fallbackHref="/support"
+            title="VIP Host & Support"
+            ariaLabel="VIP Host & Support"
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#14263d] hover:bg-[#1e395b] active:scale-95 text-[#3888e9] hover:text-white border border-[#234267] transition-all cursor-pointer relative"
+          >
+            <MdOutlineSupportAgent className="text-xl" />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-[#0a1626]" />
+          </LiveChatTrigger>
+        </SiteHeader>
 
         <main className="min-h-screen bg-[#070e17] text-white px-3 sm:px-4 py-6 max-w-4xl mx-auto space-y-6 pb-28 md:pb-14">
           {/* Back Button */}
