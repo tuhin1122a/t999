@@ -26,7 +26,7 @@ export const PlaceholderCard = ({ category }: { category?: string }) => {
 
 export const Loader = ({ category }: { category?: string }) => {
   return (
-    <div className="w-full h-40 rounded-2xl overflow-hidden border border-[#1b3554] bg-[#0a1626] shadow-md animate-pulse">
+    <div className="w-full aspect-square rounded-2xl overflow-hidden border border-[#1b3554] bg-[#0a1626] shadow-md animate-pulse">
       <PlaceholderCard category={category} />
     </div>
   );

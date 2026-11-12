@@ -69,7 +69,7 @@ export const GameCardWithProvider = ({ game, index }: GameCardWithProviderProps)
       <Link
         href={user ? `/play?gameId=${id}` : `/login?redirect=${encodeURIComponent(`/play?gameId=${id}`)}`}
         onClick={handleCardClick}
-        className="relative game-main overflow-hidden block rounded-2xl h-40 bg-[#002632]"
+        className="relative game-main overflow-hidden block rounded-2xl aspect-square w-full bg-[#0a1626] border border-[#162e4a] shadow-md transition-all hover:border-[#3888e9]/50"
       >
         {/* Category placeholder */}
         {(!imageLoaded || imageError) && (
@@ -88,7 +88,8 @@ export const GameCardWithProvider = ({ game, index }: GameCardWithProviderProps)
               <img
                 alt={name || "Game image"}
                 src={imageSrc}
-                className="w-full h-40 object-cover rounded-2xl"
+                loading="lazy"
+                className="w-full h-full object-cover object-center rounded-2xl"
                 onLoad={handleImageLoad}
                 onError={() => setImageError(true)}
               />
