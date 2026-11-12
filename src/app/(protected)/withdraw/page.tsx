@@ -11,7 +11,7 @@ const WithdrawPage = () => {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#003e3e] flex flex-col text-white pb-28">
+    <div className="min-h-screen bg-[#070e17] flex flex-col text-white pb-28">
       {/* Premium Dark Theme Header */}
       <header className="bg-[#0a1626] border-b border-[#1b3554] py-3.5 px-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
         <button
