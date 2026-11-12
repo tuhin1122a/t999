@@ -17,7 +17,7 @@ import { FiCheck, FiDownload, FiRefreshCw } from "react-icons/fi";
 import { GiFishMonster } from "react-icons/gi";
 import { LuNotebookText } from "react-icons/lu";
 import { MdOutlineSupportAgent, MdSecurity } from "react-icons/md";
-import { PiHandDepositFill, PiHandWithdrawFill } from "react-icons/pi";
+import { RiWallet3Fill, RiExchangeDollarFill } from "react-icons/ri";
 import { TiUserAdd } from "react-icons/ti";
 
 const menuItems = [
@@ -79,7 +79,7 @@ const App: React.FC = () => {
   }, [showToast]);
 
   return (
-    <div className="min-h-screen bg-[#003e3e] flex flex-col text-white pb-28">
+    <div className="min-h-screen bg-[#070e17] flex flex-col text-white pb-28">
       {/* Premium Dark Theme Header */}
       <header className="bg-[#0a1626] border-b border-[#1b3554] py-3.5 px-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
         <button
@@ -189,18 +189,42 @@ const App: React.FC = () => {
         {/* Action Buttons (Deposit, Withdraw, My Card, Reward) */}
         <div className="grid grid-cols-4 gap-2.5">
           {[
-            { href: "/deposit", icon: PiHandDepositFill, label: "Deposit", color: "text-[#23FFC8] bg-[#003e3e]/40 border-[#006165]" },
-            { href: "/withdraw", icon: PiHandWithdrawFill, label: "Withdraw", color: "text-[#FFB800] bg-[#003e3e]/40 border-[#FFB800]/30" },
-            { href: "/my-cards", icon: FaCreditCard, label: "My Card", color: "text-[#e0c3fc] bg-[#003e3e]/40 border-[#006165]" },
-            { href: "/rewardCenter", icon: FaGift, label: "Reward", color: "text-rose-400 bg-[#003e3e]/40 border-[#006165]" },
+            {
+              href: "/deposit",
+              icon: RiWallet3Fill,
+              label: "Deposit",
+              color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+            },
+            {
+              href: "/withdraw",
+              icon: RiExchangeDollarFill,
+              label: "Withdraw",
+              color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/30",
+            },
+            {
+              href: "/my-cards",
+              icon: FaCreditCard,
+              label: "My Card",
+              color: "text-blue-400 bg-blue-500/10 border-blue-500/30",
+            },
+            {
+              href: "/rewardCenter",
+              icon: FaGift,
+              label: "Reward",
+              color: "text-rose-400 bg-rose-500/10 border-rose-500/30",
+            },
           ].map((btn) => (
             <Link href={btn.href} key={btn.label} className="block">
-              <button className="w-full rounded-2xl border border-[#006165] bg-[#002632] px-2 py-4 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#002632]/80 hover:border-[#23FFC8]/30 active:scale-[0.98] cursor-pointer">
-                <div className="flex flex-col items-center gap-2.5">
-                  <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl border ${btn.color} shadow-inner`}>
-                    <btn.icon className="h-5.5 w-5.5" />
+              <button className="w-full rounded-2xl border border-[#1b3554] bg-[#0a1626] px-2 py-3.5 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#10233b] hover:border-[#3888e9]/40 active:scale-[0.98] cursor-pointer">
+                <div className="flex flex-col items-center gap-2">
+                  <span
+                    className={`inline-flex h-11 w-11 items-center justify-center rounded-xl border ${btn.color} shadow-sm`}
+                  >
+                    <btn.icon className="h-5 w-5" />
                   </span>
-                  <p className="text-[11px] font-bold text-gray-200 tracking-wide">{btn.label}</p>
+                  <p className="text-[11px] font-bold text-gray-200 tracking-wide">
+                    {btn.label}
+                  </p>
                 </div>
               </button>
             </Link>

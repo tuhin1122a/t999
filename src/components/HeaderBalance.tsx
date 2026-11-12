@@ -1,13 +1,17 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useState } from "react";
+import Link from "next/link";
 import { HiOutlineRefresh } from "react-icons/hi";
-import {} from "react-icons/ri";
+import {
+  RiCustomerService2Line,
+  RiAccountPinCircleFill,
+  RiWallet3Fill,
+  RiExchangeDollarFill,
+  RiAddCircleFill,
+} from "react-icons/ri";
 import { FaRegFileAlt } from "react-icons/fa";
-import { RiCustomerService2Line } from "react-icons/ri";
-import { PiHandWithdrawFill, PiHandDepositFill } from "react-icons/pi";
 import { IoLogOut } from "react-icons/io5";
-import { RiAccountPinCircleFill } from "react-icons/ri";
 import { MdHistory } from "react-icons/md";
 import {
   Popover,
@@ -85,6 +89,16 @@ const UserBalance = ({
                   <RefreshButton onRefresh={handleRefresh} isRefreshing={isRefreshing} />
                 </div>
               </div>
+
+              {/* Quick Deposit Button in Header (1xBet style) */}
+              <Link
+                href="/deposit"
+                className="ml-2 flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white rounded-md text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
+                title="Deposit Funds"
+              >
+                <RiAddCircleFill size={14} className="text-white" />
+                <span className="hidden xs:inline">Deposit</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -220,12 +234,12 @@ const DropdownMenu: React.FC = () => {
     },
 
     {
-      icon: <PiHandDepositFill className="w-6 h-6 text-white" />,
+      icon: <RiWallet3Fill className="w-5 h-5 text-emerald-400" />,
       label: "Deposit",
       onclick: () => redirect("/deposit"),
     },
     {
-      icon: <PiHandWithdrawFill className="w-6 h-6 text-white" />,
+      icon: <RiExchangeDollarFill className="w-5 h-5 text-yellow-400" />,
       label: "Withdrawal",
       onclick: () => redirect("/withdraw"),
     },
