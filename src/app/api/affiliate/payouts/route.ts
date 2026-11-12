@@ -1,170 +1,119 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { findCurrentUser } from "@/data/user";
+import { db } from "@/lib/db";
 import { z } from "zod";
 
-// Schema for payout request
+export const dynamic = "force-dynamic";
+
+// Schema for payout request (in BDT)
 const payoutRequestSchema = z.object({
-  amount: z.number().min(50, "Minimum payout amount is $50"),
-  paymentMethod: z.enum(["BANK_TRANSFER", "PAYPAL", "CRYPTO", "MOBILE_MONEY"]),
+  amount: z.number().min(500, "নূন্যতম উত্তোলনের পরিমাণ ৫০০ ৳ (Minimum payout amount is 500 BDT)"),
+  paymentMethod: z.enum(["BKASH", "NAGAD", "ROCKET", "BANK_TRANSFER", "CRYPTO_USDT", "MOBILE_MONEY"]),
   paymentDetails: z.object({
     accountNumber: z.string().optional(),
     accountName: z.string().optional(),
     bankName: z.string().optional(),
-    email: z.string().email().optional(),
-    walletAddress: z.string().optional(),
+    branchName: z.string().optional(),
     phoneNumber: z.string().optional(),
-  })
+    walletAddress: z.string().optional(),
+    notes: z.string().optional(),
+  }),
 });
 
 // GET - Get affiliate payouts history
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await findCurrentUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { authenticated: false, isAffiliate: false, message: "User not logged in" },
+        { status: 401 }
+      );
     }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-
-    // For now, return mock payout data
-    const mockPayouts = {
-      payouts: [
-        {
-          id: "payout_1",
-          amount: 500.00,
-          paymentMethod: "BANK_TRANSFER",
-          paymentDetails: {
-            accountNumber: "****1234",
-            accountName: "John Doe",
-            bankName: "ABC Bank"
-          },
-          status: "COMPLETED",
-          requestedAt: "2024-01-20T10:00:00Z",
-          processedAt: "2024-01-22T14:30:00Z",
-          transactionId: "TXN123456789"
-        },
-        {
-          id: "payout_2",
-          amount: 250.00,
-          paymentMethod: "PAYPAL",
-          paymentDetails: {
-            email: "john.doe@example.com"
-          },
-          status: "PENDING",
-          requestedAt: "2024-01-25T15:30:00Z",
-          processedAt: null,
-          transactionId: null
-        },
-        {
-          id: "payout_3",
-          amount: 150.00,
-          paymentMethod: "MOBILE_MONEY",
-          paymentDetails: {
-            phoneNumber: "+1234567890"
-          },
-          status: "PROCESSING",
-          requestedAt: "2024-01-28T09:15:00Z",
-          processedAt: null,
-          transactionId: null
-        }
-      ],
-      summary: {
-        totalRequested: 900.00,
-        totalPaid: 500.00,
-        totalPending: 400.00,
-        availableBalance: 320.50
-      },
-      pagination: {
-        currentPage: page,
-        totalPages: 1,
-        totalCount: 3,
-        hasNext: false,
-        hasPrev: false
-      }
-    };
-
-    return NextResponse.json({
-      success: true,
-      data: mockPayouts
-    });
-
-    /* TODO: Uncomment this once database migration is complete
-    // Check if user is an affiliate
     const affiliate = await db.affiliate.findUnique({
-      where: { userId: session.user.id }
+      where: { userId: user.id },
     });
 
     if (!affiliate) {
-      return NextResponse.json({ 
-        error: "User is not an affiliate" 
-      }, { status: 404 });
+      return NextResponse.json(
+        { authenticated: true, isAffiliate: false, message: "User is not an affiliate" },
+        { status: 404 }
+      );
     }
 
-    // Build where clause
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "10", 10)));
+    const status = searchParams.get("status") || undefined;
+
     const whereClause: any = {
-      affiliateId: affiliate.id
+      affiliateId: affiliate.id,
     };
 
-    if (status) {
-      whereClause.status = status;
+    if (status && ["PENDING", "PROCESSING", "COMPLETED", "REJECTED", "CANCELLED"].includes(status.toUpperCase())) {
+      whereClause.status = status.toUpperCase();
     }
 
-    // Get total count
-    const totalCount = await db.affiliatePayout.count({
-      where: whereClause
-    });
+    const [totalCount, payouts, allPayouts] = await Promise.all([
+      db.affiliatePayout.count({ where: whereClause }),
+      db.affiliatePayout.findMany({
+        where: whereClause,
+        orderBy: { requestedAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      db.affiliatePayout.findMany({
+        where: { affiliateId: affiliate.id },
+        select: {
+          amount: true,
+          status: true,
+        },
+      }),
+    ]);
 
-    // Get payouts with pagination
-    const payouts = await db.affiliatePayout.findMany({
-      where: whereClause,
-      orderBy: { requestedAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit
-    });
+    const totalEarnings = Number(affiliate.totalEarnings || 0);
+    const pendingEarnings = Number(affiliate.pendingEarnings || 0);
+    const availableBalance = Math.max(0, totalEarnings - pendingEarnings);
 
-    // Calculate summary
-    const allPayouts = await db.affiliatePayout.findMany({
-      where: { affiliateId: affiliate.id },
-      select: {
-        amount: true,
-        status: true
+    const summary = allPayouts.reduce(
+      (acc, payout) => {
+        const amount = Number(payout.amount);
+        acc.totalRequested += amount;
+
+        if (payout.status === "COMPLETED") {
+          acc.totalPaid += amount;
+        } else if (payout.status === "PENDING" || payout.status === "PROCESSING") {
+          acc.totalPending += amount;
+        }
+
+        return acc;
+      },
+      {
+        totalRequested: 0,
+        totalPaid: 0,
+        totalPending: 0,
+        availableBalance,
+        totalEarnings,
       }
-    });
+    );
 
-    const summary = allPayouts.reduce((acc, payout) => {
-      const amount = Number(payout.amount);
-      acc.totalRequested += amount;
-      
-      if (payout.status === 'COMPLETED') {
-        acc.totalPaid += amount;
-      } else if (payout.status === 'PENDING' || payout.status === 'PROCESSING') {
-        acc.totalPending += amount;
-      }
-      
-      return acc;
-    }, {
-      totalRequested: 0,
-      totalPaid: 0,
-      totalPending: 0,
-      availableBalance: Number(affiliate.totalEarnings) - Number(affiliate.pendingEarnings)
-    });
-
-    const totalPages = Math.ceil(totalCount / limit);
+    const totalPages = Math.ceil(totalCount / limit) || 1;
 
     return NextResponse.json({
       success: true,
       data: {
-        payouts: payouts.map(payout => ({
+        payouts: payouts.map((payout) => ({
           id: payout.id,
           amount: Number(payout.amount),
           paymentMethod: payout.paymentMethod,
           paymentDetails: payout.paymentDetails,
           status: payout.status,
-          requestedAt: payout.requestedAt,
-          processedAt: payout.processedAt,
-          transactionId: payout.transactionId
+          requestedAt: payout.requestedAt.toISOString(),
+          processedAt: payout.processedAt?.toISOString() || null,
+          transactionId: payout.transactionId,
+          notes: payout.notes,
         })),
         summary,
         pagination: {
@@ -172,12 +121,10 @@ export async function GET(request: NextRequest) {
           totalPages,
           totalCount,
           hasNext: page < totalPages,
-          hasPrev: page > 1
-        }
-      }
+          hasPrev: page > 1,
+        },
+      },
     });
-    */
-
   } catch (error) {
     console.error("[AFFILIATE_PAYOUTS_GET_ERROR]", error);
     return NextResponse.json(
@@ -187,91 +134,86 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Request new payout
+// POST - Request new affiliate payout
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
+    const user = await findCurrentUser();
+
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    payoutRequestSchema.parse(body);
-
-    // For now, return mock response
-    return NextResponse.json({
-      success: true,
-      message: "Payout request submitted successfully",
-      payoutId: `payout_${Date.now()}`,
-      estimatedProcessingTime: "2-3 business days"
-    });
-
-    /* TODO: Uncomment this once database migration is complete
-    // Check if user is an affiliate
     const affiliate = await db.affiliate.findUnique({
-      where: { userId: session.user.id }
+      where: { userId: user.id },
     });
 
     if (!affiliate) {
-      return NextResponse.json({ 
-        error: "User is not an affiliate" 
-      }, { status: 404 });
+      return NextResponse.json({ error: "User is not an affiliate" }, { status: 404 });
     }
 
-    // Check if affiliate has sufficient balance
-    const availableBalance = Number(affiliate.totalEarnings) - Number(affiliate.pendingEarnings);
-    
+    const body = await request.json();
+    const validatedData = payoutRequestSchema.parse(body);
+
+    const totalEarnings = Number(affiliate.totalEarnings || 0);
+    const pendingEarnings = Number(affiliate.pendingEarnings || 0);
+    const availableBalance = Math.max(0, totalEarnings - pendingEarnings);
+
     if (validatedData.amount > availableBalance) {
-      return NextResponse.json({
-        error: "Insufficient balance",
-        availableBalance,
-        requestedAmount: validatedData.amount
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "অপর্যাপ্ত ব্যালেন্স (Insufficient available balance)",
+          availableBalance,
+          requestedAmount: validatedData.amount,
+        },
+        { status: 400 }
+      );
     }
 
-    // Check for pending payouts (limit one pending payout at a time)
-    const pendingPayout = await db.affiliatePayout.findFirst({
+    // Check for pending payouts
+    const existingPending = await db.affiliatePayout.findFirst({
       where: {
         affiliateId: affiliate.id,
-        status: { in: ['PENDING', 'PROCESSING'] }
-      }
+        status: { in: ["PENDING", "PROCESSING"] },
+      },
     });
 
-    if (pendingPayout) {
-      return NextResponse.json({
-        error: "You already have a pending payout request",
-        pendingPayoutId: pendingPayout.id
-      }, { status: 400 });
+    if (existingPending) {
+      return NextResponse.json(
+        {
+          error: "আপনার ইতিমধ্যে একটি উত্তোলন অনুরোধ প্রক্রিয়াধীন রয়েছে। অনুগ্রহ করে পূর্বের অনুরোধটি সম্পূর্ণ হওয়া পর্যন্ত অপেক্ষা করুন।",
+          pendingPayoutId: existingPending.id,
+        },
+        { status: 400 }
+      );
     }
 
-    // Create payout request
-    const payout = await db.affiliatePayout.create({
-      data: {
-        affiliateId: affiliate.id,
-        amount: validatedData.amount,
-        paymentMethod: validatedData.paymentMethod,
-        paymentDetails: validatedData.paymentDetails,
-        status: 'PENDING'
-      }
-    });
-
-    // Update affiliate pending earnings
-    await db.affiliate.update({
-      where: { id: affiliate.id },
-      data: {
-        pendingEarnings: { increment: validatedData.amount }
-      }
-    });
+    // Create payout request & update pendingEarnings in a transaction
+    const [payout] = await db.$transaction([
+      db.affiliatePayout.create({
+        data: {
+          affiliateId: affiliate.id,
+          amount: validatedData.amount,
+          paymentMethod: validatedData.paymentMethod,
+          paymentDetails: validatedData.paymentDetails,
+          status: "PENDING",
+        },
+      }),
+      db.affiliate.update({
+        where: { id: affiliate.id },
+        data: {
+          pendingEarnings: { increment: validatedData.amount },
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
-      message: "Payout request submitted successfully",
+      message: "উত্তোলনের অনুরোধ সফলভাবে জমা হয়েছে (Payout request submitted successfully)",
       payoutId: payout.id,
-      estimatedProcessingTime: "2-3 business days"
+      amount: Number(payout.amount),
+      status: payout.status,
+      estimatedProcessingTime: "২ থেকে ২৪ ঘণ্টার মধ্যে পেমেন্ট পৌঁছে যাবে",
     });
-    */
-
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
