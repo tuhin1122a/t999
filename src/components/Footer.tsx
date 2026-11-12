@@ -85,10 +85,10 @@ const Footer = async () => {
         {/* ══════════════════════════════════════════════════════════════════
             2. BRAND & QUICK LINKS GRID
         ══════════════════════════════════════════════════════════════════ */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-2">
+        <div className="flex flex-col md:grid md:grid-cols-4 gap-6 pt-2">
           
           {/* Brand Col */}
-          <div className="md:col-span-1 space-y-3">
+          <div className="w-full md:col-span-1 space-y-3">
             <Link href="/" className="inline-block">
               <img
                 src={typeof promotionsLogo === "string" && promotionsLogo ? promotionsLogo : "/logo.png"}
@@ -110,99 +110,111 @@ const Footer = async () => {
             </div>
           </div>
 
-          {/* Quick Col 1: Casino */}
-          <div className="space-y-2.5">
-            <h5 className="text-xs font-extrabold text-white uppercase tracking-wider border-l-2 border-[#3888e9] pl-2">
-              Casino Games
-            </h5>
-            <ul className="space-y-1.5 text-xs">
-              <li>
-                <Link href="/slots" className="hover:text-white transition-colors">
-                  Online Slots
-                </Link>
-              </li>
-              <li>
-                <Link href="/live-casino" className="hover:text-white transition-colors">
-                  Live Dealer Casino
-                </Link>
-              </li>
-              <li>
-                <Link href="/hot" className="hover:text-white transition-colors">
-                  Hot Popular Games
-                </Link>
-              </li>
-              <li>
-                <Link href="/sports" className="hover:text-white transition-colors">
-                  Cricket & Sportsbook
-                </Link>
-              </li>
-              <li>
-                <Link href="/fish" className="hover:text-white transition-colors">
-                  Fish Hunter Games
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {/* Quick Links Grid: 3 columns on mobile screen (grid-cols-3) */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 md:col-span-3">
+            
+            {/* Quick Col 1: Casino */}
+            <div className="space-y-2 sm:space-y-2.5">
+              <h5 className="text-[11px] sm:text-xs font-extrabold text-white uppercase tracking-wider border-l-2 border-[#3888e9] pl-1.5 sm:pl-2">
+                Casino
+              </h5>
+              <ul className="space-y-1.5 text-[11px] sm:text-xs">
+                <li>
+                  <Link href="/slots" className="hover:text-white transition-colors block truncate">
+                    Slots
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/live-casino" className="hover:text-white transition-colors block truncate">
+                    Live Casino
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/hot" className="hover:text-white transition-colors block truncate">
+                    Hot Games
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/sports" className="hover:text-white transition-colors block truncate">
+                    Sports
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/fish" className="hover:text-white transition-colors block truncate">
+                    Fishing
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Quick Col 2: Promos & VIP */}
-          <div className="space-y-2.5">
-            <h5 className="text-xs font-extrabold text-white uppercase tracking-wider border-l-2 border-yellow-400 pl-2">
-              Rewards & Offers
-            </h5>
-            <ul className="space-y-1.5 text-xs">
-              <li>
-                <Link href="/vip" className="hover:text-white transition-colors">
-                  VIP Club Lounge
-                </Link>
-              </li>
-              <li>
-                <Link href="/promotion" className="hover:text-white transition-colors">
-                  Promotions & Bonuses
-                </Link>
-              </li>
-              <li>
-                <Link href="/invite-friends" className="hover:text-white transition-colors">
-                  Invite Friends & Earn
-                </Link>
-              </li>
-              <li>
-                <Link href="/rewardCenter" className="hover:text-white transition-colors">
-                  Daily Reward Center
-                </Link>
-              </li>
-              <li>
-                <Link href="/affiliate" className="hover:text-white transition-colors">
-                  Affiliate Program
-                </Link>
-              </li>
-            </ul>
-          </div>
+            {/* Quick Col 2: Promos & VIP */}
+            <div className="space-y-2 sm:space-y-2.5">
+              <h5 className="text-[11px] sm:text-xs font-extrabold text-white uppercase tracking-wider border-l-2 border-yellow-400 pl-1.5 sm:pl-2">
+                Rewards
+              </h5>
+              <ul className="space-y-1.5 text-[11px] sm:text-xs">
+                <li>
+                  <Link href="/vip" className="hover:text-white transition-colors block truncate">
+                    VIP Club
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/promotion" className="hover:text-white transition-colors block truncate">
+                    Promotions
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/invite-friends" className="hover:text-white transition-colors block truncate">
+                    Invite & Earn
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/rewardCenter" className="hover:text-white transition-colors block truncate">
+                    Reward Center
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/affiliate" className="hover:text-white transition-colors block truncate">
+                    Affiliate
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Quick Col 3: Legal & Security */}
-          <div className="space-y-2.5">
-            <h5 className="text-xs font-extrabold text-white uppercase tracking-wider border-l-2 border-emerald-400 pl-2">
-              Security & Fair Play
-            </h5>
-            <ul className="space-y-1.5 text-xs">
-              <li>
-                <Link href="/support" className="hover:text-white transition-colors">
-                  Customer Support Helpdesk
-                </Link>
-              </li>
-              <li>
-                <Link href="/manual" className="hover:text-white transition-colors">
-                  How to Deposit & Withdraw
-                </Link>
-              </li>
-              <li>
-                <Link href="/appp" className="hover:text-white transition-colors">
-                  Download Mobile APK
-                </Link>
-              </li>
-              <li className="text-[11px] text-gray-500 pt-1">
-                SSL Certificate: 256-bit AES-GCM
-              </li>
-            </ul>
+            {/* Quick Col 3: Legal & Security */}
+            <div className="space-y-2 sm:space-y-2.5">
+              <h5 className="text-[11px] sm:text-xs font-extrabold text-white uppercase tracking-wider border-l-2 border-emerald-400 pl-1.5 sm:pl-2">
+                Support
+              </h5>
+              <ul className="space-y-1.5 text-[11px] sm:text-xs">
+                <li>
+                  <Link href="/support" className="hover:text-white transition-colors block truncate">
+                    Helpdesk
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/manual" className="hover:text-white transition-colors block truncate">
+                    How to Deposit
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/appp" className="hover:text-white transition-colors block truncate">
+                    Mobile APK
+                  </Link>
+                </li>
+                <li>
+                  <span className="text-gray-500 block truncate">
+                    Fair Gaming
+                  </span>
+                </li>
+                <li>
+                  <span className="text-[10px] text-gray-500 block truncate">
+                    256-Bit SSL
+                  </span>
+                </li>
+              </ul>
+            </div>
+
           </div>
 
         </div>
