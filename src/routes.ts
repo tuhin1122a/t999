@@ -13,6 +13,9 @@ export const authRoutes = ["/register", "/login", "/forget-password"];
 export const publicRoutes = [
   "/",
   "/slots",
+  "/slot",
+  "/games",
+  "/game",
   "/card-x",
   "/pocker",
   "/roulette",

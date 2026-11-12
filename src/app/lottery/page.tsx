@@ -8,6 +8,7 @@ import { Categories } from "@/types/game";
 import PrimaryInput from "@/components/form/input";
 import GameLoader from "@/components/loader/GameLoader";
 import SideNavLayout from "@/components/SideNavLayout";
+import TabLayout from "@/components/TabLayout";
 
 const LotteryPage = () => {
   const [search, setSearch] = useState("");
@@ -18,9 +19,10 @@ const LotteryPage = () => {
 
   return (
     <SideNavLayout>
-      <div>
-        <AppHeader title="Lottery Games" />
-        <main className="py-5 px-2 bg-[#003e3e] min-h-screen">
+      <TabLayout>
+        <div>
+          <AppHeader title="Lottery Games" />
+          <main className="py-5 px-2 bg-[#070e17] min-h-screen pb-28 md:pb-8">
           {/* Search Box */}
           <div className="flex items-center">
             <PrimaryInput
@@ -51,7 +53,8 @@ const LotteryPage = () => {
           )}
         </main>
       </div>
-    </SideNavLayout>
+    </TabLayout>
+  </SideNavLayout>
   );
 };
 

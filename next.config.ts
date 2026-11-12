@@ -39,6 +39,20 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/slot",
+        destination: "/slots",
+        permanent: true,
+      },
+      {
+        source: "/game",
+        destination: "/games",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

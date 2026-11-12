@@ -117,9 +117,9 @@ const SlotPage = () => {
   return (
     <SideNavLayout>
       <TabLayout>
-        <div>
+        <div className="min-h-screen bg-[#070e17]">
           <AppHeader title="Slots" />
-          <main className="py-5 px-2 bg-[#003e3e] pb-24 md:pb-5">
+          <main className="py-5 px-2 bg-[#070e17] pb-28 md:pb-8 min-h-[calc(100vh-60px)]">
             <FilterProivder onSelect={handleProviderChange} category="slots" />
             <div className="flex items-center gap-2">
               <PrimaryInput

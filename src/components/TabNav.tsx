@@ -11,8 +11,8 @@ const TabNav = () => {
   const path = usePathname();
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[999] flex justify-center pb-[env(safe-area-inset-bottom,0px)]">
-      <div className="w-full md:w-[500px] px-2">
+    <div className="fixed inset-x-0 bottom-0 z-[999] pointer-events-none flex justify-center pb-[env(safe-area-inset-bottom,4px)] mb-1">
+      <div className="w-full md:w-[500px] px-2 pointer-events-auto">
         <div
           className="flex items-center justify-between h-[56px] py-1 px-3 bg-[#0a1626]/95 border border-[#1b3554] rounded-2xl shadow-2xl backdrop-blur-md"
         >
@@ -31,7 +31,11 @@ const TabNav = () => {
             <Link
               href="/slots"
               className={`flex flex-col items-center justify-center w-full transition-colors ${
-                path === "/slots" || path.startsWith("/play") || path.startsWith("/sportss")
+                path === "/slots" ||
+                path === "/slot" ||
+                path.startsWith("/games") ||
+                path.startsWith("/play") ||
+                path.startsWith("/sportss")
                   ? "text-[#3888e9]"
                   : "text-gray-400 hover:text-gray-200"
               }`}
