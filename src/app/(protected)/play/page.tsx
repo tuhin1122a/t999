@@ -191,7 +191,6 @@ const Play = () => {
     // If auth state has resolved (user hook returns undefined if loading or not logged in)
     // Wait briefly or check session
     if (typeof window !== "undefined" && user === null) {
-      toast.error("Please login first to play");
       const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
       router.replace(`/login?redirect=${redirectUrl}`);
     }

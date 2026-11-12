@@ -11,7 +11,6 @@ import { NetEnt } from "@/types/game";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import { LiaHeartSolid } from "react-icons/lia";
 import { PlaceholderCard } from "./loader/GameLoader";
 
@@ -35,7 +34,6 @@ export const GameCardWithProvider = ({ game, index }: GameCardWithProviderProps)
   const handleCardClick = (e: React.MouseEvent) => {
     if (!user) {
       e.preventDefault();
-      toast.error("Please login to play this game");
       const redirectUrl = encodeURIComponent(`/play?gameId=${id}`);
       router.push(`/login?redirect=${redirectUrl}`);
     }
