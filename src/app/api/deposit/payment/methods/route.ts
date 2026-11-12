@@ -24,12 +24,17 @@ export async function GET() {
         (pw) => pw.id === dw.paymentWalletId
       );
       const name = matchingPw?.walletName || "Unknown";
+      const officialImage = getPaymentMethodImage(name);
+      const image =
+        matchingPw?.walletLogo && !matchingPw.walletLogo.includes("mbuzz88")
+          ? matchingPw.walletLogo
+          : officialImage;
 
       return {
         id: dw.id,
         paymentWalletId: dw.paymentWalletId,
         name: name,
-        image: matchingPw?.walletLogo || getPaymentMethodImage(name),
+        image: image,
         label: matchingPw?.walletName || getPaymentMethodLabel(name),
         min_deposit: parseFloat(dw.minDeposit.toString()),
         max_deposit: parseFloat(dw.maximumDeposit.toString()),

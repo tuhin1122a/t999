@@ -25,12 +25,20 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
   onClick,
 }) => {
   const isSelected = selectedPaymentMethod?.id === method.id;
-  const fallbackImg = getPaymentMethodImage(method.name);
-  const [imgSrc, setImgSrc] = useState<string>(method.image || fallbackImg);
+  const officialLogo = getPaymentMethodImage(method.name);
+  const initialImg =
+    method.image && !method.image.includes("mbuzz88")
+      ? method.image
+      : officialLogo;
+  const [imgSrc, setImgSrc] = useState<string>(initialImg);
 
   useEffect(() => {
-    setImgSrc(method.image || fallbackImg);
-  }, [method.image, fallbackImg]);
+    const freshImg =
+      method.image && !method.image.includes("mbuzz88")
+        ? method.image
+        : officialLogo;
+    setImgSrc(freshImg);
+  }, [method.image, method.name, officialLogo]);
 
   return (
     <div
@@ -38,7 +46,7 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
       onClick={onClick}
     >
       <div
-        className={`relative w-24 h-24 sm:w-26 sm:h-26 rounded-xl flex flex-col items-center justify-center p-2.5 transition-all duration-200 active:scale-95 ${
+        className={`relative w-28 h-20 sm:w-32 sm:h-22 rounded-xl flex flex-col items-center justify-center p-2 transition-all duration-200 active:scale-95 ${
           isSelected
             ? "bg-gradient-to-b from-[#142a47] to-[#0c1a2d] border-2 border-[#3888e9] shadow-lg shadow-[#3888e9]/20 ring-2 ring-[#3888e9]/40"
             : "bg-[#0a1626] border border-[#183454] hover:border-[#3888e9]/50 hover:bg-[#0f223b]"
@@ -51,22 +59,22 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
           </span>
         )}
 
-        {/* White badge for crystal-clear logo display */}
-        <div className="relative w-12 h-12 rounded-lg bg-white p-1.5 flex items-center justify-center shadow-inner">
+        {/* White badge for crystal-clear official logo display */}
+        <div className="w-full h-10 rounded-lg bg-white px-2 py-1 flex items-center justify-center shadow-sm">
           <img
             src={imgSrc}
             alt={getPaymentMethodLabel(method.name)}
-            className="max-h-9 max-w-9 w-auto h-auto object-contain"
+            className="max-h-7 max-w-[85px] sm:max-w-[95px] w-auto h-auto object-contain"
             onError={() => {
-              if (imgSrc !== fallbackImg) {
-                setImgSrc(fallbackImg);
+              if (imgSrc !== officialLogo) {
+                setImgSrc(officialLogo);
               }
             }}
           />
         </div>
 
         <span
-          className={`mt-2 text-xs font-bold truncate max-w-[85px] tracking-tight ${
+          className={`mt-1.5 text-[11px] sm:text-xs font-bold truncate max-w-[95px] tracking-tight ${
             isSelected ? "text-white" : "text-gray-300"
           }`}
         >

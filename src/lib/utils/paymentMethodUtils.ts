@@ -29,22 +29,29 @@ const PAYMENT_METHOD_IMAGE_MAP: Record<string, string> = {
  * @returns The image path
  */
 export function getPaymentMethodImage(methodName: string): string {
-  // Normalize the method name to lowercase for matching
-  const normalizedMethodName = methodName.toLowerCase();
+  if (!methodName) return "/wallet/bkash.png";
+  const normalizedMethodName = methodName.toLowerCase().trim();
   
+  if (normalizedMethodName.includes("bkash")) {
+    return "/wallet/bkash.png";
+  }
+  if (normalizedMethodName.includes("nagad") || normalizedMethodName.includes("nogod")) {
+    return "/wallet/nagad.png";
+  }
+  if (normalizedMethodName.includes("rocket")) {
+    return "/wallet/rocket.png";
+  }
+  if (normalizedMethodName.includes("upay")) {
+    return "/wallet/upay.png";
+  }
+
   // Check if we have a direct mapping
   if (PAYMENT_METHOD_IMAGE_MAP[normalizedMethodName]) {
     return `/wallet/${PAYMENT_METHOD_IMAGE_MAP[normalizedMethodName]}`;
   }
   
-  // Check if we have a mapping for the exact name
-  if (PAYMENT_METHOD_IMAGE_MAP[methodName]) {
-    return `/wallet/${PAYMENT_METHOD_IMAGE_MAP[methodName]}`;
-  }
-  
   // Fallback to using the method name directly
-  // This will work if the method name matches the image filename
-  return `/wallet/${methodName}.png`;
+  return `/wallet/${normalizedMethodName}.png`;
 }
 
 /**
