@@ -51,14 +51,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Encrypted wire format: { "payload": "<base64>", "timestamp": 123 }
-    let event: any = parsedIncoming;
+    // ============================================================================
+    // SECURITY GUARD: Require AES-256-ECB encrypted payload OR valid secret header
+    // Prevents external attackers from sending unencrypted plain JSON to inflate balances
+    // ============================================================================
+    const secret = process.env.SOFTAPI_SECRET || DEFAULT_SOFTAPI_SECRET;
+    let event: any = null;
+
     if (
       parsedIncoming &&
       typeof parsedIncoming.payload === "string" &&
-      parsedIncoming.payload !== ""
+      parsedIncoming.payload.trim() !== ""
     ) {
-      const secret = process.env.SOFTAPI_SECRET || DEFAULT_SOFTAPI_SECRET;
       try {
         event = decryptPayloadECB(parsedIncoming.payload, secret);
         console.log("Decrypted SoftAPI callback event:", JSON.stringify(event, null, 2));
@@ -69,6 +73,17 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+    } else {
+      // Allow plain JSON ONLY if authenticated via internal x-softapi-secret header or secret field
+      const headerSecret = request.headers.get("x-softapi-secret") || parsedIncoming?.secret;
+      if (headerSecret !== secret) {
+        console.warn("[SoftAPI Security] Blocked unencrypted callback without valid secret.");
+        return NextResponse.json(
+          { code: 1, msg: "unauthorized plain payload", credit_amount: -1, error: "Encrypted payload required" },
+          { status: 403 }
+        );
+      }
+      event = parsedIncoming;
     }
 
     const game_uid = String(event.game_uid ?? event.game_id ?? "");

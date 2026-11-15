@@ -28,7 +28,7 @@ const menuItems = [
   { href: "/my-account", icon: FaCircleUser, label: "My Account" },
   { href: "/security", icon: MdSecurity, label: "Security Center" },
   { href: "/invite-friends", icon: TiUserAdd, label: "Invite Friend" },
-  { href: "#", icon: FiDownload, label: "Download App" },
+  { href: "/appp", icon: FiDownload, label: "Download App" },
   { href: "/support", icon: MdOutlineSupportAgent, label: "Customer Center" },
   { href: "/fish", icon: GiFishMonster, label: "Fish Games" },
 ];

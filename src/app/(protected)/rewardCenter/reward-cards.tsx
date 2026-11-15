@@ -58,24 +58,24 @@ const REWARD_CHANNELS = [
 
 const DAILY_QUESTS = [
   {
-    title: "Daily Login Check",
-    reward: "+10 ৳ Free Cash",
-    status: "Ready",
+    title: "দৈনিক লগইন রিওয়ার্ড (Daily Login)",
+    reward: "+20 ৳ Cash • 1x Turnover",
+    status: "Claim Now",
     progress: "1/1",
     completed: true,
   },
   {
-    title: "Play 10 Rounds in Slots",
-    reward: "+50 ৳ Game Credit",
-    status: "In Progress",
-    progress: "6/10",
+    title: "আজকের প্রথম ডিপোজিট (Daily 1st Deposit)",
+    reward: "+50 ৳ Cash • 1x Turnover",
+    status: "Active",
+    progress: "500 ৳",
     completed: false,
   },
   {
-    title: "Make a 500 BDT Deposit",
-    reward: "+3% Instant Bonus",
-    status: "Pending",
-    progress: "0/1",
+    title: "টার্নওভার স্প্রিন্ট (১,০০০ ৳ বেট মিশন)",
+    reward: "+60 ৳ Cash • 1x Turnover",
+    status: "Active",
+    progress: "1,000 ৳",
     completed: false,
   },
 ];
@@ -129,17 +129,24 @@ const RewardCards = () => {
           <div className="flex items-center gap-2">
             <HiSparkles className="text-yellow-400 text-lg" />
             <h3 className="text-sm font-black text-white uppercase tracking-wider">
-              Daily Missions & Quests
+              Daily Missions & Quests (1x Turnover)
             </h3>
           </div>
-          <span className="text-[11px] text-gray-400 font-medium">Resets Daily at 00:00</span>
+          <Link
+            href="/mission"
+            className="text-[11px] text-[#3888e9] hover:text-white font-extrabold flex items-center gap-1 transition-colors"
+          >
+            <span>Open Mission Center</span>
+            <FaArrowRight size={10} />
+          </Link>
         </div>
 
         <div className="space-y-2.5">
           {DAILY_QUESTS.map((quest, i) => (
-            <div
+            <Link
+              href="/mission"
               key={i}
-              className="flex items-center justify-between p-3 rounded-xl bg-[#06101c] border border-[#162e4a] text-xs"
+              className="flex items-center justify-between p-3 rounded-xl bg-[#06101c] hover:bg-[#0b1b2e] border border-[#162e4a] hover:border-[#3888e9]/40 text-xs transition-all"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -169,7 +176,7 @@ const RewardCards = () => {
                   {quest.status}
                 </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

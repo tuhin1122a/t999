@@ -146,24 +146,48 @@ export const POST = async (req: NextRequest) => {
       });
     }
 
-    // 9️⃣ Create manual pending Withdraw record (will show up in admin panel & user history)
-    const newWithdraw = await db.withdraw.create({
-      data: {
-        amount: new Prisma.Decimal(withdrawAmount),
-        expire: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expiry in 24 hours
-        status: "PENDING",
-        cardId: card.id,
-        userId: user.id
-      }
-    });
+    // 9️⃣ Atomic Transaction: Conditionally decrement wallet balance & create pending Withdraw record
+    // Prevents concurrent race-condition double withdrawals
+    let newWithdraw: any = null;
+    try {
+      newWithdraw = await db.$transaction(async (tx) => {
+        const deducted = await tx.wallet.updateMany({
+          where: {
+            userId: user.id,
+            balance: { gte: new Prisma.Decimal(withdrawAmount) },
+            turnOver: { lte: 0 },
+          },
+          data: {
+            balance: { decrement: withdrawAmount },
+          },
+        });
 
-    // 🔟 Decrement wallet balance
-    await db.wallet.update({
-      where: { userId: user.id },
-      data: {
-        balance: { decrement: withdrawAmount }
+        if (deducted.count === 0) {
+          throw new Error("INSUFFICIENT_BALANCE_OR_TURNOVER");
+        }
+
+        return await tx.withdraw.create({
+          data: {
+            amount: new Prisma.Decimal(withdrawAmount),
+            expire: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expiry in 24 hours
+            status: "PENDING",
+            cardId: card.id,
+            userId: user.id,
+          },
+        });
+      });
+    } catch (txError: any) {
+      if (txError?.message === "INSUFFICIENT_BALANCE_OR_TURNOVER") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Insufficient balance or active 1x turnover requirement not met.",
+          },
+          { status: 400 }
+        );
       }
-    });
+      throw txError;
+    }
 
     // 1️⃣1️⃣ Create system notification for user
     await createNotification({

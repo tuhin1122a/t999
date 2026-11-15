@@ -1,49 +1,71 @@
 // Admin Banner Management API
-// GET    /api/admin/banners - list all banners
-// POST   /api/admin/banners - create a new banner
-// PATCH  /api/admin/banners - update sortOrder of banners (reorder)
+// GET    /api/admin/banners - list all banners (public read)
+// POST   /api/admin/banners - create a new banner (admin protected)
 
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-// Helper: verify admin session (basic check using admin cookie/token)
+/**
+ * Verifies that the caller holds a valid Admin token or internal secret.
+ */
 async function isAdmin(req: NextRequest): Promise<boolean> {
-  // Check for session cookie or Authorization header
-  const authHeader = req.headers.get('authorization');
-  // For now, check if admin session cookie exists via the admin endpoint
-  // Admin dashboard uses next-auth or similar session
-  // We'll use a simple check: if the request comes with a valid admin token
-  // that matches an Admin record in the database
+  const authHeader = req.headers.get("authorization");
+  const adminSecretHeader = req.headers.get("x-admin-secret");
+  const envSecret = process.env.AUTH_SECRET || process.env.ADMIN_SECRET;
+
+  if (envSecret && adminSecretHeader === envSecret) {
+    return true;
+  }
+
   if (!authHeader) return false;
-  
-  const token = authHeader.replace('Bearer ', '');
-  const admin = await prisma.admin.findFirst({
-    where: { sessionToken: token } as any,
-  }).catch(() => null);
-  
-  // If no session-based admin found, allow if session cookie is present
-  // (admin dashboard calls this from server-side Next.js)
+
+  const token = authHeader.replace("Bearer ", "").trim();
+  if (!token) return false;
+
+  if (envSecret && token === envSecret) {
+    return true;
+  }
+
+  const admin = await prisma.admin
+    .findFirst({
+      where: { id: token, isActive: true },
+    })
+    .catch(() => null);
+
   return admin !== null;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const banners = await prisma.banner.findMany({
-      orderBy: { sortOrder: 'asc' },
+      orderBy: { sortOrder: "asc" },
     });
     return NextResponse.json({ success: true, banners });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: 'Failed to fetch banners' }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch banners" },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    if (!(await isAdmin(req))) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Admin access required" },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const { imageUrl, title, linkUrl, isActive, sortOrder } = body;
 
     if (!imageUrl) {
-      return NextResponse.json({ success: false, error: 'imageUrl is required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "imageUrl is required" },
+        { status: 400 }
+      );
     }
 
     const banner = await prisma.banner.create({
@@ -57,7 +79,10 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, banner });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: 'Failed to create banner' }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "Failed to create banner" },
+      { status: 500 }
+    );
   }
 }
