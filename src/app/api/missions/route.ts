@@ -472,24 +472,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Award reward in transaction
+    // Award reward + 1x Turnover requirement in transaction
     const [updatedWallet] = await db.$transaction([
       db.wallet.update({
         where: { userId: user.id },
         data: {
           balance: { increment: mission.reward },
+          turnOver: { increment: mission.reward }, // 1x Turnover requirement
         },
       }),
       db.notification.create({
         data: {
           userId: user.id,
           title: `Mission Reward: ${mission.title}`,
-          description: `অভিনন্দন! ৳ ${mission.reward} মিশন রিওয়ার্ড আপনার একাউন্ট ব্যালেন্সে যোগ হয়েছে।`,
+          description: `অভিনন্দন! ৳ ${mission.reward} মিশন রিওয়ার্ড আপনার একাউন্ট ব্যালেন্সে যোগ হয়েছে (1x Turnover প্রযোজ্য)।`,
           icon: "BONUS",
           metadata: {
             type: "MISSION_CLAIM",
             missionId: mission.id,
             rewardAmount: mission.reward,
+            turnoverAdded: mission.reward,
             claimedAt: new Date().toISOString(),
           },
         },
@@ -498,9 +500,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `অভিনন্দন! ৳ ${mission.reward} রিওয়ার্ড সফলভাবে আপনার ওয়ালেটে যোগ হয়েছে!`,
+      message: `অভিনন্দন! ৳ ${mission.reward} রিওয়ার্ড সফলভাবে আপনার ওয়ালেটে যোগ হয়েছে! (1x Turnover)`,
       rewardAmount: mission.reward,
       newBalance: Number(updatedWallet.balance),
+      newTurnOver: Number(updatedWallet.turnOver),
     });
   } catch (error) {
     console.error("[MISSIONS_CLAIM_POST_ERROR]", error);

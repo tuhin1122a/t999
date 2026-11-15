@@ -7,6 +7,8 @@ export interface WithdrawPageData {
   minWithdraw: number;
   maxWithdraw: number;
   turnOver: number;
+  totalWagered?: number;
+  turnoverProgressPercent?: number;
 }
 
 export interface MakeWithdrawInput {

@@ -13,7 +13,7 @@ import zod from "zod";
 
 export const register = async (data: zod.infer<typeof registerSchema>) => {
   try {
-    const { password, confirmPassword, phone, ageCheck, bonusCheck, agentCode } = data;
+    const { password, confirmPassword, phone, ageCheck, bonusCheck, agentCode, referralId } = data;
 
     // ---------------- Validations ----------------
     if (password !== confirmPassword) return { error: "Confirm Password did not match" };
@@ -21,6 +21,68 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
 
     const existingUser = await findUserByPhone(phone);
     if (existingUser) return { error: "Number is already registered" };
+
+    // ---------------- Referral (?r=CODE or ?ref=CODE) Attribution ----------------
+    let invitedByInvitationId: string | null = null;
+    let isReferralBonusActive = false;
+    let matchedAffiliateId: string | null = null;
+
+    if (referralId && referralId.trim()) {
+      const cleanRef = referralId.trim();
+      let referralUser = await db.user.findFirst({
+        where: {
+          referId: { equals: cleanRef, mode: "insensitive" },
+        },
+      });
+
+      // Also check if cleanRef is an Affiliate code
+      const affiliateRecord = await db.affiliate.findFirst({
+        where: {
+          affiliateCode: { equals: cleanRef, mode: "insensitive" },
+        },
+      });
+
+      if (affiliateRecord) {
+        matchedAffiliateId = affiliateRecord.id;
+        if (!referralUser) {
+          referralUser = await db.user.findUnique({
+            where: { id: affiliateRecord.userId },
+          });
+        }
+      }
+
+      if (referralUser) {
+        let referralInvitation = await db.invitation.findUnique({
+          where: { userId: referralUser.id },
+        });
+        if (!referralInvitation) {
+          referralInvitation = await db.invitation.create({
+            data: { userId: referralUser.id },
+          });
+        }
+
+        const referralInvitationBonus = await db.invitationBonus.findUnique({
+          where: { userId: referralUser.id },
+        });
+        if (!referralInvitationBonus) {
+          await db.invitationBonus.create({
+            data: {
+              userId: referralUser.id,
+              totalRegisters: 1,
+              totalValidreferral: 0,
+            },
+          });
+        } else {
+          await db.invitationBonus.update({
+            where: { userId: referralUser.id },
+            data: { totalRegisters: { increment: 1 } },
+          });
+        }
+
+        isReferralBonusActive = true;
+        invitedByInvitationId = referralInvitation.id;
+      }
+    }
 
     // ---------------- Sub-Admin (?agent=CODE) Attribution ----------------
     let assignedSubAdminId: string | null = null;
@@ -127,12 +189,13 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
         referId,
         isBanned: false,
         subAdminId: assignedSubAdminId,
+        invitedById: invitedByInvitationId,
         bettingRecord: { create: {} },
         wallet: {
           create: {
             balance: 0,
             signinBonus: bonusCheck,
-            referralBonus: false,
+            referralBonus: isReferralBonusActive,
             currency: "BDT",
             playerId: newPlayer.id,   // Fix: Use newPlayer.id (database ID) instead of newPlayer.playerId (GameXA ID)
           },
@@ -141,8 +204,18 @@ export const register = async (data: zod.infer<typeof registerSchema>) => {
       },
     });
 
-    // ---------------- Update Referral ----------------
-    // Connected automatically via invitedBy relation during user creation
+    // ---------------- Sync AffiliateReferral if referred via Affiliate link ----------------
+    if (matchedAffiliateId) {
+      await db.affiliateReferral
+        .create({
+          data: {
+            affiliateId: matchedAffiliateId,
+            referredUserId: newUser.id,
+            status: "ACTIVE",
+          },
+        })
+        .catch(() => {});
+    }
 
     // ---------------- Auto Sign In ----------------
     try {

@@ -89,7 +89,15 @@ const SigninBonusPlan = ({
             </h3>
 
             <p className="text-[11px] sm:text-xs text-gray-300 font-medium">
-              Deposit <strong className="text-white">৳ {nextClaimAvailable.deposit}</strong> or more to unlock and claim today&apos;s free cash reward.
+              {Number(nextClaimAvailable.deposit) > 0 ? (
+                <>
+                  Deposit <strong className="text-white">৳ {nextClaimAvailable.deposit}</strong> or more to unlock and claim today&apos;s free cash reward (<strong className="text-emerald-400">1x Turnover</strong>).
+                </>
+              ) : (
+                <>
+                  Free daily login check-in bonus! Claim instantly with <strong className="text-emerald-400">1x Turnover</strong>.
+                </>
+              )}
             </p>
           </div>
         </div>

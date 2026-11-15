@@ -113,9 +113,14 @@ const Rewards = ({ rewards }: RewardsProps) => {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-xs font-black text-yellow-400">
-                    <BiCoinStack className="text-sm" />
-                    <span>Reward: ৳ {Number(reward.prize).toLocaleString()} Cash</span>
+                  <div className="flex items-center gap-2 text-xs font-black text-yellow-400">
+                    <span className="flex items-center gap-1">
+                      <BiCoinStack className="text-sm" />
+                      <span>Reward: ৳ {Number(reward.prize).toLocaleString()} Cash</span>
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+                      1x Turnover
+                    </span>
                   </div>
 
                   {/* Progress Bar */}

@@ -164,8 +164,11 @@ export async function POST(request: NextRequest) {
         ? credit_amount
         : Math.max(0, Number((current_balance - bet_amount + win_amount).toFixed(2)));
 
-    const new_turnover =
+    // 1x Turnover Deduction + Zero-Balance Auto-Reset:
+    // If balance drops below 1 BDT, clear remaining turnover so future deposits aren't burdened.
+    const deducted_turnover =
       bet_amount > 0 ? Math.max(0, Number((current_turnover - bet_amount).toFixed(2))) : current_turnover;
+    const new_turnover = new_balance < 1 ? 0 : deducted_turnover;
 
     console.log("[SoftAPI Callback] Settling round:", {
       game_uid,

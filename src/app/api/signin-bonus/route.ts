@@ -5,11 +5,30 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+const DEFAULT_SIGNIN_REWARDS = [
+  { day: "1", prize: 15, deposit: 0 },
+  { day: "2", prize: 25, deposit: 200 },
+  { day: "3", prize: 40, deposit: 500 },
+  { day: "4", prize: 60, deposit: 1000 },
+  { day: "5", prize: 100, deposit: 2000 },
+  { day: "6", prize: 200, deposit: 3000 },
+  { day: "7", prize: 500, deposit: 5000 },
+];
+
 export const GET = async () => {
   try {
     const user: any = await findCurrentUser();
 
-    const rewards: any = await db.signinBonusRewards.findMany();
+    let rewards: any[] = await db.signinBonusRewards.findMany();
+
+    // Auto-seed 7-day login bonus rewards if table is empty
+    if (!rewards || rewards.length === 0) {
+      await db.signinBonusRewards.createMany({
+        data: DEFAULT_SIGNIN_REWARDS,
+      });
+      rewards = await db.signinBonusRewards.findMany();
+    }
+
     // Sort rewards numerically by day
     rewards.sort((a: any, b: any) => Number(a.day) - Number(b.day));
 
@@ -23,50 +42,96 @@ export const GET = async () => {
         },
         lastClaimed: null,
         nextClaimAvailable: rewards[0] || null,
-        rewards: rewards.map((r: any) => ({ ...r, status: "AVAILABLE" })),
+        rewards: rewards.map((r: any) => ({
+          ...r,
+          turnoverMultiplier: "1x",
+          status: "AVAILABLE",
+        })),
       });
     }
 
-    const [claimedSigninRewards, userApprovedDeposits, wallet] = await Promise.all([
-      db.claimedSigninReward.findMany({
-        where: { userId: user.id },
-        include: { reward: true },
-        orderBy: { createdAt: "desc" },
-      }),
-      db.deposit.findMany({
-        where: { userId: user.id, status: "APPROVED" },
-        select: { id: true, amount: true, createdAt: true },
-      }),
-      db.wallet.findUnique({
-        where: { userId: user.id },
-        select: { balance: true },
-      }),
-    ]);
+    const [claimedSigninRewards, signinNotifications, userApprovedDeposits, wallet] =
+      await Promise.all([
+        db.claimedSigninReward.findMany({
+          where: { userId: user.id },
+          include: { reward: true },
+          orderBy: { createdAt: "desc" },
+        }),
+        db.notification.findMany({
+          where: {
+            userId: user.id,
+            title: { startsWith: "Daily Check-in Day " },
+          },
+          orderBy: { createdAt: "desc" },
+        }),
+        db.deposit.findMany({
+          where: { userId: user.id, status: "APPROVED" },
+          select: { id: true, amount: true, createdAt: true },
+        }),
+        db.wallet.findUnique({
+          where: { userId: user.id },
+          select: { balance: true, turnOver: true },
+        }),
+      ]);
 
-    const totalSigninIncome = claimedSigninRewards.reduce(
-      (acc, c) => (c.isClamed ? acc + c.reward.prize : acc),
-      0
-    );
+    // Build set of claimed reward IDs and days from both ClaimedSigninReward and Notifications
+    const claimedRewardIds = new Set<string>();
+    const claimedDays = new Set<string>();
+    let totalSigninIncome = 0;
+    let lastSigninIncome = 0;
+
+    claimedSigninRewards.forEach((c) => {
+      if (c.isClamed) {
+        claimedRewardIds.add(c.rewardId);
+        if (c.reward?.day) claimedDays.add(String(c.reward.day));
+      }
+    });
+
+    signinNotifications.forEach((n, index) => {
+      const meta = (n.metadata || {}) as any;
+      if (meta.rewardId) claimedRewardIds.add(String(meta.rewardId));
+      const dayMatch = n.title.match(/Day\s+(\d+)/i);
+      const dayStr = meta.day ? String(meta.day) : dayMatch ? dayMatch[1] : null;
+      if (dayStr) claimedDays.add(dayStr);
+
+      const prizeVal = meta.prize
+        ? Number(meta.prize)
+        : rewards.find((r) => String(r.day) === dayStr)?.prize || 0;
+      totalSigninIncome += prizeVal;
+      if (index === 0) {
+        lastSigninIncome = prizeVal;
+      }
+    });
+
+    // Fallback if notifications didn't have historical claims
+    if (totalSigninIncome === 0 && claimedSigninRewards.length > 0) {
+      totalSigninIncome = claimedSigninRewards.reduce(
+        (acc, c) => (c.isClamed ? acc + c.reward.prize : acc),
+        0
+      );
+      lastSigninIncome = claimedSigninRewards.find((c) => c.isClamed)?.reward?.prize || 0;
+    }
 
     const lastSignin = claimedSigninRewards.find((c) => c.isClamed);
 
     // Compute status for each day:
     // CLAIMED: already claimed
-    // CLAIM: eligible to claim right now (has qualifying deposit)
+    // CLAIM: eligible to claim right now (free day or has qualifying deposit)
     // AVAILABLE: needs deposit to unlock
     rewards.forEach((reward: any) => {
-      const alreadyClaimed = claimedSigninRewards.find(
-        (c) => c.rewardId === reward.id && c.isClamed
-      );
+      reward.turnoverMultiplier = "1x";
+      const isAlreadyClaimed =
+        claimedRewardIds.has(reward.id) || claimedDays.has(String(reward.day));
 
-      if (alreadyClaimed) {
+      if (isAlreadyClaimed) {
         reward.status = "CLAIMED";
         return;
       }
 
-      const hasQualifyingDeposit = userApprovedDeposits.some(
-        (d) => Number(d.amount) >= Number(reward.deposit)
-      );
+      const requiredDeposit = Number(reward.deposit || 0);
+      const hasQualifyingDeposit =
+        requiredDeposit <= 0 ||
+        userApprovedDeposits.some((d) => Number(d.amount) >= requiredDeposit);
 
       if (hasQualifyingDeposit) {
         reward.status = "CLAIM";
@@ -76,7 +141,9 @@ export const GET = async () => {
     });
 
     const nextClaimAvailable =
-      rewards.find((r: any) => r.status !== "CLAIMED") || rewards[rewards.length - 1] || null;
+      rewards.find((r: any) => r.status !== "CLAIMED") ||
+      rewards[rewards.length - 1] ||
+      null;
 
     return Response.json({
       authenticated: true,
@@ -86,10 +153,11 @@ export const GET = async () => {
         phone: user.phone,
         playerId: user.playerId,
         balance: wallet?.balance ? Number(wallet.balance) : 0,
+        turnOver: wallet?.turnOver ? Number(wallet.turnOver) : 0,
       },
       statictic: {
         totalSigninIncome,
-        lastSigninIncome: lastSignin?.reward?.prize || 0,
+        lastSigninIncome,
       },
       lastClaimed: lastSignin || null,
       nextClaimAvailable,

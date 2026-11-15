@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createNotification } from "@/action/notifications";
 import { findCurrentUser } from "@/data/user";
 import { INTERNAL_SERVER_ERROR } from "@/error";
 import { db } from "@/lib/db";
@@ -27,77 +26,113 @@ export const PUT = async (
       return Response.json({ error: "Reward not found" }, { status: 404 });
     }
 
-    // Check if user already claimed this reward
-    const existingClaim = await db.claimedSigninReward.findFirst({
-      where: {
-        userId: user.id,
-        rewardId: reward.id,
-        isClamed: true,
-      },
-    });
+    // 1. Check if user already claimed this specific day's reward
+    const [existingClaim, existingNotification] = await Promise.all([
+      db.claimedSigninReward.findFirst({
+        where: {
+          userId: user.id,
+          rewardId: reward.id,
+          isClamed: true,
+        },
+      }),
+      db.notification.findFirst({
+        where: {
+          userId: user.id,
+          title: `Daily Check-in Day ${reward.day}`,
+        },
+      }),
+    ]);
 
-    if (existingClaim) {
+    if (existingClaim || existingNotification) {
       return Response.json(
         { error: `You have already claimed Day ${reward.day} reward!` },
         { status: 400 }
       );
     }
 
-    // Find qualifying approved deposit for this user (amount >= reward.deposit)
-    const qualifyingDeposit = await db.deposit.findFirst({
-      where: {
-        userId: user.id,
-        status: "APPROVED",
-        amount: { gte: reward.deposit },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    // 2. Check qualifying approved deposit if requiredDeposit > 0
+    const requiredDeposit = Number(reward.deposit || 0);
+    let qualifyingDeposit: any = null;
 
-    if (!qualifyingDeposit) {
-      return Response.json(
-        {
-          error: `Minimum deposit of ৳ ${reward.deposit} required to claim Day ${reward.day} bonus. Please make a deposit first!`,
+    if (requiredDeposit > 0) {
+      qualifyingDeposit = await db.deposit.findFirst({
+        where: {
+          userId: user.id,
+          status: "APPROVED",
+          amount: { gte: reward.deposit },
         },
-        { status: 400 }
-      );
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (!qualifyingDeposit) {
+        return Response.json(
+          {
+            error: `Minimum deposit of ৳ ${reward.deposit} required to claim Day ${reward.day} bonus. Please make a deposit first!`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
-    // Update wallet balance and record claimed reward in transaction
+    // 3. Credit wallet balance + 1x Turnover requirement & record claim in atomic transaction
+    const prizeAmount = Number(reward.prize);
+
     await db.$transaction(async (tx) => {
       await tx.wallet.update({
         where: { userId: user.id },
         data: {
-          balance: { increment: reward.prize },
+          balance: { increment: prizeAmount },
+          turnOver: { increment: prizeAmount }, // 1x Turnover requirement
         },
       });
 
-      // ClaimedSigninReward has unique constraint on userId in schema, so upsert
-      await tx.claimedSigninReward.upsert({
-        where: { userId: user.id },
-        create: {
+      // Record in notification log (supports all 7 days without unique constraint collision)
+      await tx.notification.create({
+        data: {
           userId: user.id,
-          rewardId: reward.id,
-          depositId: qualifyingDeposit.id,
-          isClamed: true,
-        },
-        update: {
-          rewardId: reward.id,
-          depositId: qualifyingDeposit.id,
-          isClamed: true,
+          title: `Daily Check-in Day ${reward.day}`,
+          description: `৳ ${prizeAmount} daily login bonus added to your wallet (1x Turnover: ৳ ${prizeAmount}).`,
+          icon: "BONUS",
+          metadata: {
+            type: "SIGNIN_CLAIM",
+            rewardId: reward.id,
+            day: String(reward.day),
+            prize: prizeAmount,
+            turnoverAdded: prizeAmount,
+            claimedAt: new Date().toISOString(),
+          },
         },
       });
-    });
 
-    await createNotification({
-      title: `Daily Check-in Day ${reward.day}`,
-      description: `৳ ${reward.prize} daily streak bonus added to your wallet!`,
-      userId: user.id,
-      icon: "MONEY",
-    }).catch(() => {});
+      // Best-effort sync with legacy ClaimedSigninReward table if qualifyingDeposit is available and unused
+      if (qualifyingDeposit) {
+        const depositUsed = await tx.claimedSigninReward.findUnique({
+          where: { depositId: qualifyingDeposit.id },
+        });
+        if (!depositUsed) {
+          await tx.claimedSigninReward
+            .upsert({
+              where: { userId: user.id },
+              create: {
+                userId: user.id,
+                rewardId: reward.id,
+                depositId: qualifyingDeposit.id,
+                isClamed: true,
+              },
+              update: {
+                rewardId: reward.id,
+                depositId: qualifyingDeposit.id,
+                isClamed: true,
+              },
+            })
+            .catch(() => {});
+        }
+      }
+    });
 
     return Response.json({
       success: true,
-      message: `Day ${reward.day} bonus of ৳ ${reward.prize} successfully credited!`,
+      message: `Day ${reward.day} bonus of ৳ ${prizeAmount} credited! (1x Turnover applied)`,
     });
   } catch (error) {
     console.error("Error claiming signin reward:", error);

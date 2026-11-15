@@ -57,12 +57,16 @@ export const POST = async (req: NextRequest) => {
     if (status === "success") {
       console.log(`Payment successful for invoice: ${invoice_no}, updating user wallet`);
 
-      // Update user wallet balance
+      // Update user wallet balance + 1x turnover requirement
+      const depositDecimal = new Prisma.Decimal(depositRecord.amount.toString());
       await db.wallet.update({
         where: { userId: depositRecord.userId },
         data: {
           balance: {
-            increment: new Prisma.Decimal(depositRecord.amount.toString()),
+            increment: depositDecimal,
+          },
+          turnOver: {
+            increment: depositDecimal,
           },
         },
       });

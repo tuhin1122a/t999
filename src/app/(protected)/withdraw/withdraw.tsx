@@ -20,15 +20,17 @@ const Withdraw = () => {
       {withdrwData && !withdrawLoading && !walletLoading && wallets && (
         <>
           <WithdrawInfo
-            availableBalance={withdrwData.availableBalance}
-            mainBalance={withdrwData.mainBalance}
-            remainingWithdrawal={withdrwData.remainingWithdrawal}
-            turnOver={withdrwData.turnOver}
+            availableBalance={Number(withdrwData.availableBalance)}
+            mainBalance={Number(withdrwData.mainBalance)}
+            remainingWithdrawal={Number(withdrwData.remainingWithdrawal)}
+            turnOver={Number(withdrwData.turnOver)}
+            totalWagered={Number(withdrwData.totalWagered || 0)}
+            turnoverProgressPercent={Number(withdrwData.turnoverProgressPercent ?? 100)}
           />
           <WithdrawForm
             wallets={wallets}
-            availableBalance={withdrwData.availableBalance}
-            turnOver={withdrwData.turnOver}
+            availableBalance={Number(withdrwData.availableBalance)}
+            turnOver={Number(withdrwData.turnOver)}
           />
         </>
       )}

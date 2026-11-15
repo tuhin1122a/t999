@@ -103,11 +103,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Enforce Turnover requirement
-    const turnOverVal = parseFloat(wallet.turnOver.toString());
+    // Enforce 1x Turnover requirement
+    const currentBalance = parseFloat(wallet.balance.toString());
+    let turnOverVal = parseFloat(wallet.turnOver.toString());
+
+    if (currentBalance < 1 && turnOverVal > 0) {
+      await db.wallet.update({
+        where: { id: wallet.id },
+        data: { turnOver: 0 },
+      });
+      turnOverVal = 0;
+    }
+
     if (turnOverVal > 0) {
       return NextResponse.json(
-        { success: false, error: `Turnover requirement not met. You must bet ${turnOverVal} BDT more before you can withdraw.` },
+        { success: false, error: `1x Turnover requirement not met. উইথড্র করতে আপনাকে আরও ৳ ${turnOverVal.toFixed(2)} বেট করতে হবে।` },
         { status: 400 }
       );
     }

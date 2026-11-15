@@ -132,7 +132,9 @@ const BonusCard = ({ reward, isDaySeven, isAuthenticated }: BonusCardProps) => {
         </div>
 
         <span className="text-[9px] text-gray-400 font-mono block">
-          Min Dep: ৳ {reward.deposit}
+          {Number(reward.deposit) > 0
+            ? `Min Dep: ৳ ${reward.deposit} • 1x`
+            : "Free Login • 1x Turnover"}
         </span>
       </div>
 

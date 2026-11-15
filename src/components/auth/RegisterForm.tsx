@@ -30,6 +30,11 @@ import {
 const RegisterForm = () => {
   const searchParams = useSearchParams();
   const agentFromUrl = searchParams.get("agent")?.trim() || "";
+  const refFromUrl =
+    searchParams.get("r")?.trim() ||
+    searchParams.get("ref")?.trim() ||
+    searchParams.get("referralId")?.trim() ||
+    "";
   const [pending, startTransiction] = useTransition();
   const [resolvedAgent, setResolvedAgent] = useState<{
     name: string;
@@ -44,9 +49,30 @@ const RegisterForm = () => {
       ageCheck: true,
       bonusCheck: false,
       agentCode: agentFromUrl,
+      referralId: refFromUrl,
     },
     resolver: zodResolver(registerSchema),
   });
+
+  useEffect(() => {
+    if (refFromUrl) {
+      try {
+        localStorage.setItem("rk444_referral_code", refFromUrl);
+      } catch {
+        // ignore storage error
+      }
+      form.setValue("referralId", refFromUrl);
+    } else {
+      try {
+        const storedRef = localStorage.getItem("rk444_referral_code") || "";
+        if (storedRef) {
+          form.setValue("referralId", storedRef);
+        }
+      } catch {
+        // ignore storage error
+      }
+    }
+  }, [refFromUrl, form]);
 
   useEffect(() => {
     const code = (agentFromUrl || getStoredAgentCode()).trim().toUpperCase();
@@ -95,13 +121,28 @@ const RegisterForm = () => {
       .trim()
       .toUpperCase();
 
+    let resolvedReferral = (data.referralId || refFromUrl || "").trim();
+    if (!resolvedReferral) {
+      try {
+        resolvedReferral = (localStorage.getItem("rk444_referral_code") || "").trim();
+      } catch {
+        // ignore
+      }
+    }
+
     startTransiction(() => {
       register({
         ...data,
         agentCode: fallbackCode || undefined,
+        referralId: resolvedReferral || undefined,
       }).then((res) => {
         if (res && res.success) {
           clearStoredAgentCode();
+          try {
+            localStorage.removeItem("rk444_referral_code");
+          } catch {
+            // ignore
+          }
           window.location.href = "/";
         } else if (res && res.error) {
           toast.error(res.error);
@@ -229,6 +270,30 @@ const RegisterForm = () => {
                         <FaEyeSlash className="!relative !flex-1 !grow !h-[18.72px] text-wwwwwwck444combright-turquoise " />
                       )}
                     </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="referralId"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div className="relative">
+                    <input
+                      placeholder="Referral / Invite Code (Optional)"
+                      disabled={pending}
+                      {...field}
+                      value={field.value || ""}
+                      className="text-white w-full mb-2 outline-none text-sm px-8 py-3 bg-wwwwwwck-44-4comdaintree rounded-[10.4px] overflow-hidden border border-solid border-[#006165] focus:border-[#2f9396] shadow-[0px_2.08px_0px_#002631] placeholder:font-www-wwwck444-com-semantic-input font-[number:var(--www-wwwck444-com-semantic-input-font-weight)] placeholder:text-wwwwwwck444combright-turquoise placeholder:text-[length:var(--www-wwwck444-com-semantic-input-font-size)] placeholder:tracking-[var(--www-wwwck444-com-semantic-input-letter-spacing)] placeholder:leading-[var(--www-wwwck444-com-semantic-input-line-height)] placeholder:[font-style:var(--www-wwwck444-com-semantic-input-font-style)]"
+                    />
+                    <div className="flex w-[19px] h-[19px] items-center justify-center absolute top-[45%] -translate-y-1/2 left-2.5">
+                      <FaUserShield className="!relative !flex-1 !grow !h-[16px] text-wwwwwwck444combright-turquoise" />
+                    </div>
                   </div>
                 </FormControl>
                 <FormMessage />

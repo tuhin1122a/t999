@@ -33,12 +33,12 @@ export const promotions: PromotionItem[] = [
     category: "welcome",
     badge: "100% BONUS",
     badgeColor: "bg-gradient-to-r from-amber-500 to-yellow-500 text-black",
-    turnover: "10x Wager",
+    turnover: "1x Turnover",
     minDeposit: "500 BDT",
     image: promotion_1,
     title: "Welcome Bonus 500 BDT On All Products",
     description:
-      "Get your lucky start with a 100% bonus on ALL games worth up to 500 BDT for your first deposit on RK444!",
+      "Get your lucky start with a 100% bonus on ALL games worth up to 500 BDT for your first deposit on RK444 with 1x turnover!",
     content: `## 🎁 Claim Your Welcome Bonus in 3 Easy Steps
 
 ### Step 1:
@@ -57,8 +57,8 @@ Make a minimum deposit of 500 BDT and receive your bonus automatically!
 - 🔒 The bonus is **exclusive to new members** and is given **only once on first deposit**.
 - 💸 The **minimum qualifying deposit** is **500 BDT**.
 - 🎮 Bonus can be wagered on **ALL games and products** on RK444.
-- 🔁 **Wagering Requirement:** (Deposit + Bonus) must be wagered **10x** before funds can be withdrawn.
-- ✅ The wagering requirement is fulfilled when the required bets are placed or account balance is below **10 BDT**.
+- 🔁 **Wagering Requirement:** Only **1x Turnover** before funds can be withdrawn.
+- ✅ The wagering requirement is fulfilled when the required bets are placed or account balance is below **1 BDT**.
 - 🚫 Tie/draw bets and voided bets do not count toward the wagering requirement.
 - 👥 Strictly one bonus per registered member, IP address, and financial account.
 - ⚠️ **RK444** reserves the right to modify or terminate this promotion at its sole discretion.
@@ -103,12 +103,12 @@ Complete your deposit and enjoy the 3% instant extra credit!
     category: "welcome",
     badge: "FREE 200 BDT",
     badgeColor: "bg-gradient-to-r from-blue-500 to-cyan-500 text-white",
-    turnover: "3x Wager",
+    turnover: "1x Turnover",
     minDeposit: "500 BDT",
     image: promotion_3,
     title: "Welcome Bonus 200 BDT in All Products",
     description:
-      "Get a fast 200 BDT free bonus boost with an ultra-easy 3x wagering requirement for your first deposit!",
+      "Get a fast 200 BDT free bonus boost with an ultra-easy 1x wagering requirement for your first deposit!",
     content: `## 🎁 Claim Your 200 BDT Bonus in 3 Easy Steps
 
 ### Step 1:
@@ -126,7 +126,7 @@ Deposit 500 BDT or more and start playing with your extra 200 BDT credit!
 
 - 🎉 The bonus is **exclusive to newly registered RK444 members**.
 - 💰 The **minimum qualifying deposit** is **500 BDT**.
-- 🔁 **Wagering Requirement:** (Deposit + Bonus) must be wagered only **3x times**.
+- 🔁 **Wagering Requirement:** Only **1x Turnover** before withdrawal.
 - 🎮 Usable across all slots, crash games, table games, and live dealers.
 - ⚠️ **RK444** general terms and conditions apply.
 `,
@@ -137,12 +137,12 @@ Deposit 500 BDT or more and start playing with your extra 200 BDT credit!
     category: "slots",
     badge: "300% SLOTS",
     badgeColor: "bg-gradient-to-r from-pink-500 to-purple-600 text-white",
-    turnover: "20x Wager",
+    turnover: "1x Turnover",
     minDeposit: "1,000 BDT",
     image: promotion_4,
     title: "Slots 300% Welcome Bonus up to 8,000 BDT",
     description:
-      "Mega Slots Booster! Triple your initial funds with a massive 300% bonus worth up to 8,000 BDT on all slot games.",
+      "Mega Slots Booster! Triple your initial funds with a massive 300% bonus worth up to 8,000 BDT on all slot games with 1x turnover.",
     content: `## 🎰 Claim Your 300% Slots Booster in 3 Easy Steps
 
 ### Step 1:
@@ -160,7 +160,7 @@ Deposit at least 1,000 BDT and unlock up to 8,000 BDT extra slots credit!
 
 - 🆕 Exclusive to new players on their initial slots deposit.
 - 🎰 Valid on all certified slot providers: Pragmatic Play, JILI, PG Soft, NetEnt, Spribe, etc.
-- 🔁 **Wagering Requirement:** 20x (Deposit + Bonus) on Slots only.
+- 🔁 **Wagering Requirement:** Only **1x Turnover** on Slots.
 - 💰 Maximum bonus payout is capped at 8,000 BDT.
 - ⚠️ Standard **RK444** promotion abuse policies apply.
 `,
@@ -171,7 +171,7 @@ Deposit at least 1,000 BDT and unlock up to 8,000 BDT extra slots credit!
     category: "reload",
     badge: "1100% REWARD",
     badgeColor: "bg-gradient-to-r from-yellow-400 to-amber-500 text-black",
-    turnover: "15x Wager",
+    turnover: "1x Turnover",
     minDeposit: "1,000 BDT",
     image: promotion_5,
     title: "Weekly Reload Bonus up to 1100%",
@@ -210,7 +210,7 @@ Unlock escalating rewards up to 225% on your 8th deposit of the week!
 
 - 🔄 Promotion restarts every Sunday at 23:59 (GMT+6).
 - 💰 Maximum bonus payout is 5,000 BDT per deposit.
-- 🔁 Wagering Requirement: 15x on Slots products before withdrawal.
+- 🔁 Wagering Requirement: **1x Turnover** before withdrawal.
 - ⚠️ **RK444** terms and conditions apply.
 `,
   },
@@ -220,12 +220,12 @@ Unlock escalating rewards up to 225% on your 8th deposit of the week!
     category: "slots",
     badge: "25% DAILY",
     badgeColor: "bg-cyan-500 text-black",
-    turnover: "15x Wager",
+    turnover: "1x Turnover",
     minDeposit: "500 BDT",
     image: promotion_6,
     title: "Slots Games 25% Daily Reload Bonus up to 5,000 BDT",
     description:
-      "Deposit everyday and hit an additional 25% Slots Reload bonus up to 5,000 BDT with fast turnover.",
+      "Deposit everyday and hit an additional 25% Slots Reload bonus up to 5,000 BDT with fast 1x turnover.",
     content: `## 🎰 Claim Your 25% Daily Slots Reload
 
 ### Step 1:
@@ -242,7 +242,7 @@ Enjoy your 25% extra credit to spin on any Pragmatic, JILI, or PG Soft slot!
 ## 📜 Promotion Rules & Terms
 
 - 🎰 Claimable once per day every 24 hours.
-- 🔁 Wagering Requirement: 15x (Deposit + Bonus) on Slots.
+- 🔁 Wagering Requirement: **1x Turnover** on Slots.
 - 💰 Maximum bonus amount: 5,000 BDT daily.
 - ⚠️ **RK444** fair play rules apply.
 `,
@@ -291,12 +291,12 @@ Enjoy your 25% extra credit to spin on any Pragmatic, JILI, or PG Soft slot!
     category: "referral",
     badge: "600 BDT REWARD",
     badgeColor: "bg-gradient-to-r from-purple-500 to-indigo-600 text-white",
-    turnover: "Automatic",
+    turnover: "1x Turnover",
     minDeposit: "Invite",
     image: promotion_8,
     title: "Refer a Friend & Earn 600 BDT Cash for Both of You",
     description:
-      "Earn real money by inviting your friends to join RK444! Get a 300 BDT cash reward for you and 300 BDT for your friend.",
+      "Earn real money by inviting your friends to join RK444! Get a 300 BDT cash reward for you and 300 BDT for your friend with only 1x turnover.",
     content: `## 🤝 Refer & Earn – 600 BDT Total Cash Reward!
 
 ### 🎯 How to Participate in 2 Easy Steps:
@@ -310,10 +310,10 @@ Enjoy your 25% extra credit to spin on any Pragmatic, JILI, or PG Soft slot!
 
 ## 💸 Reward Breakdown
 
-| Recipient | Free Cash Bonus | Friend Deposit Requirement | Friend Turnover |
-|:----------|:----------------|:---------------------------|:----------------|
-| You (Referrer) | **300 BDT** | 2,000 BDT | 5,000 BDT |
-| Your Friend | **300 BDT** | 1,000 BDT | 3,000 BDT |
+| Recipient | Free Cash Bonus | Friend Deposit Requirement | Bonus Turnover |
+|:----------|:----------------|:---------------------------|:---------------|
+| You (Referrer) | **300 BDT** | 500 BDT | **1x Turnover** |
+| Your Friend | **300 BDT** | 500 BDT | **1x Turnover** |
 
 ---
 
@@ -321,6 +321,7 @@ Enjoy your 25% extra credit to spin on any Pragmatic, JILI, or PG Soft slot!
 
 - ✅ Unlimited referrals allowed! Refer 10 friends and earn 3,000 BDT!
 - 💰 Bonuses are credited automatically once your friend completes the minimum deposit.
+- 🔁 **Turnover Requirement:** Only **1x Turnover** before withdrawal.
 - ⚠️ Multiple accounts or self-referral will result in account suspension.
 `,
   },
@@ -330,7 +331,7 @@ Enjoy your 25% extra credit to spin on any Pragmatic, JILI, or PG Soft slot!
     category: "sports",
     badge: "100% SPORTS + FREE BET",
     badgeColor: "bg-gradient-to-r from-amber-500 to-orange-500 text-white",
-    turnover: "5x Wager",
+    turnover: "1x Turnover",
     minDeposit: "500 BDT",
     image: sports_1,
     title: "Cricket & Sportsbook 100% Welcome Bonus + 500 BDT Free Bet",
@@ -353,7 +354,7 @@ Deposit 500 BDT or more and immediately receive your 100% extra balance plus a 5
 
 - 🏏 Valid on all Cricket (IPL, BPL, ICC), Football, and Tennis sports markets.
 - 🎯 Minimum qualifying odds for bonus wagering is **1.50 or higher**.
-- 🔁 **Turnover Requirement:** Only **5x** (Deposit + Bonus) on Sports bets.
+- 🔁 **Turnover Requirement:** Only **1x Turnover** before withdrawal.
 - 🎁 Free Bet winnings can be withdrawn directly after 1x turnover!
 - ⚠️ Draw or canceled matches do not count toward turnover calculations.
 `,
@@ -397,7 +398,7 @@ Complete the deposit with your transaction ID (TrxID) and watch your 5% cash ins
     category: "live",
     badge: "50% LIVE BOOSTER",
     badgeColor: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white",
-    turnover: "12x Wager",
+    turnover: "1x Turnover",
     minDeposit: "1,000 BDT",
     image: sports_2,
     title: "Live Casino & VIP Roulette 50% Weekend Reload Boost",
@@ -420,7 +421,7 @@ Enjoy live video streaming blackjack, baccarat, roulette, and Crazy Time with 50
 
 - 🎲 Valid across all Live Dealer suites: Evolution, Sexy Baccarat, Ezugi, Pragmatic Live.
 - 💰 Maximum bonus payout is **10,000 BDT** per weekend.
-- 🔁 **Turnover Requirement:** 12x (Deposit + Bonus) on live table games.
+- 🔁 **Turnover Requirement:** Only **1x Turnover** on live table games.
 - 🚫 Opposite betting (e.g., betting on both Red & Black on Roulette) is strictly prohibited.
 `,
   },
