@@ -80,12 +80,11 @@ export default function TawkToWidget({
     lastAttrFingerprintRef.current = fingerprint;
 
     try {
+      // Only pass standard Tawk.to attributes (name & email) to prevent [Tawk/Logger] schema errors
       window.Tawk_API?.setAttributes?.(
         {
           name: displayName,
           email,
-          phone,
-          playerid: playerId,
         },
         () => {
           // Ignore non-fatal attribute callback responses
@@ -100,10 +99,25 @@ export default function TawkToWidget({
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    window.__TAWK_ENABLED__ = enabled;
+    // Suppress noisy third-party [Tawk/Logger] console.error from triggering Next.js 15 Dev Overlay
+    const origConsoleError = window.console.error;
+    if (!(window as any).__TAWK_CONSOLE_PATCHED__) {
+      (window as any).__TAWK_CONSOLE_PATCHED__ = true;
+      window.console.error = (...args: any[]) => {
+        const firstArg = typeof args[0] === "string" ? args[0] : "";
+        if (firstArg.includes("[Tawk/Logger]")) {
+          return;
+        }
+        origConsoleError.apply(window.console, args);
+      };
+    }
+
+    // Do not inject external Tawk script if still using the placeholder default ID
+    const isPlaceholderDefault = validUrl.includes("6af470f6211af33c4aae43d6");
+    window.__TAWK_ENABLED__ = enabled && !isPlaceholderDefault;
     window.__TAWK_DIRECT_URL__ = directChatUrl;
 
-    if (!enabled) {
+    if (!enabled || isPlaceholderDefault) {
       window.__TAWK_LOADING__ = false;
       window.__TAWK_PENDING_OPEN__ = false;
       try {
