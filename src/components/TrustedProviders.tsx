@@ -1,8 +1,8 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { FiArrowRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { MdVerified } from "react-icons/md";
-import { FiChevronLeft, FiChevronRight, FiArrowRight } from "react-icons/fi";
 
 interface ProviderItem {
   brandId: string;
@@ -150,11 +150,11 @@ const TrustedProviders = () => {
           : [];
         if (list.length > 0) {
           const mapped: ProviderItem[] = list
-            .filter((p: { brand_id?: string | number; logo?: string }) => p.brand_id && p.logo)
-            .map((p: { brand_id: string | number; brand_title?: string; name?: string; logo: string }) => ({
+            .filter((p: { brand_id?: string | number }) => Boolean(p.brand_id))
+            .map((p: { brand_id: string | number; brand_title?: string; name?: string; logo?: string }) => ({
               brandId: String(p.brand_id),
               name: p.brand_title || p.name || "Provider",
-              logo: p.logo,
+              logo: p.logo || "",
             }));
           if (mapped.length > 0) {
             setProviderList(mapped);

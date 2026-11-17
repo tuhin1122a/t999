@@ -307,6 +307,17 @@ export async function getBrandProviderSetting(brandId: string) {
   }
 }
 
+export async function getBrandGameSettings(brandId: string) {
+  try {
+    return await db.providerGameSetting.findMany({
+      where: { brandId: String(brandId) },
+      orderBy: [{ sortOrder: "asc" }, { updatedAt: "desc" }],
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchLiveSoftGamesForBrand(
   brandId: string,
   forceRefresh = false

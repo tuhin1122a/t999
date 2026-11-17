@@ -47,7 +47,11 @@ function selectBalancedProviders(providers: ActiveProviderMeta[]): string[] {
     chosen.add(String(p.brand_id));
   }
 
-  return Array.from(chosen);
+  // Preserve the exact Admin provider serial order
+  const orderMap = new Map(providers.map((p, idx) => [String(p.brand_id), idx]));
+  return Array.from(chosen).sort(
+    (a, b) => (orderMap.get(a) ?? 9999) - (orderMap.get(b) ?? 9999)
+  );
 }
 
 const GamesLoader = () => {

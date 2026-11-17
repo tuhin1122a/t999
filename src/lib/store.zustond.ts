@@ -80,6 +80,13 @@ export const useGames = create<GameType>((set, get) => ({
         );
         console.log(`Provider games filtered by search ${name}: ${providerGames.length}`);
       }
+
+      providerGames = [...providerGames].sort((a: any, b: any) => {
+        const ga = a?.game_sort_order ?? 9999;
+        const gb = b?.game_sort_order ?? 9999;
+        if (ga !== gb) return ga - gb;
+        return (a?._originalIdx ?? 0) - (b?._originalIdx ?? 0);
+      });
       
       // Apply limit if provided
       if (limit !== undefined && limit > 0) {
@@ -145,6 +152,23 @@ export const useGames = create<GameType>((set, get) => ({
       console.log(`Games filtered by search ${name}: ${searchFiltered.length}`);
       flitedGames = searchFiltered;
     }
+
+    // Sort by Admin Provider Serial first, then per-provider Game Serial
+    flitedGames = [...flitedGames].sort((a: any, b: any) => {
+      if (provider && provider !== "all") {
+        const ga = a?.game_sort_order ?? 9999;
+        const gb = b?.game_sort_order ?? 9999;
+        if (ga !== gb) return ga - gb;
+        return (a?._originalIdx ?? 0) - (b?._originalIdx ?? 0);
+      }
+      const pa = a?.provider_sort_order ?? 9999;
+      const pb = b?.provider_sort_order ?? 9999;
+      if (pa !== pb) return pa - pb;
+      const ga = a?.game_sort_order ?? 9999;
+      const gb = b?.game_sort_order ?? 9999;
+      if (ga !== gb) return ga - gb;
+      return (a?._originalIdx ?? 0) - (b?._originalIdx ?? 0);
+    });
 
     if (limit !== undefined && limit > 0) {
       return flitedGames.slice(0, limit);

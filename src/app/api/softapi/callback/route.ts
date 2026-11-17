@@ -87,11 +87,13 @@ export async function POST(request: NextRequest) {
     }
 
     const game_uid = String(event.game_uid ?? event.game_id ?? "");
+    const game_name_raw = String(event.game_name ?? "").trim();
     const game_round = String(event.game_round ?? "");
     const member_account = String(event.member_account ?? event.user_id ?? "");
     const bet_amount = parseFloat(String(event.bet_amount ?? "0")) || 0;
     const win_amount = parseFloat(String(event.win_amount ?? "0")) || 0;
     const serial_number = String(event.serial_number || event.game_round || "");
+    const free_spin_bonus = event.free_spin_bonus ? String(event.free_spin_bonus) : null;
 
     // Extract credit_amount (SoftAPI official source of truth for in-game balance after round)
     const credit_amount_raw = event.credit_amount;
@@ -122,6 +124,24 @@ export async function POST(request: NextRequest) {
         },
         { status: 200 }
       );
+    }
+
+    if (serial_number) {
+      const existingBet = await prisma.betHistory
+        .findUnique({ where: { serialNumber: serial_number } })
+        .catch(() => null);
+      if (existingBet) {
+        rememberSerial(serial_number);
+        return NextResponse.json(
+          {
+            code: 0,
+            msg: "OK",
+            credit_amount: Number(existingBet.creditAmount),
+            timestamp: Math.round(Date.now()),
+          },
+          { status: 200 }
+        );
+      }
     }
 
     // Match user by phone variations, id, or playerId
@@ -197,6 +217,46 @@ export async function POST(request: NextRequest) {
       new_balance,
     });
 
+    // Resolve game name & provider if not supplied in callback payload
+    let resolvedGameName = game_name_raw;
+    let resolvedProvider: string | null = null;
+    let resolvedBrandId: string | null = null;
+    let resolvedCategory: string | null = null;
+
+    if (game_uid) {
+      const [pgSetting, hotSetting] = await Promise.all([
+        prisma.providerGameSetting
+          .findUnique({ where: { gameUid: game_uid } })
+          .catch(() => null),
+        prisma.hotGame
+          .findUnique({ where: { gameUid: game_uid } })
+          .catch(() => null),
+      ]);
+      if (!resolvedGameName) {
+        resolvedGameName =
+          pgSetting?.customName ||
+          pgSetting?.name ||
+          hotSetting?.name ||
+          `Game #${game_uid}`;
+      }
+      resolvedBrandId = pgSetting?.brandId || hotSetting?.brandId || null;
+      resolvedProvider = hotSetting?.providerName || null;
+      resolvedCategory = pgSetting?.category || hotSetting?.category || "slots";
+    }
+    if (!resolvedGameName) {
+      resolvedGameName = game_uid ? `Game #${game_uid}` : "Casino Game";
+    }
+
+    const roundStatus =
+      win_amount > bet_amount
+        ? "WIN"
+        : win_amount === bet_amount && bet_amount > 0
+        ? "REFUND"
+        : "LOSS";
+
+    const uniqueSerial =
+      serial_number || `${user.id}_${game_uid || "game"}_${Date.now()}`;
+
     await prisma.$transaction(async (tx) => {
       await tx.wallet.update({
         where: { id: user.wallet!.id },
@@ -216,6 +276,32 @@ export async function POST(request: NextRequest) {
         update: {
           totalBet: { increment: bet_amount },
           totalWin: { increment: win_amount },
+        },
+      });
+
+      await tx.betHistory.upsert({
+        where: { serialNumber: uniqueSerial },
+        create: {
+          serialNumber: uniqueSerial,
+          userId: user.id,
+          memberAccount: member_account,
+          gameUid: game_uid || "unknown",
+          gameName: resolvedGameName,
+          provider: resolvedProvider,
+          brandId: resolvedBrandId,
+          category: resolvedCategory,
+          gameRound: game_round || null,
+          betAmount: bet_amount,
+          winAmount: win_amount,
+          creditAmount: new_balance,
+          status: roundStatus,
+          freeSpinBonus: free_spin_bonus,
+        },
+        update: {
+          betAmount: bet_amount,
+          winAmount: win_amount,
+          creditAmount: new_balance,
+          status: roundStatus,
         },
       });
     });

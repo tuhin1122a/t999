@@ -1,11 +1,12 @@
 // src/app/api/softapi/games/route.ts
+import {
+    fetchLiveSoftGamesForBrand,
+    getBrandGameSettings,
+    getBrandProviderSetting,
+} from "@/lib/gameCatalog";
 import { promises as fs } from "fs";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import {
-  fetchLiveSoftGamesForBrand,
-  getBrandProviderSetting,
-} from "@/lib/gameCatalog";
 
 export const dynamic = "force-dynamic";
 
@@ -156,6 +157,53 @@ function normalizeGames(
   return { games, providerTitle };
 }
 
+function applyAdminGameOrdering(
+  games: Array<Record<string, any>>,
+  providerSortOrder: number,
+  gameSettings: Array<{
+    gameUid: string;
+    customName?: string | null;
+    img?: string | null;
+    isActive: boolean;
+    sortOrder: number;
+  }>
+) {
+  const map = new Map(gameSettings.map((gs) => [String(gs.gameUid), gs]));
+
+  const processed = games
+    .map((g, idx) => {
+      const uid = String(g.id || g.game_code || "");
+      const setting = map.get(uid);
+      if (setting && setting.isActive === false) {
+        return null;
+      }
+      const nextName = setting?.customName?.trim() || g.name;
+      const nextImg = setting?.img?.trim() || g.img;
+      const gameSortOrder = setting ? setting.sortOrder : 9999;
+
+      return {
+        ...g,
+        name: nextName,
+        game_name: nextName,
+        img: nextImg,
+        game_img: nextImg,
+        provider_sort_order: providerSortOrder,
+        game_sort_order: gameSortOrder,
+        _originalIdx: idx,
+      };
+    })
+    .filter(Boolean) as Array<Record<string, any>>;
+
+  processed.sort((a, b) => {
+    if (a.game_sort_order !== b.game_sort_order) {
+      return a.game_sort_order - b.game_sort_order;
+    }
+    return a._originalIdx - b._originalIdx;
+  });
+
+  return processed;
+}
+
 async function fetchWithTimeout(url: string, timeoutMs = 10000) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -192,8 +240,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Check Admin's GameProviderSetting active flag first
-    const providerSetting = await getBrandProviderSetting(brand_id);
+    // Check Admin's GameProviderSetting active flag & per-game settings
+    const [providerSetting, gameSettings] = await Promise.all([
+      getBrandProviderSetting(brand_id),
+      getBrandGameSettings(brand_id),
+    ]);
     if (providerSetting && providerSetting.isActive === false) {
       return NextResponse.json(
         {
@@ -213,6 +264,7 @@ export async function GET(req: NextRequest) {
     }
 
     const adminCategory = providerSetting?.category || null;
+    const providerSortOrder = providerSetting?.sortOrder ?? (Number(brand_id) || 999);
 
     if (!refresh) {
       const cachedSoftApiPayload = await readLocalCache(brand_id);
@@ -226,10 +278,15 @@ export async function GET(req: NextRequest) {
           brand_id,
           adminCategory
         );
+        const orderedGames = applyAdminGameOrdering(
+          normalized,
+          providerSortOrder,
+          gameSettings
+        );
         const finalGames =
           category && category !== "all"
-            ? normalized.filter((g) => g.categories === category)
-            : normalized;
+            ? orderedGames.filter((g) => g.categories === category)
+            : orderedGames;
 
         return NextResponse.json(
           {
@@ -265,10 +322,15 @@ export async function GET(req: NextRequest) {
       };
       await writeLocalCache(brand_id, payloadToCache);
 
+      const orderedGames = applyAdminGameOrdering(
+        allBrandGames,
+        providerSortOrder,
+        gameSettings
+      );
       const finalGames =
         category && category !== "all"
-          ? allBrandGames.filter((g) => g.categories === category)
-          : allBrandGames;
+          ? orderedGames.filter((g) => g.categories === category)
+          : orderedGames;
 
       return NextResponse.json(
         {
@@ -312,10 +374,15 @@ export async function GET(req: NextRequest) {
 
           await writeLocalCache(brand_id, payloadToCache);
 
+          const orderedGames = applyAdminGameOrdering(
+            allBrandGames,
+            providerSortOrder,
+            gameSettings
+          );
           const finalGames =
             category && category !== "all"
-              ? allBrandGames.filter((g) => g.categories === category)
-              : allBrandGames;
+              ? orderedGames.filter((g) => g.categories === category)
+              : orderedGames;
 
           return NextResponse.json(
             {
