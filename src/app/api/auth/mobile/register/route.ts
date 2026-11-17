@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.AUTH_SECRET || "rk444_secret_key_t999_app";
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone, password, referralId } = await req.json();
+    const { phone, password, referralId, agentCode } = await req.json();
 
     if (!phone || !password) {
       return NextResponse.json(
@@ -27,6 +27,25 @@ export async function POST(req: NextRequest) {
         { success: false, error: "Number is already registered" },
         { status: 409 }
       );
+    }
+
+    // ---------------- Sub-Admin (Agent) Resolution ----------------
+    let resolvedSubAdminId: string | null = null;
+    const rawAgent = String(agentCode || referralId || "").trim().toUpperCase();
+    if (rawAgent) {
+      const subAdmin = await db.admin
+        .findFirst({
+          where: {
+            agentCode: { equals: rawAgent, mode: "insensitive" },
+            role: "SUBADMIN",
+            isActive: true,
+          },
+          select: { id: true },
+        })
+        .catch(() => null);
+      if (subAdmin) {
+        resolvedSubAdminId = subAdmin.id;
+      }
     }
 
     // ---------------- Referral Setup ----------------
@@ -127,6 +146,7 @@ export async function POST(req: NextRequest) {
         referId,
         isBanned: false,
         invitedBy,
+        ...(resolvedSubAdminId ? { subAdmin: { connect: { id: resolvedSubAdminId } } } : {}),
         bettingRecord: { create: {} },
         wallet: {
           create: {

@@ -55,7 +55,7 @@ const Play = () => {
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 1xBet Style UI States
+  // Fullscreen Casino UI States
   const [showHeader, setShowHeader] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -97,7 +97,7 @@ const Play = () => {
     return () => clearInterval(interval);
   }, [iframe]);
 
-  // ── 1xBet Fullscreen Toggle ───────────────────────────────────────────────
+  // ── Fullscreen Toggle ────────────────────────────────────────────────────────
   const toggleFullscreen = useCallback(async () => {
     try {
       if (!document.fullscreenElement) {
@@ -242,7 +242,7 @@ const Play = () => {
     <div className="w-full h-[100dvh] bg-[#070e17] overflow-hidden relative select-none flex flex-col font-sans">
 
       {/* ══════════════════════════════════════════════════════════════════════
-          1XBET / MELBET STYLE TOP BAR
+          CASINO TOP BAR
       ══════════════════════════════════════════════════════════════════════ */}
       <div
         className={`w-full z-50 transition-all duration-300 ease-in-out ${
@@ -274,7 +274,7 @@ const Play = () => {
             </Link>
           </div>
 
-          {/* CENTER: Real-Time Wallet Balance with 1xBet Deposit Quick Action */}
+          {/* CENTER: Real-Time Wallet Balance with Deposit Quick Action */}
           <div className="flex items-center gap-1 sm:gap-2">
             <div className="flex items-center bg-[#07101b] border border-[#1b3452] rounded-md px-2.5 py-1 shadow-inner">
               <RiWallet3Line className="text-[#10b981] mr-1.5 text-base" />
@@ -297,7 +297,7 @@ const Play = () => {
               </button>
             </div>
 
-            {/* Quick Deposit Button (1xBet style "+ Deposit") */}
+            {/* Quick Deposit Button */}
             <Link
               href="/deposit"
               target="_blank"
@@ -367,7 +367,7 @@ const Play = () => {
             <button
               onClick={() => setShowHeader(true)}
               className="group flex items-center gap-1.5 px-3 py-1 bg-[#0a1626]/90 hover:bg-[#14263d] border-b border-x border-[#1c304a] rounded-b-lg shadow-xl backdrop-blur-md transition-all active:scale-95"
-              title="Expand 1xBet Controls"
+              title="Expand Casino Controls"
             >
               <span className="text-[11px] font-bold text-yellow-400">৳ {balanceValue}</span>
               <FiChevronDown size={14} className="text-teal-400 group-hover:translate-y-0.5 transition-transform" />
@@ -381,7 +381,7 @@ const Play = () => {
       ══════════════════════════════════════════════════════════════════════ */}
       <main className="flex-1 w-full h-full relative bg-[#04080e] overflow-hidden">
 
-        {/* 1xBet Style Loading Screen */}
+        {/* Casino Loading Screen */}
         {isIframeLoading && !error && (
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gradient-to-b from-[#071322] via-[#091b31] to-[#040c16] text-white">
             <div className="relative flex items-center justify-center mb-6">
@@ -395,7 +395,7 @@ const Play = () => {
               LAUNCHING GAME
             </h3>
             <p className="text-xs text-[#7196bf] font-medium animate-pulse mb-6">
-              Connecting to secure 1xBet / World Casino server...
+              Connecting to secure RK444 Casino server...
             </p>
 
             <button

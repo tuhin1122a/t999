@@ -90,7 +90,7 @@ const UserBalance = ({
                 </div>
               </div>
 
-              {/* Quick Deposit Button in Header (1xBet style) */}
+              {/* Quick Deposit Button in Header */}
               <Link
                 href="/deposit"
                 className="ml-2 flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white rounded-md text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition-all"

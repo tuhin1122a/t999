@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { promotions as fallbackPromotions, PromotionItem } from "../../../data/promotions";
+import { PromotionItem } from "../../../data/promotions";
 import {
   FaGift,
   FaArrowRight,
@@ -18,6 +18,7 @@ import {
 import { HiSparkles } from "react-icons/hi2";
 import { MdOutlineLocalOffer, MdCelebration } from "react-icons/md";
 import { RiMoneyDollarCircleFill } from "react-icons/ri";
+import LuckyWheel from "@/components/LuckyWheel";
 
 const CATEGORIES = [
   { id: "all", label: "All Offers" },
@@ -87,10 +88,7 @@ const PromotionList = () => {
     };
   }, []);
 
-  const promoList: PromotionWithRealData[] =
-    data?.promotions && data.promotions.length > 0
-      ? data.promotions
-      : fallbackPromotions;
+  const promoList: PromotionWithRealData[] = data?.promotions || [];
 
   const filteredPromotions =
     activeTab === "all"
@@ -244,6 +242,22 @@ const PromotionList = () => {
         </div>
       </div>
 
+      {/* ── RK444 Lucky Wheel ───────────────────────────────────────── */}
+      <LuckyWheel
+        isAuthenticated={isAuthenticated}
+        onBalanceUpdate={(newBalance) => {
+          if (data?.stats) {
+            setData({
+              ...data,
+              stats: {
+                ...data.stats,
+                walletBalance: newBalance,
+              },
+            });
+          }
+        }}
+      />
+
       {/* ── Category Filter Tabs ────────────────────────────────────────── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1 sm:mx-0 sm:px-0">
         {CATEGORIES.map((tab) => {
@@ -289,17 +303,29 @@ const PromotionList = () => {
       </div>
 
       {filteredPromotions.length === 0 && (
-        <div className="text-center py-10 bg-[#0a1626] border border-[#162e4a] rounded-2xl space-y-2">
-          <p className="text-xs sm:text-sm font-bold text-gray-300">
-            No promotions available in this category
+        <div className="text-center py-12 px-4 bg-[#0a1626] border border-[#162e4a] rounded-3xl space-y-3 shadow-xl">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#142842] border border-[#1d3d63] flex items-center justify-center text-3xl">
+            🎁
+          </div>
+          <h3 className="text-base sm:text-lg font-black text-white">
+            {promoList.length === 0
+              ? "No Promotions Published Yet"
+              : "No Offers in This Category"}
+          </h3>
+          <p className="text-xs text-gray-400 max-w-md mx-auto">
+            {promoList.length === 0
+              ? "Exciting new deposit matches, free spins, and VIP cashback offers configured by management will be available here soon."
+              : "Try switching to another category tab to view active bonus offers."}
           </p>
-          <button
-            type="button"
-            onClick={() => setActiveTab("all")}
-            className="text-xs text-[#3888e9] font-bold hover:underline"
-          >
-            Show all available promotions
-          </button>
+          {promoList.length > 0 && activeTab !== "all" && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("all")}
+              className="mt-2 px-4 py-2 rounded-xl bg-[#3888e9] hover:bg-[#2b75ce] text-white text-xs font-bold transition-all shadow"
+            >
+              Show All Available Offers
+            </button>
+          )}
         </div>
       )}
 

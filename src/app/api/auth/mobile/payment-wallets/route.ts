@@ -1,15 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getScopedDepositWalletsForUser } from "@/lib/depositWallets";
+import jwt from "jsonwebtoken";
+
+export const dynamic = "force-dynamic";
+
+const JWT_SECRET = process.env.AUTH_SECRET || "rk444_secret_key_t999_app";
 
 export async function GET(req: NextRequest) {
   try {
-    const paymentWallets = await db.paymentWallet.findMany();
-    const depositWallets = await db.depositWallet.findMany({
-      where: { isActive: true }
-    });
+    let userId: string | null = null;
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.slice(7).trim();
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { sub?: string };
+        if (decoded?.sub) {
+          userId = decoded.sub;
+        }
+      } catch {
+        // Ignore invalid token and fall back to default platform wallets
+      }
+    }
 
-    const activeMethods = depositWallets.map(dw => {
-      const pw = paymentWallets.find(p => p.id === dw.paymentWalletId);
+    const paymentWallets = await db.paymentWallet.findMany();
+    let depositWallets;
+
+    if (userId) {
+      const scoped = await getScopedDepositWalletsForUser(userId);
+      depositWallets = scoped.depositWallets;
+    } else {
+      depositWallets = await db.depositWallet.findMany({
+        where: { subAdminId: null, isActive: true },
+      });
+    }
+
+    const activeMethods = depositWallets.map((dw) => {
+      const pw = paymentWallets.find((p) => p.id === dw.paymentWalletId);
       return {
         id: dw.id,
         name: pw?.walletName || "Payment Method",
@@ -25,7 +52,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      methods: activeMethods
+      methods: activeMethods,
     });
   } catch (error: any) {
     console.error("Mobile GetPaymentMethods Error:", error);

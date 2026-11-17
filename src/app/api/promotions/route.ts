@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { findCurrentUser } from "@/data/user";
 import { db } from "@/lib/db";
-import { promotions } from "../../../../data/promotions";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +13,22 @@ export async function GET() {
     const signinBonusPercent = bonusSettings?.signinBonus ?? 10;
     const referralBonusPercent = bonusSettings?.referralBonus ?? 15;
 
+    // Check lucky wheel setting & user's daily spins
+    const wheelSetting = await db.luckyWheelSetting.findFirst().catch(() => null);
+    const freeSpinsPerDay = wheelSetting?.freeSpinsPerDay ?? 1;
+    const isWheelActive = wheelSetting?.isActive !== false;
+
+    // ── GUEST USER ────────────────────────────────────────────────────────
     if (!sessionUser) {
-      // Guest state
-      const mappedPromos = promotions.map((p) => {
+      // Only return active promotions where targetType is ALL (Admin configured)
+      const dbPromos = await db.promotion
+        .findMany({
+          where: { isActive: true, targetType: "ALL" },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+        })
+        .catch(() => []);
+
+      const mappedPromos = dbPromos.map((p: any) => {
         let userStatus: "GUEST" | "ELIGIBLE" | "AVAILABLE" | "CLAIMED" = "GUEST";
         let statusBadge = "Login to Claim";
         let statusBadgeColor = "bg-blue-500/20 text-blue-300 border border-blue-500/40";
@@ -44,7 +56,17 @@ export async function GET() {
         }
 
         return {
-          ...p,
+          id: p.id,
+          title: p.title,
+          context: p.context,
+          category: p.category,
+          badge: p.badge,
+          badgeColor: p.badgeColor,
+          turnover: p.turnover,
+          minDeposit: p.minDeposit,
+          description: p.description,
+          content: p.content,
+          image: p.image,
           userStatus,
           statusBadge,
           statusBadgeColor,
@@ -70,12 +92,18 @@ export async function GET() {
           signinBonusPercent,
           referralBonusPercent,
         },
+        luckyWheel: {
+          isActive: isWheelActive,
+          canSpin: false,
+          remainingSpins: 0,
+          requiresLogin: true,
+        },
         promotions: mappedPromos,
       });
     }
 
-    // Authenticated user: fetch real wallet, approved deposits, referrals, betting volume
-    const [dbUser, approvedDeposits, referredCount] = await Promise.all([
+    // ── AUTHENTICATED USER ─────────────────────────────────────────────────
+    const [dbUser, approvedDeposits, referredCount, todaySpins] = await Promise.all([
       db.user.findUnique({
         where: { id: sessionUser.id },
         include: {
@@ -99,6 +127,15 @@ export async function GET() {
       db.user.count({
         where: { invitedById: sessionUser.id },
       }),
+      db.luckyWheelSpin.count({
+        where: {
+          userId: sessionUser.id,
+          prizeType: { not: "RESPIN" },
+          createdAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+        },
+      }).catch(() => 0),
     ]);
 
     const depositCount = approvedDeposits.length;
@@ -106,9 +143,11 @@ export async function GET() {
     const totalBonusReceived = approvedDeposits.reduce((acc, d) => acc + Number(d.bonus || 0), 0);
     const walletBalance = Number(dbUser?.wallet?.balance || 0);
     const totalWagered = Number(dbUser?.bettingRecord?.totalBet || 0);
-
-    // Eligible for first deposit if 0 approved deposits, or wallet.signinBonus is true
     const isFirstDepositEligible = Boolean(dbUser?.wallet?.signinBonus || depositCount === 0);
+
+    // Calculate remaining daily lucky spins
+    const remainingSpins = Math.max(0, freeSpinsPerDay - todaySpins);
+    const canSpinWheel = isWheelActive && remainingSpins > 0;
 
     // Determine user's VIP tier & cashback
     let vipTierName = "Member";
@@ -130,15 +169,42 @@ export async function GET() {
       vipCashbackRate = "2%";
     }
 
+    // Fetch promotions from database strictly:
+    // User sees: targetType === "ALL" OR targetUserIds contains sessionUser.id OR dbUser.playerId!
+    const dbPromos = await db.promotion
+      .findMany({
+        where: {
+          isActive: true,
+          OR: [
+            { targetType: "ALL" },
+            { targetUserIds: { has: sessionUser.id } },
+            ...(dbUser?.playerId ? [{ targetUserIds: { has: dbUser.playerId } }] : []),
+          ],
+        },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      })
+      .catch(() => []);
+
     // Map each promotion with the user's real eligibility and action URL
-    const mappedPromos = promotions.map((p) => {
+    const mappedPromos = dbPromos.map((p: any) => {
+      const isTargetedToUser =
+        p.targetType === "SPECIFIC" &&
+        (p.targetUserIds?.includes(sessionUser.id) ||
+          p.targetUserIds?.includes(dbUser?.playerId));
+
       let userStatus: "GUEST" | "ELIGIBLE" | "AVAILABLE" | "CLAIMED" = "AVAILABLE";
-      let statusBadge = "Active Offer";
-      let statusBadgeColor = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+      let statusBadge = isTargetedToUser ? "Exclusive for You 🎯" : "Active Offer";
+      let statusBadgeColor = isTargetedToUser
+        ? "bg-purple-500/30 text-purple-200 border border-purple-500/50"
+        : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
       let actionUrl = "/deposit";
       let actionLabel = "Claim Bonus";
 
-      if (p.category === "welcome") {
+      if (isTargetedToUser) {
+        userStatus = "ELIGIBLE";
+        actionUrl = "/deposit";
+        actionLabel = "Claim VIP Offer 🎁";
+      } else if (p.category === "welcome") {
         if (isFirstDepositEligible) {
           userStatus = "ELIGIBLE";
           statusBadge = "Ready to Claim 🎁";
@@ -170,12 +236,6 @@ export async function GET() {
         statusBadgeColor = "bg-purple-500/20 text-purple-300 border border-purple-500/40";
         actionUrl = "/invite-friends";
         actionLabel = "Invite Friends & Earn";
-      } else if (p.category === "slots") {
-        userStatus = "AVAILABLE";
-        statusBadge = "All Slots Valid 🎰";
-        statusBadgeColor = "bg-amber-500/20 text-amber-300 border border-amber-500/40";
-        actionUrl = "/deposit";
-        actionLabel = "Deposit for Slots";
       } else if (p.category === "sports") {
         userStatus = "AVAILABLE";
         statusBadge = "Cricket & Football 🏏";
@@ -191,12 +251,23 @@ export async function GET() {
       }
 
       return {
-        ...p,
+        id: p.id,
+        title: p.title,
+        context: p.context,
+        category: p.category,
+        badge: p.badge,
+        badgeColor: p.badgeColor,
+        turnover: p.turnover,
+        minDeposit: p.minDeposit,
+        description: p.description,
+        content: p.content,
+        image: p.image,
         userStatus,
         statusBadge,
         statusBadgeColor,
         actionUrl,
         actionLabel,
+        isTargetedToUser,
       };
     });
 
@@ -223,6 +294,13 @@ export async function GET() {
         signinBonusPercent,
         referralBonusPercent,
       },
+      luckyWheel: {
+        isActive: isWheelActive,
+        canSpin: canSpinWheel,
+        remainingSpins,
+        freeSpinsPerDay,
+        todaySpins,
+      },
       promotions: mappedPromos,
     });
   } catch (error) {
@@ -233,4 +311,3 @@ export async function GET() {
     );
   }
 }
-

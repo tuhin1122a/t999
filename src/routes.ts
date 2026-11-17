@@ -27,6 +27,8 @@ export const publicRoutes = [
   "/api/game/32328e87f8592ed205bbaa065dbacce4",
   "/live-casino",
   "/promotion",
+  "/api/promotions",
+  "/api/lucky-wheel",
   "/hot",
   "/api/durantopay/deposit",
   "/api/durantopay/withdraw",
