@@ -4,12 +4,12 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export const DEFAULT_APP_VERSION_CONFIG = {
-  latestVersion: "1.0.0",
-  versionCode: 1,
+  latestVersion: "1.0.1",
+  versionCode: 2,
   minVersion: "1.0.0",
   forceUpdate: false,
   downloadUrl: "https://rk444.site/download/rk444.apk",
-  releaseNotes: "• 24H Lucky Wheel with real cash drops\n• Improved deposit & withdrawal speeds\n• Bug fixes and UI enhancements",
+  releaseNotes: "• New animated RK444 startup screen\n• Real-time offline connection guard\n• Enhanced performance and stability",
 };
 
 export async function GET() {
