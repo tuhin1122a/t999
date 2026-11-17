@@ -8,7 +8,7 @@ export const DEFAULT_APP_VERSION_CONFIG = {
   versionCode: 1,
   minVersion: "1.0.0",
   forceUpdate: false,
-  downloadUrl: "https://rk444.site/app.apk",
+  downloadUrl: "https://rk444.site/download/rk444.apk",
   releaseNotes: "• 24H Lucky Wheel with real cash drops\n• Improved deposit & withdrawal speeds\n• Bug fixes and UI enhancements",
 };
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       versionCode: Number(versionCode) || 1,
       minVersion: minVersion || "1.0.0",
       forceUpdate: Boolean(forceUpdate),
-      downloadUrl: downloadUrl || "https://rk444.site/app.apk",
+      downloadUrl: downloadUrl || "https://rk444.site/download/rk444.apk",
       releaseNotes: releaseNotes || "",
     };
 

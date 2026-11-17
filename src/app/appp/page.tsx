@@ -110,9 +110,21 @@ const AppDownloadPage = () => {
 
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="space-y-4 flex-1 text-center md:text-left">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-wider">
-                  <HiSparkles className="animate-pulse" />
-                  <span>OFFICIAL RK444 MOBILE APP v4.2</span>
+                {/* App Icon + Badge */}
+                <div className="flex items-center justify-center md:justify-start gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/icon.png"
+                    alt="RK444 App Icon"
+                    className="w-14 h-14 rounded-2xl border-2 border-yellow-500/60 shadow-xl shadow-yellow-500/20 object-cover"
+                  />
+                  <div className="text-left">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-wider">
+                      <HiSparkles className="animate-pulse" />
+                      <span>OFFICIAL RK444 APP v1.0.0</span>
+                    </div>
+                    <div className="text-xs text-gray-300 font-bold mt-0.5">Android APK & PWA · 100% Secure</div>
+                  </div>
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight">
@@ -121,25 +133,20 @@ const AppDownloadPage = () => {
                 </h1>
 
                 <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-xl">
-                  অ্যান্ড্রয়েড এবং আইওএস ডিভাইসের জন্য বিশেষভাবে অপ্টিমাইজড। দ্রুততর গেমপ্লে, মাত্র 1x টার্নওভার বোনাস এবং তাৎক্ষণিক বিকাশ/নগদ পেমেন্টের অভিজ্ঞতা নিন।
+                  অ্যান্ড্রয়েড ডিভাইসের জন্য অফিশিয়াল রিলিজ APK। দ্রুততর গেমপ্লে, মাত্র 1x টার্নওভার বোনাস, ২৪ ঘণ্টা পর পর ফ্রি লাকি হুইল স্পিন এবং তাৎক্ষণিক বিকাশ/নগদ ডিপোজিট-উইথড্র সুবিধা।
                 </p>
 
                 {/* Primary Install CTA Buttons */}
                 <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab("android");
-                      handleInstallApp();
-                    }}
+                  <a
+                    href="/download/rk444.apk"
+                    download="rk444.apk"
                     className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2.5 active:scale-95 transition-all cursor-pointer"
                   >
-                    <FaAndroid className="text-lg" />
-                    <span>
-                      {isInstalled ? "App Installed ✓" : "Install for Android"}
-                    </span>
-                    <FaDownload className="text-xs opacity-80" />
-                  </button>
+                    <FaAndroid className="text-xl" />
+                    <span>Download Android APK</span>
+                    <FaDownload className="text-xs opacity-90" />
+                  </a>
 
                   <button
                     type="button"

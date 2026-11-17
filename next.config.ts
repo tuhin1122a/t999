@@ -51,6 +51,16 @@ const nextConfig: NextConfig = {
         destination: "/games",
         permanent: true,
       },
+      {
+        source: "/rk444.apk",
+        destination: "/download/rk444.apk",
+        permanent: true,
+      },
+      {
+        source: "/app.apk",
+        destination: "/download/rk444.apk",
+        permanent: true,
+      },
     ];
   },
 };
