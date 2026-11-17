@@ -38,6 +38,7 @@ export default auth(async (req) => {
     nextUrl.pathname.startsWith("/promotion") ||
     nextUrl.pathname.startsWith("/api/promotions") ||
     nextUrl.pathname.startsWith("/api/lucky-wheel") ||
+    nextUrl.pathname.startsWith("/api/app-version") ||
     nextUrl.pathname.startsWith("/api/auth") ||
     nextUrl.pathname.startsWith("/api/games/list") ||
     nextUrl.pathname.startsWith("/api/softapi/games") ||
