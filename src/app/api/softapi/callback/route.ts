@@ -1,5 +1,7 @@
+
 // src/app/api/softapi/callback/route.ts
 // SoftAPI Callback Webhook Receiver (accepts both plain JSON and AES-256-ECB encrypted payload)
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
@@ -166,21 +168,26 @@ export async function POST(request: NextRequest) {
       )
     );
 
-    const orConditions: any[] = [
-      ...phoneCandidates.map((p) => ({ phone: p })),
+    const indexedOrConditions: Prisma.UserWhereInput[] = [
+      { phone: { in: phoneCandidates } },
       { id: member_account },
       { playerId: member_account },
       { gameXAPlayerId: member_account },
     ];
 
-    if (last10Digits && last10Digits.length >= 8) {
-      orConditions.push({ phone: { endsWith: last10Digits } });
-    }
-
-    const user = await prisma.user.findFirst({
-      where: { OR: orConditions },
+    // Fast path: indexed lookup only (uses B-Tree unique indexes on phone, id, playerId, gameXAPlayerId)
+    let user = await prisma.user.findFirst({
+      where: { OR: indexedOrConditions },
       include: { wallet: true, bettingRecord: true },
     });
+
+    // Fallback: suffix match only if exact indexed lookup returned no row
+    if (!user && last10Digits && last10Digits.length >= 8) {
+      user = await prisma.user.findFirst({
+        where: { phone: { endsWith: last10Digits } },
+        include: { wallet: true, bettingRecord: true },
+      });
+    }
 
     if (!user || !user.wallet) {
       console.error("[SoftAPI Callback] User not found for member_account:", member_account);
@@ -257,66 +264,115 @@ export async function POST(request: NextRequest) {
     const uniqueSerial =
       serial_number || `${user.id}_${game_uid || "game"}_${Date.now()}`;
 
-    await prisma.$transaction(async (tx) => {
-      await tx.wallet.update({
-        where: { id: user.wallet!.id },
-        data: {
-          balance: new_balance,
-          turnOver: new_turnover,
-        },
-      });
+    let settledBalance = new_balance;
 
-      await tx.bettingRecord.upsert({
-        where: { userId: user.id },
-        create: {
-          userId: user.id,
-          totalBet: bet_amount,
-          totalWin: win_amount,
-        },
-        update: {
-          totalBet: { increment: bet_amount },
-          totalWin: { increment: win_amount },
-        },
-      });
+    try {
+      settledBalance = await prisma.$transaction(
+        async (tx) => {
+          // 1. Acquire fresh wallet state inside transaction to prevent stale-read race conditions
+          const freshWallet = await tx.wallet.findUnique({
+            where: { id: user.wallet!.id },
+          });
+          const liveBalance = freshWallet ? Number(freshWallet.balance) : current_balance;
+          const liveTurnover = freshWallet ? Number(freshWallet.turnOver || 0) : current_turnover;
 
-      await tx.betHistory.upsert({
-        where: { serialNumber: uniqueSerial },
-        create: {
-          serialNumber: uniqueSerial,
-          userId: user.id,
-          memberAccount: member_account,
-          gameUid: game_uid || "unknown",
-          gameName: resolvedGameName,
-          provider: resolvedProvider,
-          brandId: resolvedBrandId,
-          category: resolvedCategory,
-          gameRound: game_round || null,
-          betAmount: bet_amount,
-          winAmount: win_amount,
-          creditAmount: new_balance,
-          status: roundStatus,
-          freeSpinBonus: free_spin_bonus,
+          const effectiveNewBalance =
+            credit_amount !== null && credit_amount >= 0
+              ? credit_amount
+              : Math.max(0, Number((liveBalance - bet_amount + win_amount).toFixed(2)));
+
+          const effectiveDeductedTurnover =
+            bet_amount > 0
+              ? Math.max(0, Number((liveTurnover - bet_amount).toFixed(2)))
+              : liveTurnover;
+          const effectiveNewTurnover =
+            effectiveNewBalance < 1 ? 0 : effectiveDeductedTurnover;
+
+          // 2. Insert BetHistory FIRST — unique index on serialNumber guarantees idempotency
+          // If a duplicate webhook arrives concurrently, P2002 aborts before wallet/bettingRecord are touched
+          await tx.betHistory.create({
+            data: {
+              serialNumber: uniqueSerial,
+              userId: user.id,
+              memberAccount: member_account,
+              gameUid: game_uid || "unknown",
+              gameName: resolvedGameName,
+              provider: resolvedProvider,
+              brandId: resolvedBrandId,
+              category: resolvedCategory,
+              gameRound: game_round || null,
+              betAmount: bet_amount,
+              winAmount: win_amount,
+              creditAmount: effectiveNewBalance,
+              status: roundStatus,
+              freeSpinBonus: free_spin_bonus,
+            },
+          });
+
+          // 3. Update wallet balance & turnover atomically
+          await tx.wallet.update({
+            where: { id: user.wallet!.id },
+            data: {
+              balance: effectiveNewBalance,
+              turnOver: effectiveNewTurnover,
+            },
+          });
+
+          // 4. Increment player's cumulative betting statistics atomically
+          await tx.bettingRecord.upsert({
+            where: { userId: user.id },
+            create: {
+              userId: user.id,
+              totalBet: bet_amount,
+              totalWin: win_amount,
+            },
+            update: {
+              totalBet: { increment: bet_amount },
+              totalWin: { increment: win_amount },
+            },
+          });
+
+          return effectiveNewBalance;
         },
-        update: {
-          betAmount: bet_amount,
-          winAmount: win_amount,
-          creditAmount: new_balance,
-          status: roundStatus,
-        },
-      });
-    });
+        {
+          maxWait: 5000,
+          timeout: 10000,
+        }
+      );
+    } catch (txErr: any) {
+      // Concurrent duplicate callback hit unique constraint on BetHistory.serialNumber
+      if (
+        txErr instanceof Prisma.PrismaClientKnownRequestError &&
+        txErr.code === "P2002"
+      ) {
+        if (serial_number) rememberSerial(serial_number);
+        const existing = await prisma.betHistory
+          .findUnique({ where: { serialNumber: uniqueSerial } })
+          .catch(() => null);
+        return NextResponse.json(
+          {
+            code: 0,
+            msg: "OK",
+            credit_amount: existing ? Number(existing.creditAmount) : settledBalance,
+            timestamp: Math.round(Date.now()),
+          },
+          { status: 200 }
+        );
+      }
+      throw txErr;
+    }
 
     if (serial_number) {
       rememberSerial(serial_number);
     }
 
-    console.log("[SoftAPI Callback] Balance & betting record updated successfully. New balance:", new_balance);
+    console.log("[SoftAPI Callback] Balance & betting record updated successfully. New balance:", settledBalance);
 
     return NextResponse.json(
       {
         code: 0,
         msg: "OK",
-        credit_amount: new_balance,
+        credit_amount: settledBalance,
         timestamp: Math.round(Date.now()),
       },
       { status: 200 }

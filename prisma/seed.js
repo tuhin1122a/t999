@@ -31,10 +31,13 @@ async function main() {
         minWithdraw: 200,
         dpTurnover: 1.0,
         sliderImages: [
-          "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80",
-          "https://images.unsplash.com/photo-1606167668584-78701c57f13d?w=1200&auto=format&fit=crop&q=80"
+          "/slider/slider-1.jpg",
+          "/slider/slider-2.png",
+          "/slider/slider-3.jpg",
+          "/slider/slider-4.png",
+          "/slider/slider-5.png"
         ],
-        promotionsLogo: "https://images.unsplash.com/photo-1540747737956-37872404459a?w=400&auto=format&fit=crop&q=80"
+        promotionsLogo: ""
       },
     });
   } else {

@@ -15,6 +15,20 @@ interface StoredActiveSession {
 }
 
 const KEY_PREFIX = "active_session:";
+const CACHE_TTL_MS = 4000;
+
+const globalSessionCache = globalThis as unknown as {
+  __activeSessionCache?: Map<
+    string,
+    { data: StoredActiveSession | null; cachedAt: number }
+  >;
+};
+
+const sessionCache =
+  globalSessionCache.__activeSessionCache ??
+  new Map<string, { data: StoredActiveSession | null; cachedAt: number }>();
+
+globalSessionCache.__activeSessionCache = sessionCache;
 
 function getKey(userId: string): string {
   return `${KEY_PREFIX}${userId}`;
@@ -23,14 +37,23 @@ function getKey(userId: string): string {
 export async function getActiveUserSession(
   userId: string
 ): Promise<StoredActiveSession | null> {
+  const now = Date.now();
+  const cached = sessionCache.get(userId);
+  if (cached && now - cached.cachedAt < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
   try {
     const row = await db.siteConfig.findUnique({
       where: { key: getKey(userId) },
     });
-    if (!row?.value) return null;
-    return JSON.parse(row.value) as StoredActiveSession;
+    const parsed = row?.value
+      ? (JSON.parse(row.value) as StoredActiveSession)
+      : null;
+    sessionCache.set(userId, { data: parsed, cachedAt: now });
+    return parsed;
   } catch {
-    return null;
+    return cached?.data ?? null;
   }
 }
 
@@ -45,6 +68,8 @@ export async function registerActiveUserSession(
     platform,
     updatedAt: Date.now(),
   };
+
+  sessionCache.set(userId, { data: payload, cachedAt: Date.now() });
 
   try {
     await db.siteConfig.upsert({
@@ -66,7 +91,12 @@ export async function registerActiveGameSession(
 ): Promise<{ allowed: boolean; gameSessionId: string; reason?: string }> {
   const existing = await getActiveUserSession(userId);
 
-  if (existing && sessionId && existing.sessionId && existing.sessionId !== sessionId) {
+  if (
+    existing &&
+    sessionId &&
+    existing.sessionId &&
+    existing.sessionId !== sessionId
+  ) {
     return {
       allowed: false,
       gameSessionId: "",
@@ -81,6 +111,8 @@ export async function registerActiveGameSession(
     platform: existing?.platform || platform,
     updatedAt: Date.now(),
   };
+
+  sessionCache.set(userId, { data: nextPayload, cachedAt: Date.now() });
 
   try {
     await db.siteConfig.upsert({
@@ -100,6 +132,10 @@ export async function verifyActiveUserSession(
   sessionId?: string | null,
   gameSessionId?: string | null
 ): Promise<{ valid: boolean; reason?: string }> {
+  if (!sessionId && !gameSessionId) {
+    return { valid: true };
+  }
+
   const existing = await getActiveUserSession(userId);
   if (!existing) {
     return { valid: true };

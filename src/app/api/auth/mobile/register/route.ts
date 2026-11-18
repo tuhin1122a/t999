@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { registerActiveUserSession } from "@/lib/activeSession";
+import { createPlayer } from "@/lib/api/gamexaApi";
 import { db } from "@/lib/db";
 import { referIdGenerate } from "@/lib/helpers";
-import { createPlayer } from "@/lib/api/gamexaApi";
-import { registerActiveUserSession } from "@/lib/activeSession";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { NextRequest, NextResponse } from "next/server";
 
 const JWT_SECRET = process.env.AUTH_SECRET || "rk444_secret_key_t999_app";
 
