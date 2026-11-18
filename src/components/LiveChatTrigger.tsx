@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { openTawkChat } from "@/lib/tawk";
+import { useSession } from "next-auth/react";
 
 interface LiveChatTriggerProps {
   children: React.ReactNode;
@@ -22,25 +22,27 @@ export default function LiveChatTrigger({
   onTriggered,
 }: LiveChatTriggerProps) {
   const router = useRouter();
+  const { status, data: session } = useSession();
+  const isAuthenticated = status === "authenticated" && Boolean(session?.user);
 
   const handleClick = () => {
-    onTriggered?.();
-    const handled = openTawkChat();
-    if (!handled) {
-      router.push(fallbackHref);
+    if (!isAuthenticated) {
+      return;
     }
+    onTriggered?.();
+    router.push(fallbackHref);
   };
 
   return (
     <button
       type="button"
+      disabled={!isAuthenticated}
       onClick={handleClick}
-      className={className}
-      title={title}
+      className={`${className} ${!isAuthenticated ? "opacity-40 cursor-not-allowed" : ""}`}
+      title={!isAuthenticated ? "Please log in to use Live Support" : title}
       aria-label={ariaLabel}
     >
       {children}
     </button>
   );
 }
-

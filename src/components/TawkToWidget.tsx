@@ -9,7 +9,6 @@ import {
   DEFAULT_TAWK_WIDGET_URL,
   getTawkDirectChatUrl,
   normalizeTawkWidgetUrl,
-  openTawkChat,
 } from "@/lib/tawk";
 
 interface TawkToWidgetProps {
@@ -41,19 +40,16 @@ export default function TawkToWidget({
 }: TawkToWidgetProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
+  const isAuthenticated = status === "authenticated" && Boolean(session?.user);
   const [isChatMaximized, setIsChatMaximized] = useState(false);
 
   const pathnameRef = useRef<string | null>(pathname);
-  const showBubbleRef = useRef<boolean>(showFloatingBubble);
-  const enabledRef = useRef<boolean>(enabled);
   const sessionRef = useRef<any>(session);
   const lastAttrFingerprintRef = useRef<string>("");
 
   pathnameRef.current = pathname;
-  showBubbleRef.current = showFloatingBubble;
-  enabledRef.current = enabled;
   sessionRef.current = session;
 
   const normalized = normalizeTawkWidgetUrl(
@@ -95,15 +91,13 @@ export default function TawkToWidget({
         () => {}
       );
     } catch {
-      // ignore if widget not yet ready
+      // ignore
     }
   };
 
-  // Load Tawk.to script once when enabled
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Suppress noisy third-party [Tawk/Logger] console.error from triggering Next.js 15 Dev Overlay
     const origConsoleError = window.console.error;
     if (!(window as any).__TAWK_CONSOLE_PATCHED__) {
       (window as any).__TAWK_CONSOLE_PATCHED__ = true;
@@ -116,20 +110,23 @@ export default function TawkToWidget({
       };
     }
 
-    window.__TAWK_ENABLED__ = enabled;
-    window.__TAWK_DIRECT_URL__ = directChatUrl;
-
-    if (!enabled) {
+    // Disable chat completely when user is not logged in
+    if (!enabled || !isAuthenticated) {
+      window.__TAWK_ENABLED__ = false;
       window.__TAWK_LOADING__ = false;
       window.__TAWK_PENDING_OPEN__ = false;
       try {
         window.Tawk_API?.minimize?.();
         window.Tawk_API?.hideWidget?.();
+        setIsChatMaximized(false);
       } catch {
         // ignore
       }
       return;
     }
+
+    window.__TAWK_ENABLED__ = true;
+    window.__TAWK_DIRECT_URL__ = directChatUrl;
 
     const existingScript = document.getElementById(
       "tawk-to-embed-script"
@@ -146,44 +143,14 @@ export default function TawkToWidget({
     window.Tawk_LoadStart = new Date();
     window.__TAWK_LOADING__ = true;
 
-    window.Tawk_API.customStyle = {
-      visibility: {
-        desktop: {
-          position: "br",
-          xOffset: 20,
-          yOffset: 22,
-        },
-        mobile: {
-          position: "br",
-          xOffset: 12,
-          yOffset: 78,
-        },
-      },
-      zIndex: 1002,
-    };
-
     window.Tawk_API.onLoad = () => {
       window.__TAWK_LOADED__ = true;
       window.__TAWK_LOADING__ = false;
-
       syncUserAttributes();
-
-      // Hide default Tawk bubble because we use our custom 3D Support Icon button
       try {
         window.Tawk_API?.hideWidget?.();
       } catch {
         // ignore
-      }
-
-      if (window.__TAWK_PENDING_OPEN__) {
-        window.__TAWK_PENDING_OPEN__ = false;
-        try {
-          window.Tawk_API?.showWidget?.();
-          window.Tawk_API?.maximize?.();
-          setIsChatMaximized(true);
-        } catch {
-          // ignore
-        }
       }
     };
 
@@ -193,7 +160,6 @@ export default function TawkToWidget({
 
     window.Tawk_API.onChatMinimized = () => {
       setIsChatMaximized(false);
-      // Hide default Tawk bubble when minimized so our custom 3D icon takes over cleanly
       try {
         window.Tawk_API?.hideWidget?.();
       } catch {
@@ -218,12 +184,11 @@ export default function TawkToWidget({
     } else {
       document.head.appendChild(script);
     }
-  }, [enabled, validUrl, directChatUrl]);
+  }, [enabled, isAuthenticated, validUrl, directChatUrl]);
 
-  // Minimize Tawk chat if navigating to a hidden route
   useEffect(() => {
     if (typeof window === "undefined" || !window.__TAWK_LOADED__) return;
-    if (isHiddenRoute(pathname)) {
+    if (!isAuthenticated || isHiddenRoute(pathname)) {
       try {
         window.Tawk_API?.minimize?.();
         window.Tawk_API?.hideWidget?.();
@@ -232,28 +197,29 @@ export default function TawkToWidget({
         // ignore
       }
     }
-  }, [pathname]);
+  }, [pathname, isAuthenticated]);
 
-  // Identify player whenever session changes after Tawk.to loads
   useEffect(() => {
-    syncUserAttributes();
-  }, [session]);
-
-  const handleFloatingSupportClick = () => {
-    const opened = openTawkChat();
-    if (!opened) {
-      router.push("/support");
+    if (isAuthenticated) {
+      syncUserAttributes();
     }
-  };
+  }, [session, isAuthenticated]);
 
-  if (!enabled || !showFloatingBubble || isHiddenRoute(pathname) || isChatMaximized) {
+  // Completely disabled/hidden when user is NOT logged in
+  if (
+    !enabled ||
+    !isAuthenticated ||
+    !showFloatingBubble ||
+    isHiddenRoute(pathname) ||
+    isChatMaximized
+  ) {
     return null;
   }
 
   return (
     <button
       type="button"
-      onClick={handleFloatingSupportClick}
+      onClick={() => router.push("/support")}
       title="24/7 Live Chat Support"
       aria-label="24/7 Live Chat Support"
       className="fixed bottom-[76px] right-3.5 md:bottom-6 md:right-6 z-[1001] group flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-b from-[#0f243c] to-[#07111e] border-2 border-[#3888e9] shadow-[0_8px_28px_rgba(56,136,233,0.45)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer select-none"
