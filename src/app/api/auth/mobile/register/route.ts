@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { referIdGenerate } from "@/lib/helpers";
 import { createPlayer } from "@/lib/api/gamexaApi";
+import { registerActiveUserSession } from "@/lib/activeSession";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -165,9 +166,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const sessionId = await registerActiveUserSession(newUser.id, "app");
+
     // Generate JWT
     const token = jwt.sign(
-      { sub: newUser.id, phone: newUser.phone },
+      { sub: newUser.id, phone: newUser.phone, sid: sessionId },
       JWT_SECRET,
       { expiresIn: "30d" }
     );

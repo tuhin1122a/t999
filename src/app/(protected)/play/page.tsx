@@ -8,6 +8,7 @@ import {
 } from "@/lib/features/gameService";
 import Image from "next/image";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -27,19 +28,33 @@ import { RiGamepadLine, RiWallet3Line } from "react-icons/ri";
 import { FaTools, FaGamepad, FaHeadset } from "react-icons/fa";
 import { HiWrenchScrewdriver } from "react-icons/hi2";
 
-// ── Live Wallet Balance Fetcher ──────────────────────────────────────────────
-async function fetchLatestBalance(): Promise<number | null> {
+// ── Live Wallet Balance & Active Session Fetcher ─────────────────────────────
+async function fetchLatestBalance(
+  gameSessionId?: string | null
+): Promise<{ balance: number | null; kickedOut?: boolean }> {
   try {
-    const res = await fetch("/api/wallet", { cache: "no-store" });
+    const query = gameSessionId
+      ? `?gameSessionId=${encodeURIComponent(gameSessionId)}`
+      : "";
+    const res = await fetch(`/api/wallet${query}`, { cache: "no-store" });
+    if (res.status === 401) {
+      const errData = await res.json().catch(() => ({}));
+      if (
+        errData?.code === "SESSION_REPLACED" ||
+        errData?.code === "GAME_OPENED_ELSEWHERE"
+      ) {
+        return { balance: null, kickedOut: true };
+      }
+    }
     if (res.ok) {
       const data = await res.json();
       if (data?.payload?.balance !== undefined) {
-        return Number(data.payload.balance);
+        return { balance: Number(data.payload.balance) };
       }
     }
-    return null;
+    return { balance: null };
   } catch {
-    return null;
+    return { balance: null };
   }
 }
 
@@ -63,6 +78,23 @@ const Play = () => {
   const [displayBalance, setDisplayBalance] = useState<string | null>(null);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const gameSessionIdRef = useRef<string | null>(null);
+
+  const handleKickOut = useCallback(async () => {
+    setIframe("");
+    try {
+      if (typeof document !== "undefined" && document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch {
+      // ignore
+    }
+    toast.error("অন্য ডিভাইসে লগইন বা গেম চালু হওয়ায় গেম থেকে বের করে দেওয়া হয়েছে।", {
+      id: "session-kicked",
+      duration: 5000,
+    });
+    await signOut({ callbackUrl: "/login" });
+  }, []);
 
   // Initial balance
   const walletBalance = Number(
@@ -77,25 +109,39 @@ const Play = () => {
   const handleRefreshBalance = useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
-    const newBal = await fetchLatestBalance();
+    const { balance: newBal, kickedOut } = await fetchLatestBalance(
+      gameSessionIdRef.current
+    );
+    if (kickedOut) {
+      setIsRefreshing(false);
+      await handleKickOut();
+      return;
+    }
     if (newBal !== null) {
       setDisplayBalance(newBal.toFixed(2));
       toast.success(`৳ ${newBal.toFixed(2)}`, { id: "bal-sync" });
     }
     setIsRefreshing(false);
-  }, [isRefreshing]);
+  }, [isRefreshing, handleKickOut]);
 
-  // ── Live Balance Polling (Every 15s) ───────────────────────────────────────
+  // ── Live Balance & Single-Device Session Polling (Every 6s) ───────────────
   useEffect(() => {
     if (!iframe) return;
     const interval = setInterval(async () => {
-      const newBal = await fetchLatestBalance();
+      const { balance: newBal, kickedOut } = await fetchLatestBalance(
+        gameSessionIdRef.current
+      );
+      if (kickedOut) {
+        clearInterval(interval);
+        await handleKickOut();
+        return;
+      }
       if (newBal !== null) {
         setDisplayBalance(newBal.toFixed(2));
       }
-    }, 15_000);
+    }, 6_000);
     return () => clearInterval(interval);
-  }, [iframe]);
+  }, [iframe, handleKickOut]);
 
   // ── Fullscreen Toggle ────────────────────────────────────────────────────────
   const toggleFullscreen = useCallback(async () => {
@@ -225,9 +271,14 @@ const Play = () => {
 
         if (!url) throw new Error("Game URL could not be generated");
 
+        gameSessionIdRef.current = res?.content?.game?.sessionId || null;
         setIframe(url);
       } catch (err: any) {
         console.error("Game launch error:", err);
+        if (err?.message === "SESSION_REPLACED") {
+          await handleKickOut();
+          return;
+        }
         setError(true);
         setErrorMessage("Game Under Maintenance");
         setIsLoading(false);

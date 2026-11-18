@@ -37,6 +37,9 @@ export const { signIn, signOut, auth, handlers } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
+        if ((user as any).sessionId) {
+          token.sessionId = (user as any).sessionId;
+        }
       }
       return token;
     },
@@ -79,6 +82,7 @@ export const { signIn, signOut, auth, handlers } = NextAuth({
             session.user = {
               ...userWithoutPassword,
               id: user.id,
+              sessionId: token.sessionId || null,
               email: user.email || "",
               emailVerified: new Date(),
               isBanned: user.isBanned,

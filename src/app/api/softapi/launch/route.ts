@@ -2,6 +2,7 @@
 // SoftAPI Game Launch Endpoint — AES-256-ECB (PKCS7 padding, Base64 output)
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { registerActiveGameSession } from "@/lib/activeSession";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
@@ -49,20 +50,26 @@ export async function POST(request: NextRequest) {
     // 1. Authenticate via NextAuth session or Mobile Bearer JWT
     let userId: string | null = null;
     let sessionPhone: string | null = null;
+    let callerSessionId: string | null = null;
+    let callerPlatform: "web" | "app" = "web";
 
-    const session = (await auth()) as { user?: { id?: string; phone?: string } } | null;
+    const session = (await auth()) as { user?: { id?: string; phone?: string; sessionId?: string } } | null;
     if (session?.user?.id) {
       userId = session.user.id;
       sessionPhone = session.user.phone || null;
+      callerSessionId = session.user.sessionId || null;
+      callerPlatform = "web";
     } else {
       const authHeader = request.headers.get("authorization");
       if (authHeader?.startsWith("Bearer ")) {
         const token = authHeader.slice(7);
         try {
-          const decoded = jwt.verify(token, JWT_SECRET) as { sub?: string; phone?: string };
+          const decoded = jwt.verify(token, JWT_SECRET) as { sub?: string; phone?: string; sid?: string };
           if (decoded?.sub) {
             userId = decoded.sub;
             sessionPhone = decoded.phone || null;
+            callerSessionId = decoded.sid || null;
+            callerPlatform = "app";
           }
         } catch {
           // Invalid bearer token
@@ -72,6 +79,23 @@ export async function POST(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 2. Verify active session & acquire exclusive game session lock
+    const gameLock = await registerActiveGameSession(
+      userId,
+      callerSessionId,
+      callerPlatform
+    );
+    if (!gameLock.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "SESSION_REPLACED",
+          error: "Your account was logged in on another device. Please log in again.",
+        },
+        { status: 401 }
+      );
     }
 
     let body: { gameId?: string; game_uid?: string; gameCode?: string; language?: string; currency_code?: string };
@@ -299,7 +323,7 @@ export async function POST(request: NextRequest) {
         success: true,
         game_launch_url: launchUrl,
         data: { url: launchUrl },
-        session_id: Date.now().toString(),
+        session_id: gameLock.gameSessionId,
         raw: softData,
       },
       { status: 200 }

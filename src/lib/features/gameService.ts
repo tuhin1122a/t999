@@ -64,6 +64,10 @@ export const launchSoftAPIGameService = async (game_id: string) => {
         nestedRaw?.message ||
         errorText;
 
+      if (res.status === 401 || parsedError?.code === "SESSION_REPLACED") {
+        throw new Error("SESSION_REPLACED");
+      }
+
       console.error(
         "Launch SoftAPI game HTTP error:",
         res.status,
@@ -80,6 +84,9 @@ export const launchSoftAPIGameService = async (game_id: string) => {
     return data;
   } catch (error: any) {
     console.error("Launch SoftAPI game error:", error);
+    if (error?.message === "SESSION_REPLACED") {
+      throw error;
+    }
     throw new Error(
       error?.message?.includes("maintenance") || error?.message?.includes("under maintenance")
         ? error.message
@@ -131,6 +138,9 @@ export const launchGameFromAnyAPI = async (
     throw new Error(launchError);
   } catch (error: any) {
     console.error("Error launching game:", error);
+    if (error?.message === "SESSION_REPLACED") {
+      throw error;
+    }
     throw new Error(
       error?.message?.includes("maintenance") || error?.message?.includes("under maintenance")
         ? error.message

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { registerActiveUserSession } from "@/lib/activeSession";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -46,9 +47,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate JWT token
+    // Register active session (invalidates any previous Web or App session)
+    const sessionId = await registerActiveUserSession(user.id, "app");
+
+    // Generate JWT token with session ID (sid)
     const token = jwt.sign(
-      { sub: user.id, phone: user.phone },
+      { sub: user.id, phone: user.phone, sid: sessionId },
       JWT_SECRET,
       { expiresIn: "30d" }
     );

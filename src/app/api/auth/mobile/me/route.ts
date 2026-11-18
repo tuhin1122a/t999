@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { verifyActiveUserSession } from "@/lib/activeSession";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -7,13 +8,19 @@ export const dynamic = "force-dynamic";
 
 const JWT_SECRET = process.env.AUTH_SECRET || "rk444_secret_key_t999_app";
 
-function getUserIdFromRequest(req: NextRequest): string | null {
+function getDecodedAuthFromRequest(
+  req: NextRequest
+): { userId: string; sid?: string } | null {
   const authHeader = req.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { sub?: string };
-    return decoded?.sub || null;
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      sub?: string;
+      sid?: string;
+    };
+    if (!decoded?.sub) return null;
+    return { userId: decoded.sub, sid: decoded.sid };
   } catch {
     return null;
   }
@@ -21,10 +28,29 @@ function getUserIdFromRequest(req: NextRequest): string | null {
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(req);
-    if (!userId) {
+    const authInfo = getDecodedAuthFromRequest(req);
+    if (!authInfo?.userId) {
       return NextResponse.json(
         { success: false, error: "Authorization header missing or invalid" },
+        { status: 401 }
+      );
+    }
+
+    const { userId, sid } = authInfo;
+    const gameSessionId = req.nextUrl.searchParams.get("gameSessionId") || null;
+
+    const sessionCheck = await verifyActiveUserSession(
+      userId,
+      sid,
+      gameSessionId
+    );
+    if (!sessionCheck.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: sessionCheck.reason || "SESSION_REPLACED",
+          error: "Your account was logged in on another device.",
+        },
         { status: 401 }
       );
     }
@@ -81,7 +107,8 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(req);
+    const authInfo = getDecodedAuthFromRequest(req);
+    const userId = authInfo?.userId;
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },

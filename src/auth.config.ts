@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { db } from "@/lib/db";
+import { registerActiveUserSession } from "@/lib/activeSession";
 import bcrypt from "bcryptjs";
 
 export default {
@@ -13,26 +14,27 @@ export default {
         password: { name: "password", type: "password" },
       },
 
-     async authorize(credentials) {
-  const userPhone = (credentials!.phone as string) || "";
-  const password = (credentials!.password as string) || "";
+      async authorize(credentials) {
+        const userPhone = (credentials!.phone as string) || "";
+        const password = (credentials!.password as string) || "";
 
-  if (!userPhone || !password) throw new Error("Invalid Credentials");
+        if (!userPhone || !password) throw new Error("Invalid Credentials");
 
-  const account = await db.user.findUnique({
-    where: { phone: userPhone },
-  });
+        const account = await db.user.findUnique({
+          where: { phone: userPhone },
+        });
 
-  if (!account) throw new Error("Account not found");
+        if (!account) throw new Error("Account not found");
 
-  if (account.isBanned) throw new Error("Your account has been banned by the administrator.");
+        if (account.isBanned) throw new Error("Your account has been banned by the administrator.");
 
-  const passwordIsMatch = await bcrypt.compare(password, account.password);
-  if (!passwordIsMatch) throw new Error("Invalid Password");
+        const passwordIsMatch = await bcrypt.compare(password, account.password);
+        if (!passwordIsMatch) throw new Error("Invalid Password");
 
-  // ✅ Cast to User type so TS এখন বুঝবে gameXAPlayerId আছে
-  return account as any;
-}
+        const sessionId = await registerActiveUserSession(account.id, "web");
+
+        return { ...account, sessionId } as any;
+      }
 
     }),
   ],
