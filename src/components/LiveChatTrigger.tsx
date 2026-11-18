@@ -3,6 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { openTawkChat } from "@/lib/tawk";
 
 interface LiveChatTriggerProps {
   children: React.ReactNode;
@@ -30,7 +31,10 @@ export default function LiveChatTrigger({
       return;
     }
     onTriggered?.();
-    router.push(fallbackHref);
+    const handled = openTawkChat();
+    if (!handled) {
+      router.push(fallbackHref);
+    }
   };
 
   return (

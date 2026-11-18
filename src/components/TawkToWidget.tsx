@@ -9,6 +9,7 @@ import {
   DEFAULT_TAWK_WIDGET_URL,
   getTawkDirectChatUrl,
   normalizeTawkWidgetUrl,
+  openTawkChat,
 } from "@/lib/tawk";
 
 interface TawkToWidgetProps {
@@ -147,6 +148,17 @@ export default function TawkToWidget({
       window.__TAWK_LOADED__ = true;
       window.__TAWK_LOADING__ = false;
       syncUserAttributes();
+      if (window.__TAWK_PENDING_OPEN__) {
+        window.__TAWK_PENDING_OPEN__ = false;
+        try {
+          window.Tawk_API?.showWidget?.();
+          window.Tawk_API?.maximize?.();
+          setIsChatMaximized(true);
+        } catch {
+          // ignore
+        }
+        return;
+      }
       try {
         window.Tawk_API?.hideWidget?.();
       } catch {
@@ -219,7 +231,11 @@ export default function TawkToWidget({
   return (
     <button
       type="button"
-      onClick={() => router.push("/support")}
+      onClick={() => {
+        if (!openTawkChat()) {
+          router.push("/support");
+        }
+      }}
       title="24/7 Live Chat Support"
       aria-label="24/7 Live Chat Support"
       className="fixed bottom-[76px] right-3.5 md:bottom-6 md:right-6 z-[1001] group flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-b from-[#0f243c] to-[#07111e] border-2 border-[#3888e9] shadow-[0_8px_28px_rgba(56,136,233,0.45)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer select-none"
