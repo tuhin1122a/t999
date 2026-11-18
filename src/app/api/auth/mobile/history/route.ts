@@ -67,16 +67,23 @@ export async function GET(req: NextRequest) {
         const pw = paymentWallets.find(
           (p) => p.id === d.wallet?.paymentWalletId
         );
+        const methodName =
+          pw?.walletName || d.wallet?.trxType || "Mobile Banking";
         return {
           id: d.id,
           type: "DEPOSIT",
           amount: Number(d.amount),
           bonus: d.bonus ? Number(d.bonus) : 0,
           status: d.status,
-          method: pw?.walletName || d.wallet?.trxType || "Mobile Banking",
-          accountNumber: d.senderNumber,
-          agentNumber: d.walletNumber,
-          trxId: d.trxID || d.trackingNumber,
+          method: methodName,
+          paymentMethod: methodName,
+          image: pw?.walletLogo || "",
+          accountNumber: d.senderNumber || "",
+          senderNumber: d.senderNumber || "",
+          agentNumber: d.walletNumber || "",
+          trackingNumber: d.trackingNumber || "",
+          trxId: d.trxID || d.trackingNumber || "",
+          trxID: d.trxID || d.trackingNumber || "",
           createdAt: d.createdAt,
         };
       });
@@ -85,14 +92,19 @@ export async function GET(req: NextRequest) {
         const pw = paymentWallets.find(
           (p) => p.id === w.card?.paymentWalletid
         );
+        const methodName = pw?.walletName || "Mobile Banking";
         return {
           id: w.id,
           type: "WITHDRAW",
           amount: Number(w.amount),
           bonus: 0,
           status: w.status,
-          method: pw?.walletName || "Mobile Banking",
+          method: methodName,
+          paymentMethod: methodName,
+          image: pw?.walletLogo || "",
           accountNumber: w.card?.walletNumber || w.card?.cardNumber || "",
+          walletNumber: w.card?.walletNumber || "",
+          cardNumber: w.card?.cardNumber || "",
           agentNumber: "",
           trxId: w.id.slice(-8).toUpperCase(),
           createdAt: w.createdAt,
