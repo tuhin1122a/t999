@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getScopedDepositWalletsForUser } from "@/lib/depositWallets";
 import { Prisma } from "@prisma/client";
 import jwt from "jsonwebtoken";
+
+export const dynamic = "force-dynamic";
 
 const JWT_SECRET = process.env.AUTH_SECRET || "rk444_secret_key_t999_app";
 
@@ -10,7 +13,7 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
-        { success: false, error: "Authorization header missing or invalid" },
+        { success: false, message: "Authorization header missing or invalid", error: "Authorization header missing or invalid" },
         { status: 401 }
       );
     }
@@ -19,9 +22,9 @@ export async function POST(req: NextRequest) {
     let decoded: any;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
-    } catch (err) {
+    } catch {
       return NextResponse.json(
-        { success: false, error: "Invalid token" },
+        { success: false, message: "Invalid token", error: "Invalid token" },
         { status: 401 }
       );
     }
@@ -32,36 +35,69 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, error: "User not found" },
+        { success: false, message: "User not found", error: "User not found" },
         { status: 404 }
       );
     }
 
     if (user.isBanned) {
       return NextResponse.json(
-        { success: false, error: "Your account has been banned by the administrator." },
+        {
+          success: false,
+          message: "Your account has been banned by the administrator.",
+          error: "Your account has been banned by the administrator.",
+        },
         { status: 403 }
       );
     }
 
-    const { amount: inputAmount, bonusFor, senderNumber, trxID, walletId, walletNumber } = await req.json();
+    const {
+      amount: inputAmount,
+      bonusFor,
+      senderNumber,
+      trxID,
+      walletId,
+      walletNumber,
+    } = await req.json();
     const amount = parseFloat(inputAmount);
 
     if (!amount || amount <= 0 || !trxID || !walletId || !walletNumber) {
       return NextResponse.json(
-        { success: false, error: "Missing required fields: amount, trxID, walletId, and walletNumber are required." },
+        {
+          success: false,
+          message: "Missing required fields: amount, trxID, walletId, and walletNumber are required.",
+          error: "Missing required fields: amount, trxID, walletId, and walletNumber are required.",
+        },
         { status: 400 }
       );
     }
 
-    // 1️⃣ Validate deposit wallet and limits
-    const wallet = await db.depositWallet.findUnique({
-      where: { id: walletId },
-    });
+    // 1️⃣ Validate deposit wallet belongs to user's allowed wallet scope and limits
+    const { depositWallets: allowedWallets } = await getScopedDepositWalletsForUser(user.id);
+    const wallet = allowedWallets.find((w) => w.id === walletId);
 
     if (!wallet) {
       return NextResponse.json(
-        { success: false, error: "Invalid payment method wallet selected." },
+        {
+          success: false,
+          message: "Invalid or unavailable payment method wallet selected.",
+          error: "Invalid or unavailable payment method wallet selected.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      Array.isArray(wallet.walletsNumber) &&
+      wallet.walletsNumber.length > 0 &&
+      !wallet.walletsNumber.includes(walletNumber)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Selected receiver number does not match this payment gateway.",
+          error: "Selected receiver number does not match this payment gateway.",
+        },
         { status: 400 }
       );
     }
@@ -71,24 +107,33 @@ export async function POST(req: NextRequest) {
 
     if (amount < minDeposit || amount > maxDeposit) {
       return NextResponse.json(
-        { success: false, error: `Deposit amount must be between ${minDeposit} BDT and ${maxDeposit} BDT.` },
+        {
+          success: false,
+          message: `Deposit amount must be between ${minDeposit} BDT and ${maxDeposit} BDT.`,
+          error: `Deposit amount must be between ${minDeposit} BDT and ${maxDeposit} BDT.`,
+        },
         { status: 400 }
       );
     }
 
     // 2️⃣ Check for duplicate Transaction ID (TrxID)
+    const cleanTrxId = String(trxID).trim();
     const existingDeposit = await db.deposit.findFirst({
-      where: { trxID },
+      where: { trxID: cleanTrxId },
     });
 
     if (existingDeposit) {
       return NextResponse.json(
-        { success: false, error: "This Transaction ID (TrxID) has already been submitted." },
+        {
+          success: false,
+          message: "This Transaction ID (TrxID) has already been submitted.",
+          error: "This Transaction ID (TrxID) has already been submitted.",
+        },
         { status: 400 }
       );
     }
 
-    // 3️⃣ Securely calculate bonus amount in backend
+    // 3️⃣ Securely calculate bonus amount in backend and verify eligibility
     let bonusAmount = 0;
     if (bonusFor && bonusFor !== "none") {
       if (bonusFor === "signinBonus") {
@@ -104,7 +149,11 @@ export async function POST(req: NextRequest) {
         const isSigninBonusActive = userWallet?.signinBonus || approvedDepositsCount === 0;
         if (!isSigninBonusActive) {
           return NextResponse.json(
-            { success: false, error: "You are not eligible for the First Deposit (Sign-in) bonus." },
+            {
+              success: false,
+              message: "You are not eligible for the First Deposit (Sign-in) bonus.",
+              error: "You are not eligible for the First Deposit (Sign-in) bonus.",
+            },
             { status: 400 }
           );
         }
@@ -113,7 +162,12 @@ export async function POST(req: NextRequest) {
       try {
         const bonusSettings = await db.bonus.findFirst();
         if (bonusSettings) {
-          const percent = bonusFor === "signinBonus" ? bonusSettings.signinBonus : bonusFor === "referralBonus" ? bonusSettings.referralBonus : 0;
+          const percent =
+            bonusFor === "signinBonus"
+              ? bonusSettings.signinBonus
+              : bonusFor === "referralBonus"
+              ? bonusSettings.referralBonus
+              : 0;
           bonusAmount = Math.round((amount * percent) / 100);
         }
       } catch (err) {
@@ -122,7 +176,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 4️⃣ Generate unique tracking number
-    const trackingNumber = "DEP" + Date.now().toString().slice(-8) + Math.floor(1000 + Math.random() * 9000);
+    const trackingNumber =
+      "DEP" + Date.now().toString().slice(-8) + Math.floor(1000 + Math.random() * 9000);
 
     // 5️⃣ Create manual deposit record in database
     const newDeposit = await db.deposit.create({
@@ -131,7 +186,7 @@ export async function POST(req: NextRequest) {
         bonus: new Prisma.Decimal(bonusAmount),
         bonusFor: bonusFor || "none",
         senderNumber: senderNumber || "",
-        trxID: trxID,
+        trxID: cleanTrxId,
         walletId: walletId,
         walletNumber: walletNumber,
         trackingNumber: trackingNumber,
@@ -146,11 +201,19 @@ export async function POST(req: NextRequest) {
       message: "Deposit submitted successfully! Waiting for Admin approval.",
       depositId: newDeposit.id,
       trackingNumber: newDeposit.trackingNumber,
+      payload: {
+        message: "Deposit submitted successfully! Waiting for Admin approval.",
+        deposit: newDeposit,
+      },
     });
   } catch (error: any) {
     console.error("Mobile Deposit Error:", error);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      {
+        success: false,
+        message: "Internal server error",
+        error: "Internal server error",
+      },
       { status: 500 }
     );
   }
