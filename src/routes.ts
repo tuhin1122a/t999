@@ -19,14 +19,12 @@ export const publicRoutes = [
   "/card-x",
   "/pocker",
   "/roulette",
-  "/favorites",
   "/table",
   "/fish",
   "/lottery",
   "/api/open-game",
   "/api/game/32328e87f8592ed205bbaa065dbacce4",
   "/live-casino",
-  "/promotion",
   "/api/promotions",
   "/api/lucky-wheel",
   "/hot",
@@ -38,17 +36,11 @@ export const publicRoutes = [
   "/api/deposit/payment/methods",
   "/api/deposit",
   "/api/withdraw",
-  "/games",
   "/sports",
   "/manual",
-  "/vip",
-  "/mission",
   "/languages",
   "/appp",
-  "/chat",
-  "/support",
   "/pvp",
-
 ];
 
 /**

@@ -35,7 +35,6 @@ export default auth(async (req) => {
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   const isPublicRoute =
     publicRoutes.includes(nextUrl.pathname) ||
-    nextUrl.pathname.startsWith("/promotion") ||
     nextUrl.pathname.startsWith("/api/promotions") ||
     nextUrl.pathname.startsWith("/api/lucky-wheel") ||
     nextUrl.pathname.startsWith("/api/app-version") ||
