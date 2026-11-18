@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   DEFAULT_TAWK_WIDGET_URL,
   getTawkDirectChatUrl,
   normalizeTawkWidgetUrl,
+  openTawkChat,
 } from "@/lib/tawk";
 
 interface TawkToWidgetProps {
@@ -21,6 +23,8 @@ const HIDDEN_ROUTE_PREFIXES = [
   "/login",
   "/register",
   "/forget-password",
+  "/support",
+  "/chat",
 ];
 
 function isHiddenRoute(pathname: string | null): boolean {
@@ -31,12 +35,15 @@ function isHiddenRoute(pathname: string | null): boolean {
 }
 
 export default function TawkToWidget({
-  enabled,
+  enabled = true,
   widgetUrl,
   showFloatingBubble = true,
 }: TawkToWidgetProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
+
+  const [isChatMaximized, setIsChatMaximized] = useState(false);
 
   const pathnameRef = useRef<string | null>(pathname);
   const showBubbleRef = useRef<boolean>(showFloatingBubble);
@@ -80,15 +87,12 @@ export default function TawkToWidget({
     lastAttrFingerprintRef.current = fingerprint;
 
     try {
-      // Only pass standard Tawk.to attributes (name & email) to prevent [Tawk/Logger] schema errors
       window.Tawk_API?.setAttributes?.(
         {
           name: displayName,
           email,
         },
-        () => {
-          // Ignore non-fatal attribute callback responses
-        }
+        () => {}
       );
     } catch {
       // ignore if widget not yet ready
@@ -112,12 +116,10 @@ export default function TawkToWidget({
       };
     }
 
-    // Do not inject external Tawk script if still using the placeholder default ID
-    const isPlaceholderDefault = validUrl.includes("6af470f6211af33c4aae43d6");
-    window.__TAWK_ENABLED__ = enabled && !isPlaceholderDefault;
+    window.__TAWK_ENABLED__ = enabled;
     window.__TAWK_DIRECT_URL__ = directChatUrl;
 
-    if (!enabled || isPlaceholderDefault) {
+    if (!enabled) {
       window.__TAWK_LOADING__ = false;
       window.__TAWK_PENDING_OPEN__ = false;
       try {
@@ -137,7 +139,6 @@ export default function TawkToWidget({
       if (existingScript.src === validUrl) {
         return;
       }
-      // Widget URL updated in Admin Dashboard
       existingScript.remove();
     }
 
@@ -167,43 +168,36 @@ export default function TawkToWidget({
 
       syncUserAttributes();
 
+      // Hide default Tawk bubble because we use our custom 3D Support Icon button
+      try {
+        window.Tawk_API?.hideWidget?.();
+      } catch {
+        // ignore
+      }
+
       if (window.__TAWK_PENDING_OPEN__) {
         window.__TAWK_PENDING_OPEN__ = false;
         try {
           window.Tawk_API?.showWidget?.();
           window.Tawk_API?.maximize?.();
-        } catch {
-          // ignore
-        }
-        return;
-      }
-
-      if (
-        !enabledRef.current ||
-        !showBubbleRef.current ||
-        isHiddenRoute(pathnameRef.current)
-      ) {
-        try {
-          window.Tawk_API?.hideWidget?.();
-        } catch {
-          // ignore
-        }
-      } else {
-        try {
-          window.Tawk_API?.showWidget?.();
+          setIsChatMaximized(true);
         } catch {
           // ignore
         }
       }
     };
 
+    window.Tawk_API.onChatMaximized = () => {
+      setIsChatMaximized(true);
+    };
+
     window.Tawk_API.onChatMinimized = () => {
-      if (!showBubbleRef.current || isHiddenRoute(pathnameRef.current)) {
-        try {
-          window.Tawk_API?.hideWidget?.();
-        } catch {
-          // ignore
-        }
+      setIsChatMaximized(false);
+      // Hide default Tawk bubble when minimized so our custom 3D icon takes over cleanly
+      try {
+        window.Tawk_API?.hideWidget?.();
+      } catch {
+        // ignore
       }
     };
 
@@ -226,27 +220,56 @@ export default function TawkToWidget({
     }
   }, [enabled, validUrl, directChatUrl]);
 
-  // Toggle widget visibility on route transitions & bubble config changes
+  // Minimize Tawk chat if navigating to a hidden route
   useEffect(() => {
     if (typeof window === "undefined" || !window.__TAWK_LOADED__) return;
-    try {
-      if (!enabled || !showFloatingBubble || isHiddenRoute(pathname)) {
-        if (isHiddenRoute(pathname)) {
-          window.Tawk_API?.minimize?.();
-        }
+    if (isHiddenRoute(pathname)) {
+      try {
+        window.Tawk_API?.minimize?.();
         window.Tawk_API?.hideWidget?.();
-      } else {
-        window.Tawk_API?.showWidget?.();
+        setIsChatMaximized(false);
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
     }
-  }, [pathname, enabled, showFloatingBubble]);
+  }, [pathname]);
 
   // Identify player whenever session changes after Tawk.to loads
   useEffect(() => {
     syncUserAttributes();
   }, [session]);
 
-  return null;
+  const handleFloatingSupportClick = () => {
+    const opened = openTawkChat();
+    if (!opened) {
+      router.push("/support");
+    }
+  };
+
+  if (!enabled || !showFloatingBubble || isHiddenRoute(pathname) || isChatMaximized) {
+    return null;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleFloatingSupportClick}
+      title="24/7 Live Chat Support"
+      aria-label="24/7 Live Chat Support"
+      className="fixed bottom-[76px] right-3.5 md:bottom-6 md:right-6 z-[1001] group flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-b from-[#0f243c] to-[#07111e] border-2 border-[#3888e9] shadow-[0_8px_28px_rgba(56,136,233,0.45)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer select-none"
+    >
+      {/* Subtle outer pulse ring */}
+      <span className="absolute inset-0 rounded-full border-2 border-[#3888e9]/40 animate-ping pointer-events-none" />
+
+      {/* 3D Support Agent Avatar */}
+      <img
+        src="/support-icon.png"
+        alt="24/7 Support"
+        className="w-12 h-12 rounded-full object-cover"
+      />
+
+      {/* Online Green Indicator Dot */}
+      <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#070e17] shadow-[0_0_8px_#34d399]" />
+    </button>
+  );
 }

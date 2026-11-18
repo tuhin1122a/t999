@@ -1,554 +1,88 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @next/next/no-img-element */
 "use client";
-/* eslint-disable react/no-unescaped-entities */
 
-import React, { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import useCurrentUser from "@/hook/useCurrentUser";
-import { openTawkChat } from "@/lib/tawk";
-import toast from "react-hot-toast";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { FaArrowLeftLong } from "react-icons/fa6";
+import { DEFAULT_TAWK_WIDGET_URL, getTawkDirectChatUrl } from "@/lib/tawk";
 
-interface ChatMsg {
-  id: string | number;
-  text: string;
-  sender: "player" | "agent";
-  time: string;
-}
-
-const App: React.FC = () => {
+export default function SupportPage() {
   const router = useRouter();
-  const user = useCurrentUser();
-  const playerID = user?.playerId || "Guest User";
-  const [isCopied, setIsCopied] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [message, setMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMsg[]>([
-    {
-      id: "welcome",
-      text: "Hello! How can I assist you today with your gaming experience?",
-      sender: "agent",
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    },
-  ]);
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Fetch messages from DB API
-  const fetchMessages = async () => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch("/api/chat");
-      const data = await res.json();
-      if (data.success && data.messages) {
-        const dbMsgs = data.messages.map((m: any) => ({
-          id: m.id,
-          text: m.content,
-          sender: m.senderId === user.id ? "player" : "agent",
-          time: new Date(m.createdAt).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        }));
-        
-        // Keep welcome message at the top if there is no chat history
-        if (dbMsgs.length > 0) {
-          setChatMessages(dbMsgs);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching messages:", err);
-    }
-  };
-
-  // Poll for new messages every 3 seconds
-  useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
-  }, [user]);
-
-  const commonMessages = {
-    account: [
-      "I need to update my account details.",
-      "How do I verify my account?",
-      "I can't access my account.",
-      "I want to change my password.",
-    ],
-    payment: [
-      "My withdrawal is pending for too long.",
-      "I haven't received my deposit yet.",
-      "What payment methods do you accept?",
-      "I need to update my payment information.",
-    ],
-    technical: [
-      "The game keeps freezing on my screen.",
-      "I'm experiencing lag during gameplay.",
-      "The website is not loading properly.",
-      "I can't access certain games on my device.",
-    ],
-  };
-
-  const faqs = [
-    {
-      question: "What is the minimum withdrawal amount?",
-      answer:
-        "The minimum withdrawal amount is $20. Please note that withdrawal processing times may vary depending on your payment method.",
-    },
-    {
-      question: "How long does verification take?",
-      answer:
-        "Account verification typically takes 24-48 hours after all required documents have been submitted. During peak times, this process may take slightly longer.",
-    },
-    {
-      question: "Is my personal information secure?",
-      answer:
-        "Yes, we use industry-standard encryption and security protocols to protect your personal and financial information. Your data is never shared with unauthorized third parties.",
-    },
-    {
-      question: "What should I do if I forgot my password?",
-      answer:
-        "Click on the 'Forgot Password' link on the login page. You'll receive an email with instructions to reset your password. If you don't receive the email, please check your spam folder.",
-    },
-    {
-      question: "How do I claim a bonus?",
-      answer:
-        "To claim a bonus, navigate to the Promotions section, select the bonus you want to claim, and follow the instructions. Some bonuses may require a bonus code during deposit.",
-    },
-    {
-      question: "What are the wagering requirements?",
-      answer:
-        "Wagering requirements vary by promotion. Generally, bonuses must be wagered 30-40 times before withdrawal. Please check the specific terms for each promotion.",
-    },
-    {
-      question: "Can I play on mobile devices?",
-      answer:
-        "Yes, our platform is fully optimized for mobile play. You can access all games and features through your mobile browser without downloading any apps.",
-    },
-    {
-      question: "How do I report a technical issue?",
-      answer:
-        "You can report technical issues through this live chat support, or by emailing support@igamingplatform.com with details of the issue and screenshots if possible.",
-    },
-  ];
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-  };
-
-  const copyMessage = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setMessage(text);
-    toast.success("Copied to input box!");
-  };
-
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chatMessages]);
-
-  const filteredFaqs = faqs.filter(
-    (faq) =>
-      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  const [chatUrl, setChatUrl] = useState<string>(
+    getTawkDirectChatUrl(DEFAULT_TAWK_WIDGET_URL)
   );
+  const [iframeLoaded, setIframeLoaded] = useState(false);
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !user) return;
-    const textToSend = message.trim();
-    setMessage(""); // clear input box immediately for snappy feel
-
-    // Append locally immediately
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        text: textToSend,
-        sender: "player",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      },
-    ]);
-
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content: textToSend }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        toast.error(data.error || "Failed to send message");
-      } else {
-        fetchMessages();
-      }
-    } catch (err) {
-      console.error("Error sending message:", err);
-      toast.error("Failed to send message");
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.__TAWK_DIRECT_URL__) {
+      setChatUrl(window.__TAWK_DIRECT_URL__);
     }
-  };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Chat and Player Info */}
-          <div className="lg:col-span-2">
-            <Card className="shadow-lg border-0">
-              <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-t-lg">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    {/* Back Button */}
-                    <button
-                      onClick={() => router.back()}
-                      className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center"
-                      title="Back"
-                    >
-                      <i className="fas fa-arrow-left text-xl"></i>
-                    </button>
-                    <div>
-                      <CardTitle className="text-2xl font-bold">
-                        Live Chat Support
-                      </CardTitle>
-                      <CardDescription className="text-gray-100 mt-1">
-                        We're here to help 24/7
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="bg-white/10 text-white border-0 px-3 py-1"
-                  >
-                    Online
-                  </Badge>
-                </div>
-              </CardHeader>
+    <div className="h-screen w-full bg-[#070e17] flex flex-col text-white overflow-hidden">
+      {/* Header with 3D Support Agent Icon */}
+      <header className="bg-[#0a1626] border-b border-[#1b3554] py-2.5 px-4 flex items-center justify-between shadow-md shrink-0">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#14263d] hover:bg-[#1e395b] active:scale-95 text-[#3888e9] hover:text-white border border-[#234267] transition-all cursor-pointer"
+            title="Go Back"
+          >
+            <FaArrowLeftLong className="text-base" />
+          </button>
 
-              <CardContent className="p-0">
-                {/* Player ID Section */}
-                <div className="bg-gray-50 p-4 border-b">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500">Player ID</p>
-                      <p className="font-mono font-medium">{playerID}</p>
-                    </div>
-                    <TooltipProvider>
-                      <Tooltip open={isCopied}>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyToClipboard(playerID)}
-                            className="!rounded-button whitespace-nowrap cursor-pointer"
-                          >
-                            <i className="fas fa-copy mr-2"></i>
-                            {isCopied ? "Copied!" : "Copy ID"}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Copied to clipboard!</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-
-                {/* Info Message */}
-                <Alert className="m-4 bg-emerald-50 border-emerald-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <AlertTitle className="text-emerald-900 font-bold flex items-center gap-2">
-                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      24/7 Instant Live Agent Support
-                    </AlertTitle>
-                    <AlertDescription className="text-emerald-800 text-xs sm:text-sm mt-0.5">
-                      Need quick help with deposits, withdrawals, or game issues? Launch our live chat drawer instantly.
-                    </AlertDescription>
-                  </div>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      if (!openTawkChat()) {
-                        if (window.__TAWK_ENABLED__ !== false && window.__TAWK_DIRECT_URL__) {
-                          window.open(window.__TAWK_DIRECT_URL__, "_blank", "noopener,noreferrer");
-                        } else {
-                          toast("Please use the support form below to message our team.");
-                        }
-                      }
-                    }}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 font-semibold cursor-pointer"
-                  >
-                    <i className="fas fa-comments mr-2"></i> Start Live Chat
-                  </Button>
-                </Alert>
-
-                {/* Chat Messages Scroll Area */}
-                <ScrollArea className="h-[400px] p-4 bg-gray-50 border-t border-b">
-                  <div className="space-y-4 pr-3">
-                    {chatMessages.map((msg, i) => {
-                      const isMe = msg.sender === "player";
-                      return (
-                        <div
-                          key={msg.id || i}
-                          className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                        >
-                          <div
-                            className={`max-w-[80%] rounded-lg p-3 ${
-                              isMe
-                                ? "bg-indigo-600 text-white rounded-br-none"
-                                : "bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm"
-                            }`}
-                          >
-                            <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>
-                            <span
-                              className={`text-[10px] block mt-1 text-right ${
-                                isMe ? "text-indigo-200" : "text-gray-400"
-                              }`}
-                            >
-                              {msg.time}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {isTyping && (
-                      <div className="flex justify-start">
-                        <div className="bg-white border border-gray-200 rounded-lg rounded-bl-none p-3 shadow-sm">
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                </ScrollArea>
-
-                {/* Chat Input Section */}
-                <div className="p-4 bg-white border-b flex gap-2">
-                  <Input
-                    placeholder={user ? "Type your message here..." : "Please login to start chat"}
-                    value={message}
-                    disabled={!user}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSendMessage();
-                    }}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!user}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
-                  >
-                    Send <i className="fas fa-paper-plane ml-2"></i>
-                  </Button>
-                </div>
-              </CardContent>
-
-              <CardFooter className="border-t p-4 !flex flex-col">
-                <div className="space-y-6 w-full">
-                  {/* Common Messages */}
-                  <Card className="shadow-lg border-0 !w-full ">
-                    <CardHeader>
-                      <CardTitle>Common Messages</CardTitle>
-                      <CardDescription>
-                        Click to copy these frequently used messages to input box
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Tabs defaultValue="account" className="w-full">
-                        <TabsList className="grid grid-cols-3 mb-4">
-                          <TabsTrigger
-                            value="account"
-                            className="!rounded-button whitespace-nowrap"
-                          >
-                            Account
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="payment"
-                            className="!rounded-button whitespace-nowrap"
-                          >
-                            Payment
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="technical"
-                            className="!rounded-button whitespace-nowrap"
-                          >
-                            Technical
-                          </TabsTrigger>
-                        </TabsList>
-
-                        {Object.entries(commonMessages).map(
-                          ([category, messages]) => (
-                            <TabsContent
-                              key={category}
-                              value={category}
-                              className="mt-0"
-                            >
-                              <div className="space-y-2">
-                                {messages.map((msg, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                                  >
-                                    <p className="text-sm text-gray-700 mr-2">
-                                      {msg}
-                                    </p>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => copyMessage(msg)}
-                                            className="!rounded-button whitespace-nowrap cursor-pointer"
-                                          >
-                                            <i className="fas fa-copy"></i>
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Copy to input box</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
-                                ))}
-                              </div>
-                            </TabsContent>
-                          )
-                        )}
-                      </Tabs>
-                    </CardContent>
-                  </Card>
-
-                  {/* FAQ Section */}
-                  <Card className="shadow-lg border-0 w-full">
-                    <CardHeader>
-                      <CardTitle>Frequently Asked Questions</CardTitle>
-                      <CardDescription>
-                        Find quick answers to common questions
-                      </CardDescription>
-                      <div className="mt-2">
-                        <div className="relative">
-                          <Input
-                            placeholder="Search FAQs..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10"
-                          />
-                          <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[400px] pr-4">
-                        <Accordion type="single" collapsible className="w-full">
-                          {filteredFaqs.map((faq, index) => (
-                            <AccordionItem key={index} value={`item-${index}`}>
-                              <AccordionTrigger className="text-left hover:no-underline">
-                                {faq.question}
-                              </AccordionTrigger>
-                              <AccordionContent>
-                                <div className="pt-2 pb-4">
-                                  <p className="text-gray-700">{faq.answer}</p>
-                                  <div className="flex justify-end mt-2">
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                              copyMessage(faq.answer)
-                                            }
-                                            className="!rounded-button whitespace-nowrap cursor-pointer"
-                                          >
-                                            <i className="fas fa-copy mr-2"></i>
-                                            Copy Answer
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Copy to input box</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          ))}
-                          {filteredFaqs.length === 0 && (
-                            <div className="py-8 text-center">
-                              <i className="fas fa-search text-gray-300 text-4xl mb-3"></i>
-                              <p className="text-gray-500">
-                                No results found for "{searchQuery}"
-                              </p>
-                              <p className="text-gray-400 text-sm mt-1">
-                                Try different keywords or browse all FAQs
-                              </p>
-                            </div>
-                          )}
-                        </Accordion>
-                      </ScrollArea>
-                    </CardContent>
-                    <CardFooter className="border-t pt-4 flex justify-between">
-                      <p className="text-sm text-gray-500">
-                        Can't find what you're looking for?
-                      </p>
-                      <Button
-                        variant="link"
-                        className="text-indigo-600 hover:text-indigo-800 p-0 h-auto !rounded-button whitespace-nowrap"
-                        onClick={() => {
-                          setMessage(
-                            "I couldn't find my answer in the FAQs. I need assistance with: "
-                          );
-                          document.querySelector("textarea")?.focus();
-                        }}
-                      >
-                        Ask in chat <i className="fas fa-arrow-right ml-1"></i>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </div>
-              </CardFooter>
-            </Card>
+          <div className="flex items-center gap-2.5">
+            <div className="relative w-10 h-10 rounded-full border-2 border-[#3888e9] bg-[#0f243c] p-0.5">
+              <img
+                src="/support-icon.png"
+                alt="24/7 Support"
+                className="w-full h-full rounded-full object-cover"
+              />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0a1626]" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-white tracking-wide leading-tight">
+                24/7 Live Chat Support
+              </h3>
+              <p className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Official RK444 Support Agent Online
+              </p>
+            </div>
           </div>
         </div>
+      </header>
+
+      {/* Fullscreen Tawk.to Live Chat */}
+      <div className="relative flex-1 w-full bg-[#070e17]">
+        {!iframeLoaded && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070e17] z-10 gap-3">
+            <div className="relative w-20 h-20 rounded-full border-2 border-[#3888e9] p-1 bg-[#0a1626] shadow-[0_0_25px_rgba(56,136,233,0.35)]">
+              <img
+                src="/support-icon.png"
+                alt="Support Agent"
+                className="w-full h-full rounded-full object-cover"
+              />
+            </div>
+            <p className="text-sm font-black text-white uppercase tracking-wider">
+              Connecting to Live Support...
+            </p>
+            <div className="w-40 h-1 rounded-full bg-[#132840] overflow-hidden">
+              <div className="w-full h-full bg-gradient-to-r from-[#3888e9] via-[#23FFC8] to-[#3888e9] animate-pulse" />
+            </div>
+          </div>
+        )}
+
+        <iframe
+          src={chatUrl}
+          title="RK444 24/7 Live Support"
+          className="w-full h-full border-0"
+          allow="microphone; camera; fullscreen"
+          onLoad={() => setIframeLoaded(true)}
+        />
       </div>
     </div>
   );
-};
-
-export default App;
+}
