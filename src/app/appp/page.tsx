@@ -121,7 +121,7 @@ const AppDownloadPage = () => {
                   <div className="text-left">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-wider">
                       <HiSparkles className="animate-pulse" />
-                      <span>OFFICIAL RK444 APP v1.0.4</span>
+                      <span>OFFICIAL RK444 APP v1.0.5</span>
                     </div>
                     <div className="text-xs text-gray-300 font-bold mt-0.5">Android APK & PWA · 100% Secure</div>
                   </div>
