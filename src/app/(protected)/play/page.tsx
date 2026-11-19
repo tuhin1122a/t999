@@ -17,7 +17,7 @@ import {
   FiMaximize,
   FiMinimize,
   FiPlus,
-  FiStar,
+  FiX,
 } from "react-icons/fi";
 import { FaStar, FaTools, FaGamepad, FaHeadset } from "react-icons/fa";
 import { HiWrenchScrewdriver } from "react-icons/hi2";
