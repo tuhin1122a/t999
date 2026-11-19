@@ -13,19 +13,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
-  FiChevronDown,
-  FiChevronLeft,
-  FiChevronUp,
+  FiArrowLeft,
   FiMaximize,
   FiMinimize,
   FiPlus,
-  FiRefreshCw,
-  FiVolume2,
-  FiVolumeX,
-  FiX,
+  FiStar,
 } from "react-icons/fi";
-import { RiGamepadLine, RiWallet3Line } from "react-icons/ri";
-import { FaTools, FaGamepad, FaHeadset } from "react-icons/fa";
+import { FaStar, FaTools, FaGamepad, FaHeadset } from "react-icons/fa";
 import { HiWrenchScrewdriver } from "react-icons/hi2";
 
 // ── Live Wallet Balance & Active Session Fetcher ─────────────────────────────
@@ -65,7 +59,6 @@ const Play = () => {
 
   const user = useGetCurrentUser();
 
-  const [isIframeLoading, setIsLoading] = useState(true);
   const [iframe, setIframe] = useState("");
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -73,8 +66,7 @@ const Play = () => {
   // Fullscreen Casino UI States
   const [showHeader, setShowHeader] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [displayBalance, setDisplayBalance] = useState<string | null>(null);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -105,24 +97,33 @@ const Play = () => {
 
   const balanceValue = displayBalance ?? walletBalance;
 
-  // ── Manual Balance Refresh ────────────────────────────────────────────────
-  const handleRefreshBalance = useCallback(async () => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
-    const { balance: newBal, kickedOut } = await fetchLatestBalance(
-      gameSessionIdRef.current
-    );
-    if (kickedOut) {
-      setIsRefreshing(false);
-      await handleKickOut();
-      return;
+  // Toggle favorite state locally per gameId
+  useEffect(() => {
+    if (!gameId || typeof window === "undefined") return;
+    try {
+      const saved = JSON.parse(localStorage.getItem("rk444_fav_games") || "[]");
+      setIsFavorite(Array.isArray(saved) && saved.includes(gameId));
+    } catch {
+      // ignore
     }
-    if (newBal !== null) {
-      setDisplayBalance(newBal.toFixed(2));
-      toast.success(`৳ ${newBal.toFixed(2)}`, { id: "bal-sync" });
-    }
-    setIsRefreshing(false);
-  }, [isRefreshing, handleKickOut]);
+  }, [gameId]);
+
+  const handleToggleFavorite = useCallback(() => {
+    if (!gameId || typeof window === "undefined") return;
+    setIsFavorite((prev) => {
+      const next = !prev;
+      try {
+        const saved: string[] = JSON.parse(localStorage.getItem("rk444_fav_games") || "[]");
+        const set = new Set(Array.isArray(saved) ? saved : []);
+        if (next) set.add(gameId);
+        else set.delete(gameId);
+        localStorage.setItem("rk444_fav_games", JSON.stringify(Array.from(set)));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, [gameId]);
 
   // ── Live Balance & Single-Device Session Polling (Every 6s) ───────────────
   useEffect(() => {
@@ -149,18 +150,24 @@ const Play = () => {
       if (!document.fullscreenElement) {
         await document.documentElement.requestFullscreen();
         setIsFullscreen(true);
+        setShowHeader(false);
       } else {
         await document.exitFullscreen();
         setIsFullscreen(false);
+        setShowHeader(true);
       }
-    } catch (err) {
-      console.warn("Fullscreen toggle failed:", err);
+    } catch {
+      // Fallback on iOS Safari where Fullscreen API is restricted: toggle bar
+      setShowHeader((prev) => !prev);
+      setIsFullscreen((prev) => !prev);
     }
   }, []);
 
   useEffect(() => {
     const onFsChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
+      const fs = Boolean(document.fullscreenElement);
+      setIsFullscreen(fs);
+      setShowHeader(!fs);
     };
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
@@ -203,15 +210,6 @@ const Play = () => {
     };
   }, [executeExit]);
 
-  // ── Game Iframe Reload ────────────────────────────────────────────────────
-  const handleReloadGame = useCallback(() => {
-    if (!iframe) return;
-    setIsLoading(true);
-    if (iframeRef.current) {
-      iframeRef.current.src = iframe;
-    }
-  }, [iframe]);
-
   // ── Player Initialization ─────────────────────────────────────────────────
   const getPlayerId = async (u: any) => {
     if (!u) return null;
@@ -250,7 +248,6 @@ const Play = () => {
 
     if (!user) {
       // User is not logged in
-      setIsLoading(false);
       setError(true);
       setErrorMessage("Please login to your account to play this game.");
       return;
@@ -258,7 +255,6 @@ const Play = () => {
 
     const launch = async () => {
       try {
-        setIsLoading(true);
         setError(false);
         setErrorMessage("");
 
@@ -281,7 +277,6 @@ const Play = () => {
         }
         setError(true);
         setErrorMessage("Game Under Maintenance");
-        setIsLoading(false);
       }
     };
 
@@ -290,181 +285,96 @@ const Play = () => {
   }, [gameId, user]);
 
   return (
-    <div className="w-full h-[100dvh] bg-[#070e17] overflow-hidden relative select-none flex flex-col font-sans">
+    <div className="w-full h-[100dvh] bg-black overflow-hidden relative select-none flex flex-col font-sans">
 
       {/* ══════════════════════════════════════════════════════════════════════
-          CASINO TOP BAR
+          MINIMAL MOBILE GAME TOP BAR (Matches Provider Fullscreen Style)
       ══════════════════════════════════════════════════════════════════════ */}
-      <div
-        className={`w-full z-50 transition-all duration-300 ease-in-out ${
-          showHeader ? "h-12 opacity-100" : "h-0 opacity-0 overflow-hidden"
-        }`}
-      >
-        <header className="h-12 w-full bg-[#0a1626] border-b border-[#1c304a] px-2 sm:px-4 flex items-center justify-between text-white shadow-lg">
+      {showHeader && (
+        <header className="h-12 w-full bg-black px-3 flex items-center justify-between text-white shrink-0 z-50">
+          {/* LEFT: Back Arrow */}
+          <button
+            onClick={executeExit}
+            className="w-9 h-9 flex items-center justify-start text-white hover:opacity-80 active:scale-90 transition-all"
+            title="Back to Lobby"
+            aria-label="Back to Lobby"
+          >
+            <FiArrowLeft size={22} className="stroke-[2.2]" />
+          </button>
 
-          {/* LEFT: Back to Casino & Brand */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* CENTER: Compact Balance Pill + Green Plus Circle */}
+          <Link
+            href="/deposit"
+            className="flex items-center gap-2 bg-[#23262c] hover:bg-[#2d3139] active:scale-95 rounded-full pl-3.5 pr-1.5 py-1 transition-all"
+            title="Deposit Funds"
+          >
+            <span className="text-[13px] font-bold text-white tracking-tight leading-none">
+              {Number(balanceValue).toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2,
+              })}{" "}
+              ৳
+            </span>
+            <span className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-sm">
+              <FiPlus size={13} className="text-[#10b981] stroke-[3]" />
+            </span>
+          </Link>
+
+          {/* RIGHT: Favorite Star + Fullscreen Toggle */}
+          <div className="flex items-center gap-2.5">
             <button
-              onClick={executeExit}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-[#14263d] hover:bg-[#dc2626] active:scale-90 text-white border border-[#234267] hover:border-red-500/50 transition-all shadow-md"
-              title="Back to Lobby"
+              onClick={handleToggleFavorite}
+              className="w-8 h-8 flex items-center justify-center text-white hover:opacity-80 active:scale-90 transition-all"
+              title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+              aria-label="Favorite"
             >
-              <FiChevronLeft size={20} className="stroke-[2.5] -ml-0.5" />
-            </button>
-
-            {/* Platform Logo */}
-            <Link href="/" className="flex items-center gap-1.5">
-              <Image
-                src="/logo.png"
-                alt="Casino Logo"
-                width={85}
-                height={26}
-                className="h-6 w-auto object-contain hidden sm:block"
-                priority
-              />
-            </Link>
-          </div>
-
-          {/* CENTER: Real-Time Wallet Balance with Deposit Quick Action */}
-          <div className="flex items-center gap-1 sm:gap-2">
-            <div className="flex items-center bg-[#07101b] border border-[#1b3452] rounded-md px-2.5 py-1 shadow-inner">
-              <RiWallet3Line className="text-[#10b981] mr-1.5 text-base" />
-              <div className="flex flex-col text-right leading-none">
-                <span className="text-[10px] text-gray-400 font-medium">Main Balance</span>
-                <span className="text-xs sm:text-sm font-bold text-yellow-400 tracking-wide">
-                  ৳ {balanceValue}
-                </span>
-              </div>
-              <button
-                onClick={handleRefreshBalance}
-                disabled={isRefreshing}
-                className="ml-2 text-gray-400 hover:text-teal-400 active:scale-90 p-0.5 transition-all"
-                title="Refresh Balance"
-              >
-                <FiRefreshCw
-                  size={13}
-                  className={isRefreshing ? "animate-spin text-yellow-400" : ""}
-                />
-              </button>
-            </div>
-
-            {/* Quick Deposit Button */}
-            <Link
-              href="/deposit"
-              target="_blank"
-              className="hidden xs:flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white text-xs font-bold rounded-md shadow transition-all active:scale-95"
-              title="Deposit Funds"
-            >
-              <FiPlus size={14} className="stroke-[3]" />
-              <span>Deposit</span>
-            </Link>
-          </div>
-
-          {/* RIGHT: Quick Casino Controls (Reload, Mute, Fullscreen, Collapse) */}
-          <div className="flex items-center gap-0.5 sm:gap-1">
-            <button
-              onClick={handleReloadGame}
-              className="p-2 text-gray-400 hover:text-white hover:bg-[#14263d] rounded-md active:scale-95 transition-all"
-              title="Reload Game"
-            >
-              <FiRefreshCw size={15} />
-            </button>
-
-            <button
-              onClick={() => setIsMuted((prev) => !prev)}
-              className="p-2 text-gray-400 hover:text-white hover:bg-[#14263d] rounded-md active:scale-95 transition-all hidden sm:block"
-              title={isMuted ? "Unmute" : "Mute (Visual indicator)"}
-            >
-              {isMuted ? <FiVolumeX size={15} className="text-red-400" /> : <FiVolume2 size={15} />}
+              {isFavorite ? (
+                <FaStar size={20} className="text-yellow-400" />
+              ) : (
+                <FaStar size={20} className="text-white" />
+              )}
             </button>
 
             <button
               onClick={toggleFullscreen}
-              className="p-2 text-gray-400 hover:text-white hover:bg-[#14263d] rounded-md active:scale-95 transition-all"
-              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen View"}
+              className="w-8 h-8 flex items-center justify-center text-white hover:opacity-80 active:scale-90 transition-all"
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+              aria-label="Fullscreen"
             >
-              {isFullscreen ? <FiMinimize size={15} /> : <FiMaximize size={15} />}
-            </button>
-
-            <button
-              onClick={() => setShowHeader(false)}
-              className="p-2 text-gray-400 hover:text-yellow-400 hover:bg-[#14263d] rounded-md active:scale-95 transition-all ml-0.5"
-              title="Hide Bar for Full Experience"
-            >
-              <FiChevronUp size={18} />
+              {isFullscreen ? (
+                <FiMinimize size={20} className="stroke-[2.4]" />
+              ) : (
+                <FiMaximize size={20} className="stroke-[2.4]" />
+              )}
             </button>
           </div>
         </header>
-      </div>
+      )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          MINIMAL FLOATING TOP TRIGGER (When Header is Hidden)
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* Minimal Floating Controls When Fullscreen Header Is Hidden */}
       {!showHeader && (
-        <>
-          {/* Quick Floating Exit Button on top-left so player is never trapped */}
-          <div className="absolute top-2 left-2 z-50">
-            <button
-              onClick={executeExit}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-[#0a1626]/85 hover:bg-[#dc2626] text-white shadow-2xl backdrop-blur-md transition-all active:scale-90 border border-[#1c304a] hover:border-red-500/50"
-              title="Back to Lobby"
-            >
-              <FiChevronLeft size={20} className="stroke-[2.5] -ml-0.5" />
-            </button>
-          </div>
-
-          {/* Balance & Header Re-open Toggle */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40">
-            <button
-              onClick={() => setShowHeader(true)}
-              className="group flex items-center gap-1.5 px-3 py-1 bg-[#0a1626]/90 hover:bg-[#14263d] border-b border-x border-[#1c304a] rounded-b-lg shadow-xl backdrop-blur-md transition-all active:scale-95"
-              title="Expand Casino Controls"
-            >
-              <span className="text-[11px] font-bold text-yellow-400">৳ {balanceValue}</span>
-              <FiChevronDown size={14} className="text-teal-400 group-hover:translate-y-0.5 transition-transform" />
-            </button>
-          </div>
-        </>
+        <div className="absolute top-2 right-2 z-50 flex items-center gap-2">
+          <button
+            onClick={toggleFullscreen}
+            className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center backdrop-blur-sm border border-white/15 active:scale-90 transition-all"
+            title="Exit Fullscreen"
+            aria-label="Exit Fullscreen"
+          >
+            <FiMinimize size={16} />
+          </button>
+        </div>
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════
-          MAIN CASINO GAME FRAME
+          MAIN CASINO GAME FRAME (Provider's Own Native Loading Screen)
       ══════════════════════════════════════════════════════════════════════ */}
-      <main className="flex-1 w-full h-full relative bg-[#04080e] overflow-hidden">
-
-        {/* Casino Loading Screen */}
-        {isIframeLoading && !error && (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gradient-to-b from-[#071322] via-[#091b31] to-[#040c16] text-white">
-            <div className="relative flex items-center justify-center mb-6">
-              <div className="w-20 h-20 rounded-full border-4 border-[#143254] border-t-[#3888e9] animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <RiGamepadLine size={32} className="text-yellow-400 animate-pulse" />
-              </div>
-            </div>
-
-            <h3 className="text-base sm:text-lg font-bold text-[#e1ecf9] tracking-wide mb-1">
-              LAUNCHING GAME
-            </h3>
-            <p className="text-xs text-[#7196bf] font-medium animate-pulse mb-6">
-              Connecting to secure RK444 Casino server...
-            </p>
-
-            <button
-              onClick={executeExit}
-              className="px-5 py-2 bg-[#dc2626] hover:bg-[#b91c1c] text-white text-xs font-bold rounded-md border border-red-500/40 transition-all shadow"
-            >
-              Cancel & Exit
-            </button>
-          </div>
-        )}
-
-        {/* The Game Iframe */}
+      <main className="flex-1 w-full h-full relative bg-black overflow-hidden">
+        {/* The Game Iframe — mounts immediately with no custom loading overlay */}
         {!error && iframe && (
           <iframe
             ref={iframeRef}
             src={iframe}
             className="w-full h-full border-0 bg-black block"
-            onLoad={() => setIsLoading(false)}
             allow="autoplay; fullscreen; screen-wake-lock; orientation; clipboard-write; encrypted-media"
             allowFullScreen
           />
