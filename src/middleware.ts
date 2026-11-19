@@ -48,8 +48,9 @@ export default auth(async (req) => {
     nextUrl.pathname.startsWith("/api/games/hot") ||
     nextUrl.pathname.startsWith("/api/sub-admins/resolve") ||
     nextUrl.pathname.startsWith("/api/gamexa/games/providers") ||
-    // ✅ Mobile app API routes — no browser session, authenticated via JWT Bearer token
-    nextUrl.pathname.startsWith("/api/auth/mobile/");
+    // ✅ Mobile app & Agent Pay app API routes — authenticated via JWT Bearer token
+    nextUrl.pathname.startsWith("/api/auth/mobile/") ||
+    nextUrl.pathname.startsWith("/api/agent-app/");
   const isProvider = nextUrl.pathname.startsWith(providerApiPrefix);
 
   const stalePrefixes = [

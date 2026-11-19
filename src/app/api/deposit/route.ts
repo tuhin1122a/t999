@@ -2,6 +2,7 @@
 import { findCurrentUser } from "@/data/user";
 import { INTERNAL_SERVER_ERROR } from "@/error";
 import { db } from "@/lib/db";
+import { tryAutoMatchExistingSmsForDeposit } from "@/lib/agentAutoDeposit";
 import { getScopedDepositWalletsForUser } from "@/lib/depositWallets";
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -103,12 +104,18 @@ export const POST = async (req: NextRequest) => {
       },
     });
 
+    // 6️⃣ Instant Auto-Match if SMS already arrived earlier
+    const autoMatch = await tryAutoMatchExistingSmsForDeposit(newDeposit.id);
+
     return NextResponse.json({
       success: true,
       payload: {
-        message: "Deposit submitted successfully! Waiting for Admin approval.",
+        message: autoMatch?.matched
+          ? "Deposit auto-approved instantly! Balance added to your wallet."
+          : "Deposit submitted successfully! Waiting for Admin approval.",
         depositId: newDeposit.id,
         trackingNumber: newDeposit.trackingNumber,
+        autoApproved: Boolean(autoMatch?.matched),
       },
     }, { status: 200 });
 
