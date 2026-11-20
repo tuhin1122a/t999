@@ -1,694 +1,331 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import toast from "react-hot-toast";
-import useCurrentUser from "@/hook/useCurrentUser";
-import { updateProfile } from "@/action/account";
-import { logout } from "@/action/logout";
+import { UserAvatar } from "@/components/HeaderBalance";
+import LiveChatTrigger from "@/components/LiveChatTrigger";
 import TabNav from "@/components/TabNav";
+import { Skeleton } from "@/components/ui/skeleton";
+import useCurrentUser from "@/hook/useCurrentUser";
+import { useFetchWalletQuery } from "@/lib/features/walletApiSlice";
+import { getCurrencySymbol } from "@/lib/utils";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FaFileInvoiceDollar, FaGift } from "react-icons/fa";
 import {
-  FaArrowLeftLong,
-  FaBell,
-  FaCircleCheck,
-  FaCircleInfo,
+  FaChartLine,
   FaCircleUser,
-  FaCircleXmark,
-  FaClockRotateLeft,
+  FaCopy,
   FaCreditCard,
-  FaGamepad,
-  FaGift,
-  FaHandPointer,
-  FaHeadset,
-  FaLock,
-  FaPen,
-  FaRightFromBracket,
-  FaRotate,
-  FaShieldHalved,
-  FaTableCellsLarge,
-  FaUserPlus,
-  FaWallet,
-  FaXmark,
+  FaArrowLeftLong,
+  FaGear,
 } from "react-icons/fa6";
+import { FiCheck, FiDownload, FiRefreshCw } from "react-icons/fi";
+import { GiFishMonster } from "react-icons/gi";
+import { LuNotebookText } from "react-icons/lu";
+import { MdOutlineSupportAgent, MdSecurity } from "react-icons/md";
+import { RiWallet3Fill, RiExchangeDollarFill } from "react-icons/ri";
+import { TiUserAdd } from "react-icons/ti";
 
-function maskPhone(phone?: string): string {
-  if (!phone) return "---";
-  const clean = phone.replace(/\D/g, "");
-  if (clean.length >= 6) {
-    return `${clean.slice(0, 3)}...${clean.slice(-2)}`;
-  }
-  return phone;
-}
+const menuItems = [
+  { href: "/settings", icon: FaGear, label: "Settings" },
+  { href: "/rewardCenter", icon: FaGift, label: "Reward" },
+  { href: "/profitandloss", icon: FaChartLine, label: "Profit/Loss" },
+  { href: "/history?type=deposit", icon: FaFileInvoiceDollar, label: "Deposit Record" },
+  { href: "/history?type=withdraw", icon: LuNotebookText, label: "Withdraw Record" },
+  { href: "/my-account", icon: FaCircleUser, label: "My Account" },
+  { href: "/security", icon: MdSecurity, label: "Security Center" },
+  { href: "/invite-friends", icon: TiUserAdd, label: "Invite Friend" },
+  { href: "/appp", icon: FiDownload, label: "Download App" },
+  { href: "/support", icon: MdOutlineSupportAgent, label: "Customer Center" },
+  { href: "/fish", icon: GiFishMonster, label: "Fish Games" },
+];
 
-function formatRegDate(iso?: string | Date): string {
-  if (!iso) return "18.09.2025";
-  try {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "18.09.2025";
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}.${month}.${year}`;
-  } catch {
-    return "18.09.2025";
-  }
-}
-
-export default function MemberSettingsPage({
-  defaultView = "settings",
-}: {
-  defaultView?: "settings" | "profile";
-}) {
+const App: React.FC = () => {
   const router = useRouter();
-  const user: any = useCurrentUser();
-
-  const [viewMode, setViewMode] = useState<"settings" | "profile">(defaultView);
-  const [oneClickBet, setOneClickBet] = useState(false);
-  const [pushEnabled, setPushEnabled] = useState(true);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const rawParts = String(user?.name || "Player Md")
-    .trim()
-    .split(" ");
-  const [firstName, setFirstName] = useState(rawParts[0] || "Player");
-  const [surname, setSurname] = useState(rawParts.slice(1).join(" ") || "Md");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState(user?.facebook || "");
-  const [gender] = useState("Male");
-  const [city, setCity] = useState("Dhaka");
+  const [copied, setCopied] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (user?.name) {
-      const parts = String(user.name).trim().split(" ");
-      setFirstName(parts[0] || "Player");
-      setSurname(parts.slice(1).join(" ") || "Md");
-    }
-    if (user?.facebook) {
-      setEmail(user.facebook);
-    }
-  }, [user]);
+    setLastUpdateTime(new Date());
+  }, []);
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const fullName = `${firstName.trim()} ${surname.trim()}`.trim();
-      const res = await updateProfile({
-        name: fullName || user?.name || "Player",
-        phone: user?.phone || "",
-        facebook: email.trim(),
-      });
-      if (res?.error) {
-        toast.error(res.error);
-      } else {
-        toast.success("Profile updated successfully!");
-        setEditModalOpen(false);
-      }
-    } catch {
-      toast.error("Failed to update profile");
-    } finally {
-      setSaving(false);
+  const user: any = useCurrentUser();
+  const {
+    data,
+    isLoading: walletLoading,
+    refetch,
+    isFetching: walletRetching,
+  } = useFetchWalletQuery();
+
+  const balance = data?.payload ? Number(data.payload.balance) : 0;
+
+  const handleCopyPlayerId = () => {
+    if (user?.playerId) {
+      navigator.clipboard.writeText(user.playerId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const handleLogout = async () => {
-    const res = await logout();
-    if (res?.success) {
-      window.location.href = "/";
-    }
+  const handleRefreshBalance = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    await refetch();
+    setLastUpdateTime(new Date());
+    setShowToast(true);
+    setIsRefreshing(false);
   };
 
-  const playerId = user?.playerId || user?.id?.slice(0, 10) || "1390419915";
-  const regDate = formatRegDate(user?.createdAt);
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => setShowToast(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // VIEW 2: PERSONAL PROFILE (Opened by clicking top-right Avatar icon)
-  // Matches Screenshot 2 in Dark Casino Theme
-  // ════════════════════════════════════════════════════════════════════════════
-  if (viewMode === "profile") {
-    return (
-      <div className="min-h-screen bg-[#070e17] text-white pb-28">
-        {/* Top Header */}
-        <header className="h-14 bg-[#0a1626] border-b border-[#1b3554] px-4 flex items-center justify-between sticky top-0 z-50">
-          <button
-            type="button"
-            onClick={() => setViewMode("settings")}
-            className="w-9 h-9 flex items-center justify-center text-[#3888e9] hover:text-white cursor-pointer"
-          >
-            <FaArrowLeftLong className="text-lg" />
-          </button>
-
-          <h1 className="text-[17px] font-bold text-white tracking-wide">
-            Personal profile
-          </h1>
-
-          <div className="w-9" />
-        </header>
-
-        <main className="w-full max-w-md mx-auto px-3.5 pt-4 space-y-3">
-          {/* Top Card: Enter details */}
-          <button
-            type="button"
-            onClick={() => setEditModalOpen(true)}
-            className="w-full bg-[#0a1626] border border-[#162e4a] rounded-2xl p-4 flex items-center gap-3.5 hover:border-[#3888e9]/50 transition-all cursor-pointer text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaPen size={15} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Enter details
-            </span>
-          </button>
-
-          {/* Section: Account */}
-          <p className="text-[13px] font-bold text-[#60A5FA] pt-2 px-1">
-            Account
-          </p>
-          <div className="bg-[#0a1626] border border-[#162e4a] rounded-2xl overflow-hidden divide-y divide-[#142944]">
-            <div
-              onClick={() => {
-                navigator.clipboard.writeText(String(playerId));
-                toast.success("Account ID copied!");
-              }}
-              className="flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-[#0e1f36]"
-            >
-              <span className="text-[15px] font-semibold text-white">
-                Account number
-              </span>
-              <span className="text-sm font-semibold text-slate-400">
-                id: {playerId}
-              </span>
-            </div>
-
-            <div
-              onClick={() => setEditModalOpen(true)}
-              className="flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-[#0e1f36]"
-            >
-              <span className="text-[15px] font-semibold text-white">
-                Username
-              </span>
-              <span className="text-sm font-bold text-[#3888e9]">
-                {username || "Add"}
-              </span>
-            </div>
-
-            <div
-              onClick={() => setEditModalOpen(true)}
-              className="flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-[#0e1f36]"
-            >
-              <span className="text-[15px] font-semibold text-white">Email</span>
-              <span className="text-sm font-bold text-[#3888e9]">
-                {email || "Link"}
-              </span>
-            </div>
-
-            <div
-              onClick={() => setEditModalOpen(true)}
-              className="flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-[#0e1f36]"
-            >
-              <div>
-                <p className="text-[15px] font-semibold text-white">
-                  Phone number
-                </p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {maskPhone(user?.phone)}
-                </p>
-              </div>
-              <span className="text-sm font-bold text-[#3888e9]">Change</span>
-            </div>
-
-            <Link
-              href="/security/password"
-              className="flex items-center justify-between px-4 py-4 hover:bg-[#0e1f36]"
-            >
-              <div>
-                <p className="text-[15px] font-semibold text-white">Password</p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Days since last change: 3
-                </p>
-              </div>
-              <span className="text-sm font-bold text-[#3888e9]">Change</span>
-            </Link>
-
-            <div className="flex items-center justify-between px-4 py-4">
-              <span className="text-[15px] font-semibold text-white">
-                Registration date
-              </span>
-              <span className="text-sm font-semibold text-slate-400">
-                {regDate}
-              </span>
-            </div>
-          </div>
-
-          {/* Section: Personal information */}
-          <p className="text-[13px] font-bold text-[#60A5FA] pt-2 px-1">
-            Personal information
-          </p>
-          <div className="bg-[#0a1626] border border-[#162e4a] rounded-2xl overflow-hidden divide-y divide-[#142944]">
-            <div className="flex items-center justify-between px-4 py-4">
-              <span className="text-[15px] font-semibold text-white">Name</span>
-              <span className="text-sm font-semibold text-slate-400">
-                {firstName}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between px-4 py-4">
-              <span className="text-[15px] font-semibold text-white">
-                Surname
-              </span>
-              <span className="text-sm font-semibold text-slate-400">
-                {surname}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between px-4 py-4">
-              <span className="text-[15px] font-semibold text-white">
-                Gender
-              </span>
-              <span className="text-sm font-semibold text-slate-400">
-                {gender}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between px-4 py-4">
-              <span className="text-[15px] font-semibold text-white">
-                Country
-              </span>
-              <span className="text-sm font-semibold text-slate-400">
-                Bangladesh
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between px-4 py-4">
-              <span className="text-[15px] font-semibold text-white">City</span>
-              <span className="text-sm font-semibold text-slate-400">
-                {city}
-              </span>
-            </div>
-          </div>
-        </main>
-
-        {/* Edit Details Modal */}
-        {editModalOpen && (
-          <div className="fixed inset-0 z-[1000] bg-black/75 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <form
-              onSubmit={handleSaveProfile}
-              className="w-full max-w-md bg-[#0a1626] border-t sm:border border-[#162e4a] rounded-t-3xl sm:rounded-2xl p-5 space-y-3"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-base font-black text-white">
-                  Edit Personal Details
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setEditModalOpen(false)}
-                  className="text-slate-400 hover:text-white p-1"
-                >
-                  <FaXmark size={18} />
-                </button>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#60A5FA] uppercase">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-[#06101c] border border-[#1b385a] text-sm font-semibold text-white focus:outline-none focus:border-[#3888e9]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#60A5FA] uppercase">
-                  Surname
-                </label>
-                <input
-                  type="text"
-                  value={surname}
-                  onChange={(e) => setSurname(e.target.value)}
-                  className="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-[#06101c] border border-[#1b385a] text-sm font-semibold text-white focus:outline-none focus:border-[#3888e9]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#60A5FA] uppercase">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Optional username"
-                  className="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-[#06101c] border border-[#1b385a] text-sm font-semibold text-white focus:outline-none focus:border-[#3888e9]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#60A5FA] uppercase">
-                  Email
-                </label>
-                <input
-                  type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="example@mail.com"
-                  className="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-[#06101c] border border-[#1b385a] text-sm font-semibold text-white focus:outline-none focus:border-[#3888e9]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#60A5FA] uppercase">
-                  City
-                </label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-[#06101c] border border-[#1b385a] text-sm font-semibold text-white focus:outline-none focus:border-[#3888e9]"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#3888e9] to-[#2563eb] text-white font-black text-sm shadow-md active:scale-98 transition-all cursor-pointer mt-2"
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
-            </form>
-          </div>
-        )}
-
-        <TabNav />
-      </div>
-    );
-  }
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // VIEW 1 (DEFAULT): SETTINGS / MORE PAGE
-  // Matches Screenshot 1 in Dark Casino Theme
-  // ════════════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-[#070e17] text-white pb-28">
-      {/* Top Header: Back | Settings | Info + Avatar Icon */}
-      <header className="h-14 bg-[#0a1626] border-b border-[#1b3554] px-4 flex items-center justify-between sticky top-0 z-50">
+    <div className="min-h-screen bg-[#070e17] flex flex-col text-white pb-28">
+      {/* Premium Dark Theme Header */}
+      <header className="bg-[#0a1626] border-b border-[#1b3554] py-3.5 px-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="w-9 h-9 flex items-center justify-center text-[#3888e9] hover:text-white cursor-pointer"
+          className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#14263d] hover:bg-[#1e395b] active:scale-95 text-[#3888e9] hover:text-white border border-[#234267] transition-all cursor-pointer"
+          title="Go to Home"
         >
-          <FaArrowLeftLong className="text-lg" />
+          <FaArrowLeftLong className="text-base" />
         </button>
-
-        <h1 className="text-[17px] font-bold text-white tracking-wide">
-          Settings
-        </h1>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => toast.success("RK444 Official Platform · 256-Bit SSL")}
-            className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
-            title="Platform Info"
-          >
-            <FaCircleInfo size={20} />
-          </button>
-
-          {/* Top-Right Avatar Button -> Opens Personal Profile */}
-          <button
-            type="button"
-            onClick={() => setViewMode("profile")}
-            className="w-9 h-9 rounded-full bg-[#122844] border border-[#234267] flex items-center justify-center text-[#3888e9] hover:text-white transition-all active:scale-95 cursor-pointer"
-            title="Personal Profile"
-          >
-            <FaCircleUser size={21} />
-          </button>
-        </div>
+        <h3 className="text-base font-bold text-white tracking-wide">Member Center</h3>
+        <Link
+          href="/settings"
+          className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#14263d] hover:bg-[#1e395b] active:scale-95 text-[#23FFC8] hover:text-white border border-[#234267] transition-all"
+          title="Settings"
+        >
+          <FaGear className="text-base" />
+        </Link>
       </header>
 
-      <main className="w-full max-w-md mx-auto px-3.5 pt-4 space-y-3">
-        {/* ── 1. Account management ── */}
-        <p className="text-[13px] font-bold text-[#60A5FA] pt-1 px-1">
-          Account management
-        </p>
-        <div className="bg-[#0a1626] border border-[#162e4a] rounded-2xl overflow-hidden divide-y divide-[#142944]">
-          <Link
-            href="/deposit"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaCreditCard size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Make a deposit
-            </span>
-          </Link>
-
-          <Link
-            href="/withdraw"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaWallet size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Withdraw
-            </span>
-          </Link>
-
-          <Link
-            href="/history"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaClockRotateLeft size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Transaction history
-            </span>
-          </Link>
-
-          <Link
-            href="/betting-record"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaGamepad size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Betting history
-            </span>
-          </Link>
+      <main className="w-full max-w-md mx-auto px-4 py-6 space-y-6">
+        {/* Toast Notification */}
+        <div
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-[#002632] border border-[#23FFC8]/30 text-white px-4 py-3 rounded-xl shadow-2xl z-50 transition-all duration-300 flex flex-col items-center gap-0.5 ${
+            showToast ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3 pointer-events-none"
+          }`}
+        >
+          <div className="text-sm font-bold text-[#23FFC8] flex items-center gap-1.5">
+            <FiCheck className="text-lg" /> Balance updated
+          </div>
+          <div className="text-[10px] text-gray-400 font-medium" suppressHydrationWarning>
+            {lastUpdateTime?.toLocaleTimeString() || ""}
+          </div>
         </div>
 
-        {/* ── 2. Security ── */}
-        <p className="text-[13px] font-bold text-[#60A5FA] pt-2 px-1">
-          Security
-        </p>
-        <div className="bg-[#0a1626] border border-[#162e4a] rounded-2xl overflow-hidden divide-y divide-[#142944]">
-          <Link
-            href="/security"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaLock size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              PIN code and biometrics
-            </span>
-          </Link>
+        {/* Profile Card */}
+        <div className="relative overflow-hidden bg-[#002632] px-5 py-6 rounded-2xl border border-[#006165] shadow-lg">
+          {/* Subtle Cyber Glowing Effect */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#23FFC8]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[#FFB800]/5 rounded-full blur-3xl pointer-events-none" />
 
-          <Link
-            href="/security"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaShieldHalved size={16} />
-            </div>
-            <div>
-              <p className="text-[15px] font-semibold text-white">
-                Authenticator
-              </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <FaCircleXmark className="text-red-500 text-xs" />
-                <span className="text-xs text-slate-400">Not enabled</span>
+          <div className="relative flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <UserAvatar imageUrl="https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#23FFC8] border-2 border-[#002632] rounded-full shadow-md" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-extrabold text-lg text-white leading-tight truncate max-w-[150px] sm:max-w-none">{user?.name}</h2>
+                  <span className="rounded-full bg-[#FFB800]/10 border border-[#FFB800]/30 px-2.5 py-0.5 text-[9px] uppercase tracking-wider text-[#FFB800] font-bold shadow-sm">
+                    Premium
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center mt-1.5 gap-2 text-xs text-gray-400">
+                  <span>ID: {user?.playerId}</span>
+                  <button
+                    onClick={handleCopyPlayerId}
+                    className="inline-flex items-center gap-1 rounded-full border border-[#006165] bg-[#003e3e]/50 px-2 py-0.5 text-[10px] text-gray-300 transition hover:border-[#23FFC8]/50 hover:bg-[#003e3e] hover:text-[#23FFC8] font-bold cursor-pointer"
+                  >
+                    {copied ? <FiCheck className="text-[#23FFC8]" /> : <FaCopy />}
+                    Copy
+                  </button>
+                </div>
               </div>
             </div>
-          </Link>
 
-          <Link
-            href="/security"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaLock size={16} />
-            </div>
-            <div>
-              <p className="text-[15px] font-semibold text-white">
-                Security settings
-              </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <FaCircleCheck className="text-emerald-500 text-xs" />
-                <span className="text-xs text-slate-400">
-                  Profile protected
-                </span>
+            {/* Balance Subcard */}
+            <div className="rounded-xl p-4 bg-gradient-to-br from-[#0F727C] to-[#004E56] text-white border border-[#11867d]/40 shadow-inner relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[#23FFC8]/5 rounded-full blur-2xl pointer-events-none" />
+              
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between relative">
+                <div>
+                  <span className="text-[10px] text-[#23FFC8]/80 font-bold uppercase tracking-widest">
+                    Available Balance
+                  </span>
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <span
+                      className="text-3xl font-black text-white"
+                      style={{
+                        animation: isRefreshing ? "none" : "balancePulse 0.5s ease-out",
+                      }}
+                    >
+                      {(walletLoading || walletRetching) && (
+                        <Skeleton className="w-[120px] h-[36px] rounded-md bg-white/20" />
+                      )}
+                      {!walletLoading && !walletRetching && data && (
+                        <>
+                          <span className="text-[#FFB800] mr-1">{getCurrencySymbol("BDT")}</span>
+                          {balance.toFixed(2)}
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-gray-300 mt-1 font-semibold" suppressHydrationWarning>
+                    Updated {lastUpdateTime?.toLocaleTimeString() || ""}
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleRefreshBalance}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[linear-gradient(180deg,_#FFE600,_#FFB800)] text-[#B64100] border border-[#FFB800] px-4.5 py-2 text-xs font-extrabold shadow-md hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer"
+                  disabled={isRefreshing}
+                >
+                  <FiRefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+                  Refresh
+                </button>
               </div>
             </div>
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => toast.success("Active session: Web Browser")}
-            className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors text-left cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaClockRotateLeft size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Sign-in history
-            </span>
-          </button>
+          </div>
         </div>
 
-        {/* ── 3. Bet settings ── */}
-        <p className="text-[13px] font-bold text-[#60A5FA] pt-2 px-1">
-          Bet settings
-        </p>
-        <div className="bg-[#0a1626] border border-[#162e4a] rounded-2xl overflow-hidden divide-y divide-[#142944]">
-          <Link
-            href="/vip"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaRotate size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Bet settings &amp; VIP
-            </span>
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => {
-              setOneClickBet(!oneClickBet);
-              toast.success(
-                !oneClickBet
-                  ? "One-click bet enabled"
-                  : "One-click bet disabled"
-              );
-            }}
-            className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors text-left cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaHandPointer size={16} />
-            </div>
-            <div>
-              <p className="text-[15px] font-semibold text-white">
-                One-click bet
-              </p>
-              <p className="text-xs text-slate-400">
-                {oneClickBet ? "Enabled" : "Disabled"}
-              </p>
-            </div>
-          </button>
-
-          <Link
-            href="/promotion"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaGift size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Promotions &amp; Bonuses
-            </span>
-          </Link>
-
-          <Link
-            href="/invite-friends"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaUserPlus size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Invite Friends
-            </span>
-          </Link>
+        {/* Action Buttons (Deposit, Withdraw, My Card, Reward) */}
+        <div className="grid grid-cols-4 gap-2.5">
+          {[
+            {
+              href: "/deposit",
+              icon: RiWallet3Fill,
+              label: "Deposit",
+              color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+            },
+            {
+              href: "/withdraw",
+              icon: RiExchangeDollarFill,
+              label: "Withdraw",
+              color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/30",
+            },
+            {
+              href: "/my-cards",
+              icon: FaCreditCard,
+              label: "My Card",
+              color: "text-blue-400 bg-blue-500/10 border-blue-500/30",
+            },
+            {
+              href: "/rewardCenter",
+              icon: FaGift,
+              label: "Reward",
+              color: "text-rose-400 bg-rose-500/10 border-rose-500/30",
+            },
+          ].map((btn) => (
+            <Link href={btn.href} key={btn.label} className="block">
+              <button className="w-full rounded-2xl border border-[#1b3554] bg-[#0a1626] px-2 py-3.5 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#10233b] hover:border-[#3888e9]/40 active:scale-[0.98] cursor-pointer">
+                <div className="flex flex-col items-center gap-2">
+                  <span
+                    className={`inline-flex h-11 w-11 items-center justify-center rounded-xl border ${btn.color} shadow-sm`}
+                  >
+                    <btn.icon className="h-5 w-5" />
+                  </span>
+                  <p className="text-[11px] font-bold text-gray-200 tracking-wide">
+                    {btn.label}
+                  </p>
+                </div>
+              </button>
+            </Link>
+          ))}
         </div>
 
-        {/* ── 4. App settings ── */}
-        <p className="text-[13px] font-bold text-[#60A5FA] pt-2 px-1">
-          App settings
-        </p>
-        <div className="bg-[#0a1626] border border-[#162e4a] rounded-2xl overflow-hidden divide-y divide-[#142944]">
-          <button
-            type="button"
-            onClick={() => toast.success("Odds type: Decimal")}
-            className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors text-left cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaTableCellsLarge size={16} />
-            </div>
-            <div>
-              <p className="text-[15px] font-semibold text-white">Odds type</p>
-              <p className="text-xs text-slate-400">Decimal</p>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setPushEnabled(!pushEnabled);
-              toast.success(
-                !pushEnabled
-                  ? "Push notifications enabled"
-                  : "Push notifications muted"
+        {/* Member Menu Grid */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-base font-bold text-[#FFB800] tracking-wide uppercase">Premium Member Menu</h3>
+            <span className="rounded-full bg-[#23FFC8]/10 border border-[#23FFC8]/30 px-3 py-1 text-[9px] text-[#23FFC8] font-extrabold uppercase tracking-wider shadow-sm">
+              Elite Access
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-4 gap-2.5 md:gap-3">
+            {menuItems.map((item) => {
+              const cardClassName =
+                "group flex flex-col items-center rounded-2xl border border-[#006165] bg-[#002632] p-3 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#003840]/90 hover:border-[#23FFC8]/40 cursor-pointer";
+              const cardContent = (
+                <>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#003e3e] text-[#23FFC8] border border-[#006165]/50 shadow-inner group-hover:bg-[#004e56] group-hover:text-white transition-colors">
+                    <item.icon className="h-5.5 w-5.5" />
+                  </div>
+                  <span className="mt-2.5 text-[10px] font-bold text-gray-300 transition group-hover:text-[#23FFC8] leading-tight">
+                    {item.label}
+                  </span>
+                </>
               );
-            }}
-            className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors text-left cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaBell size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              Push notifications
-            </span>
-          </button>
 
-          <Link
-            href="/support"
-            className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#122844] flex items-center justify-center text-[#3888e9] shrink-0">
-              <FaHeadset size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-white">
-              24/7 Live Support
-            </span>
-          </Link>
+              if (item.label === "Customer Center") {
+                return (
+                  <LiveChatTrigger
+                    key={item.label}
+                    fallbackHref={item.href}
+                    className={cardClassName}
+                  >
+                    {cardContent}
+                  </LiveChatTrigger>
+                );
+              }
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#0e1f36] transition-colors text-left cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center text-red-400 shrink-0">
-              <FaRightFromBracket size={16} />
-            </div>
-            <span className="text-[15px] font-semibold text-red-400">
-              Log out
-            </span>
-          </button>
+              return (
+                <Link href={item.href} key={item.label} className={cardClassName}>
+                  {cardContent}
+                </Link>
+              );
+            })}
+
+            {/* Poker Games (Special Golden Theme highlighted) */}
+            <Link
+              href="/poker"
+              className="group flex flex-col items-center rounded-2xl border border-[#FFB800]/50 bg-[#002632] p-3 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#003840]/90 hover:border-[#FFB800]"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#003e3e] text-[#FFB800] border border-[#FFB800]/30 shadow-inner group-hover:bg-[#FFB800]/10 transition-colors">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5.5 w-5.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 12c3-2 6-2 6 2s-3 2-6 2-6-2-6-2 3-2 6-2z" />
+                  <path d="M4 12h16" />
+                  <path d="M12 4v16" />
+                </svg>
+              </div>
+              <span className="mt-2.5 text-[10px] font-bold text-gray-300 transition group-hover:text-[#FFB800] leading-tight">
+                Poker Games
+              </span>
+            </Link>
+          </div>
         </div>
       </main>
-
       <TabNav />
+      <style>{`
+        @keyframes balancePulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.03); }
+          100% { transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
-}
+};
+
+export default App;

@@ -9,8 +9,8 @@ import {
   RiHome5Line,
   RiTrophyFill,
   RiTrophyLine,
-  RiFunctionFill,
-  RiFunctionLine,
+  RiUser3Fill,
+  RiUser3Line,
   RiVipCrownFill,
 } from "react-icons/ri";
 
@@ -33,6 +33,8 @@ const TabNav = () => {
     pathname.startsWith("/promotion");
   const isProfile =
     pathname.startsWith("/member") ||
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/my-account") ||
     pathname.startsWith("/vip") ||
     pathname.startsWith("/deposit") ||
     pathname.startsWith("/withdraw");
@@ -135,7 +137,7 @@ const TabNav = () => {
             )}
           </Link>
 
-          {/* ── 5. MORE & SETTINGS ─────────────────────────────────────────── */}
+          {/* ── 5. PROFILE ─────────────────────────────────────────────────── */}
           <Link
             href="/member"
             className={`flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 active:scale-90 ${
@@ -144,13 +146,13 @@ const TabNav = () => {
           >
             <div className="relative flex items-center justify-center">
               {isProfile ? (
-                <RiFunctionFill size={21} className="transition-transform scale-110 drop-shadow-[0_0_8px_rgba(56,136,233,0.5)]" />
+                <RiUser3Fill size={21} className="transition-transform scale-110 drop-shadow-[0_0_8px_rgba(56,136,233,0.5)]" />
               ) : (
-                <RiFunctionLine size={21} />
+                <RiUser3Line size={21} />
               )}
             </div>
             <span className={`text-[10px] font-bold tracking-tight mt-0.5 ${isProfile ? "text-white" : ""}`}>
-              More
+              Profile
             </span>
             {isProfile && (
               <span className="w-1 h-1 rounded-full bg-[#3888e9] shadow-[0_0_6px_#3888e9] mt-0.5" />
