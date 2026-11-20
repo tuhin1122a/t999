@@ -4,12 +4,12 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export const DEFAULT_APP_VERSION_CONFIG = {
-  latestVersion: "1.0.5",
-  versionCode: 6,
+  latestVersion: "1.0.6",
+  versionCode: 7,
   minVersion: "1.0.0",
   forceUpdate: false,
   downloadUrl: "https://rk444.site/download/rk444.apk",
-  releaseNotes: "• 1:1 Web-matched Deposit, Withdraw & Transaction History\n• New More/Settings & Personal Profile\n• 24/7 Tawk.to Live Support with 3D Agent Icon",
+  releaseNotes: "• Deposit quick amounts starting from ৳100\n• Updated Lucky Wheel (৳10/৳20/৳50, Blast, Respin, ৳10,000 Jackpot)\n• Fixed keyboard covering text inputs across all screens",
 };
 
 export async function GET() {

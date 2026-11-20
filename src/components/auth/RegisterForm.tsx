@@ -277,30 +277,6 @@ const RegisterForm = () => {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="referralId"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <div className="relative">
-                    <input
-                      placeholder="Referral / Invite Code (Optional)"
-                      disabled={pending}
-                      {...field}
-                      value={field.value || ""}
-                      className="text-white w-full mb-2 outline-none text-sm px-8 py-3 bg-wwwwwwck-44-4comdaintree rounded-[10.4px] overflow-hidden border border-solid border-[#006165] focus:border-[#2f9396] shadow-[0px_2.08px_0px_#002631] placeholder:font-www-wwwck444-com-semantic-input font-[number:var(--www-wwwck444-com-semantic-input-font-weight)] placeholder:text-wwwwwwck444combright-turquoise placeholder:text-[length:var(--www-wwwck444-com-semantic-input-font-size)] placeholder:tracking-[var(--www-wwwck444-com-semantic-input-letter-spacing)] placeholder:leading-[var(--www-wwwck444-com-semantic-input-line-height)] placeholder:[font-style:var(--www-wwwck444-com-semantic-input-font-style)]"
-                    />
-                    <div className="flex w-[19px] h-[19px] items-center justify-center absolute top-[45%] -translate-y-1/2 left-2.5">
-                      <FaUserShield className="!relative !flex-1 !grow !h-[16px] text-wwwwwwck444combright-turquoise" />
-                    </div>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           {resolvedAgent && (
             <div className="mb-2 flex items-center gap-2.5 rounded-[10.4px] border border-[#006165] bg-[#002631]/70 px-3 py-2 text-xs text-[#23ffc8]">
               <FaUserShield className="h-4 w-4 shrink-0 text-[#FFB800]" />
