@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { UserAvatar } from "@/components/HeaderBalance";
 import LiveChatTrigger from "@/components/LiveChatTrigger";
 import TabNav from "@/components/TabNav";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +26,30 @@ import { MdOutlineSupportAgent, MdSecurity } from "react-icons/md";
 import { RiWallet3Fill, RiExchangeDollarFill } from "react-icons/ri";
 import { TiUserAdd } from "react-icons/ti";
 
+// Self-contained Avatar component to prevent missing export / undefined element exceptions
+const MemberAvatar = ({
+  imageUrl = "https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png",
+  size = "w-14 h-14",
+}: {
+  imageUrl?: string;
+  size?: string;
+}) => (
+  <div
+    className={`${size} rounded-full overflow-hidden border-2 border-[#23FFC8]/60 bg-[#003e3e] shadow-md flex items-center justify-center shrink-0`}
+  >
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img
+      src={imageUrl || "https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png"}
+      alt="User Avatar"
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        (e.target as HTMLImageElement).src =
+          "https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png";
+      }}
+    />
+  </div>
+);
+
 const menuItems = [
   { href: "/settings", icon: FaGear, label: "Settings" },
   { href: "/my-account", icon: FaCircleUser, label: "Profile Edit" },
@@ -41,7 +64,7 @@ const menuItems = [
   { href: "/fish", icon: GiFishMonster, label: "Fish Games" },
 ];
 
-const App: React.FC = () => {
+const MemberPage: React.FC = () => {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -60,11 +83,18 @@ const App: React.FC = () => {
     isFetching: walletRetching,
   } = useFetchWalletQuery();
 
-  const balance = data?.payload ? Number(data.payload.balance) : 0;
+  const balance =
+    typeof data?.payload?.balance === "number"
+      ? data.payload.balance
+      : Number(data?.payload?.balance || 0);
+
+  const safeBalance = isNaN(balance) ? 0 : balance;
 
   const handleCopyPlayerId = () => {
     if (user?.playerId) {
-      navigator.clipboard.writeText(user.playerId);
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(String(user.playerId)).catch(() => {});
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -73,10 +103,15 @@ const App: React.FC = () => {
   const handleRefreshBalance = async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
-    await refetch();
-    setLastUpdateTime(new Date());
-    setShowToast(true);
-    setIsRefreshing(false);
+    try {
+      await refetch();
+      setLastUpdateTime(new Date());
+      setShowToast(true);
+    } catch {
+      // ignore
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -119,7 +154,7 @@ const App: React.FC = () => {
             <FiCheck className="text-lg" /> Balance updated
           </div>
           <div className="text-[10px] text-gray-400 font-medium" suppressHydrationWarning>
-            {lastUpdateTime?.toLocaleTimeString() || ""}
+            {lastUpdateTime?.toLocaleTimeString?.() || ""}
           </div>
         </div>
 
@@ -132,7 +167,7 @@ const App: React.FC = () => {
           <div className="relative flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <Link href="/my-account" className="relative" title="Edit Profile">
-                <UserAvatar imageUrl="https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png" />
+                <MemberAvatar imageUrl="https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png" />
                 <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#23FFC8] border-2 border-[#002632] rounded-full shadow-md" />
               </Link>
               <div className="flex-1 min-w-0">
@@ -145,14 +180,17 @@ const App: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center mt-1.5 gap-2 text-xs text-gray-400">
-                  <span>ID: {user?.playerId}</span>
-                  <button
-                    onClick={handleCopyPlayerId}
-                    className="inline-flex items-center gap-1 rounded-full border border-[#006165] bg-[#003e3e]/50 px-2 py-0.5 text-[10px] text-gray-300 transition hover:border-[#23FFC8]/50 hover:bg-[#003e3e] hover:text-[#23FFC8] font-bold cursor-pointer"
-                  >
-                    {copied ? <FiCheck className="text-[#23FFC8]" /> : <FaCopy />}
-                    Copy
-                  </button>
+                  <span>ID: {user?.playerId || "---"}</span>
+                  {user?.playerId && (
+                    <button
+                      type="button"
+                      onClick={handleCopyPlayerId}
+                      className="inline-flex items-center gap-1 rounded-full border border-[#006165] bg-[#003e3e]/50 px-2 py-0.5 text-[10px] text-gray-300 transition hover:border-[#23FFC8]/50 hover:bg-[#003e3e] hover:text-[#23FFC8] font-bold cursor-pointer"
+                    >
+                      {copied ? <FiCheck className="text-[#23FFC8]" /> : <FaCopy />}
+                      Copy
+                    </button>
+                  )}
                   <Link
                     href="/my-account"
                     className="inline-flex items-center gap-1 rounded-full border border-[#23FFC8]/40 bg-[#23FFC8]/10 px-2.5 py-0.5 text-[10px] text-[#23FFC8] hover:bg-[#23FFC8]/20 font-bold transition"
@@ -182,20 +220,21 @@ const App: React.FC = () => {
                       {(walletLoading || walletRetching) && (
                         <Skeleton className="w-[120px] h-[36px] rounded-md bg-white/20" />
                       )}
-                      {!walletLoading && !walletRetching && data && (
+                      {!walletLoading && !walletRetching && (
                         <>
-                          <span className="text-[#FFB800] mr-1">{getCurrencySymbol("BDT")}</span>
-                          {balance.toFixed(2)}
+                          <span className="text-[#FFB800] mr-1">{getCurrencySymbol("BDT") || "৳"}</span>
+                          {safeBalance.toFixed(2)}
                         </>
                       )}
                     </span>
                   </div>
                   <div className="text-[10px] text-gray-300 mt-1 font-semibold" suppressHydrationWarning>
-                    Updated {lastUpdateTime?.toLocaleTimeString() || ""}
+                    Updated {lastUpdateTime?.toLocaleTimeString?.() || ""}
                   </div>
                 </div>
                 
                 <button
+                  type="button"
                   onClick={handleRefreshBalance}
                   className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[linear-gradient(180deg,_#FFE600,_#FFB800)] text-[#B64100] border border-[#FFB800] px-4.5 py-2 text-xs font-extrabold shadow-md hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer"
                   disabled={isRefreshing}
@@ -236,19 +275,21 @@ const App: React.FC = () => {
               color: "text-rose-400 bg-rose-500/10 border-rose-500/30",
             },
           ].map((btn) => (
-            <Link href={btn.href} key={btn.label} className="block">
-              <button className="w-full rounded-2xl border border-[#1b3554] bg-[#0a1626] px-2 py-3.5 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#10233b] hover:border-[#3888e9]/40 active:scale-[0.98] cursor-pointer">
-                <div className="flex flex-col items-center gap-2">
-                  <span
-                    className={`inline-flex h-11 w-11 items-center justify-center rounded-xl border ${btn.color} shadow-sm`}
-                  >
-                    <btn.icon className="h-5 w-5" />
-                  </span>
-                  <p className="text-[11px] font-bold text-gray-200 tracking-wide">
-                    {btn.label}
-                  </p>
-                </div>
-              </button>
+            <Link
+              href={btn.href}
+              key={btn.label}
+              className="w-full rounded-2xl border border-[#1b3554] bg-[#0a1626] px-2 py-3.5 text-center shadow-md transition hover:-translate-y-0.5 hover:bg-[#10233b] hover:border-[#3888e9]/40 active:scale-[0.98] cursor-pointer block"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <span
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-xl border ${btn.color} shadow-sm`}
+                >
+                  <btn.icon className="h-5 w-5" />
+                </span>
+                <p className="text-[11px] font-bold text-gray-200 tracking-wide">
+                  {btn.label}
+                </p>
+              </div>
             </Link>
           ))}
         </div>
@@ -336,4 +377,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default MemberPage;

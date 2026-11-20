@@ -66,7 +66,10 @@ export default async function RootLayout({
       >
         <div className="">
           <Suspense>
-            <SessionProvider session={session}>
+            {/* refetchOnWindowFocus disabled: refetching the session every time the
+                screen turns back on / the user returns from another app produced a
+                new user object and caused in-game iframes to reload (game restart). */}
+            <SessionProvider session={session} refetchOnWindowFocus={false}>
               <Toaster />
               <ShadcnToastProvider />
               <StoreProvider>

@@ -8,7 +8,7 @@ import {
 } from "@/lib/features/gameService";
 import Image from "next/image";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -52,6 +52,54 @@ async function fetchLatestBalance(
   }
 }
 
+// ── Launched-game cache (survives a browser tab discard / reload) ────────────
+// Mobile browsers may kill a background tab to save memory and reload it when the
+// player returns. We keep the last launch URL in sessionStorage (per tab) for a
+// short time so the same game round is resumed instead of a fresh relaunch.
+const LAUNCH_CACHE_PREFIX = "rk444_game_launch:";
+const LAUNCH_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+function readCachedLaunch(
+  key: string
+): { url: string; sessionId: string | null } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(LAUNCH_CACHE_PREFIX + key);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data?.url || Date.now() - Number(data.ts || 0) > LAUNCH_CACHE_TTL_MS) {
+      sessionStorage.removeItem(LAUNCH_CACHE_PREFIX + key);
+      return null;
+    }
+    return { url: String(data.url), sessionId: data.sessionId ?? null };
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedLaunch(key: string, url: string, sessionId: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      LAUNCH_CACHE_PREFIX + key,
+      JSON.stringify({ url, sessionId, ts: Date.now() })
+    );
+  } catch {
+    // storage full / private mode → ignore
+  }
+}
+
+function clearCachedLaunches() {
+  if (typeof window === "undefined") return;
+  try {
+    Object.keys(sessionStorage)
+      .filter((k) => k.startsWith(LAUNCH_CACHE_PREFIX))
+      .forEach((k) => sessionStorage.removeItem(k));
+  } catch {
+    // ignore
+  }
+}
+
 const Play = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -74,6 +122,7 @@ const Play = () => {
 
   const handleKickOut = useCallback(async () => {
     setIframe("");
+    clearCachedLaunches();
     try {
       if (typeof document !== "undefined" && document.fullscreenElement) {
         await document.exitFullscreen();
@@ -183,6 +232,8 @@ const Play = () => {
       // ignore
     }
     setIframe("");
+    // Player intentionally left → next open must start a fresh launch
+    clearCachedLaunches();
     try {
       // Fetch fresh balance right as user exits game
       await fetchLatestBalance();
@@ -232,24 +283,39 @@ const Play = () => {
     );
   };
 
-  // ── Redirect to login if user is not authenticated ───────────────────────
+  // ── Redirect to login only when auth has definitely resolved as logged-out ─
+  const { status: authStatus } = useSession();
   useEffect(() => {
-    // If auth state has resolved (user hook returns undefined if loading or not logged in)
-    // Wait briefly or check session
-    if (typeof window !== "undefined" && user === null) {
+    if (typeof window !== "undefined" && authStatus === "unauthenticated") {
       const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
       router.replace(`/login?redirect=${redirectUrl}`);
     }
-  }, [user, router]);
+  }, [authStatus, router]);
 
-  // ── Launch Game ───────────────────────────────────────────────────────────
+  // ── Launch Game (exactly ONCE per gameId + user) ──────────────────────────
+  // IMPORTANT: Do NOT depend on the `user` object itself. next-auth refetches the
+  // session whenever the tab regains focus (screen on / returning from another app),
+  // and because the session carries the wallet balance, a brand-new `user` object is
+  // produced every time. Depending on it re-launched the game and reloaded the iframe,
+  // which made the game restart. We key the launch on the stable user id instead and
+  // guard it with a ref so the iframe stays mounted while the screen is off.
+  const userId = (user as any)?.id as string | undefined;
+  const launchedKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!gameId) return;
+    if (!gameId || !userId) return;
 
-    if (!user) {
-      // User is not logged in
-      setError(true);
-      setErrorMessage("Please login to your account to play this game.");
+    const launchKey = `${userId}:${gameId}`;
+    if (launchedKeyRef.current === launchKey) return; // already running → keep game alive
+    launchedKeyRef.current = launchKey;
+
+    // If the mobile browser discarded the tab in the background and reloaded the page,
+    // resume the recently launched game URL instead of starting a brand-new round.
+    const cached = readCachedLaunch(launchKey);
+    if (cached) {
+      gameSessionIdRef.current = cached.sessionId;
+      setError(false);
+      setIframe(cached.url);
       return;
     }
 
@@ -268,9 +334,11 @@ const Play = () => {
         if (!url) throw new Error("Game URL could not be generated");
 
         gameSessionIdRef.current = res?.content?.game?.sessionId || null;
+        writeCachedLaunch(launchKey, url, gameSessionIdRef.current);
         setIframe(url);
       } catch (err: any) {
         console.error("Game launch error:", err);
+        launchedKeyRef.current = null; // allow a manual retry after a failure
         if (err?.message === "SESSION_REPLACED") {
           await handleKickOut();
           return;
@@ -282,7 +350,44 @@ const Play = () => {
 
     launch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, user]);
+  }, [gameId, userId]);
+
+  // ── Keep the screen awake while a game is running ────────────────────────
+  // Uses the Screen Wake Lock API (Android Chrome / modern browsers). The lock is
+  // released automatically by the browser when the tab is hidden, so we re-acquire
+  // it when the player comes back. Silently ignored where unsupported (e.g. old iOS).
+  useEffect(() => {
+    if (!iframe || typeof navigator === "undefined") return;
+    const nav = navigator as any;
+    if (!nav.wakeLock?.request) return;
+
+    let wakeLock: any = null;
+    let cancelled = false;
+
+    const acquire = async () => {
+      try {
+        if (document.visibilityState !== "visible") return;
+        wakeLock = await nav.wakeLock.request("screen");
+        if (cancelled) {
+          wakeLock?.release?.().catch(() => {});
+        }
+      } catch {
+        // permission denied / unsupported → ignore
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") acquire();
+    };
+
+    acquire();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibility);
+      wakeLock?.release?.().catch(() => {});
+    };
+  }, [iframe]);
 
   return (
     <div className="w-full h-[100dvh] bg-black overflow-hidden relative select-none flex flex-col font-sans">
