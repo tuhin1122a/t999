@@ -43,6 +43,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Prevent approving a TrxID that was already approved on another deposit
+    if (action === "approve" && deposit.trxID) {
+      const cleanTrxId = deposit.trxID.trim().toUpperCase();
+      const existingApproved = await db.deposit.findFirst({
+        where: {
+          id: { not: deposit.id },
+          status: "APPROVED",
+          trxID: { equals: cleanTrxId, mode: "insensitive" },
+        },
+        select: { id: true },
+      });
+      if (existingApproved) {
+        return NextResponse.json(
+          { success: false, error: `Duplicate TrxID (${cleanTrxId}) already approved earlier!` },
+          { status: 400 }
+        );
+      }
+    }
+
     const processed = await db.$transaction(
       async (tx) => {
         const updated = await tx.deposit.updateMany({
