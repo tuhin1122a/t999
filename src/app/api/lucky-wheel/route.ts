@@ -8,14 +8,14 @@ export const dynamic = "force-dynamic";
 const JWT_SECRET = process.env.AUTH_SECRET || "rk444_secret_key_t999_app";
 
 export const DEFAULT_SLICES = [
-  { id: 1, label: "💥 Blast", value: 0, type: "BLAST", color: "#DC2626", probability: 25 },
-  { id: 2, label: "৳50 Cash", value: 50, type: "CASH", color: "#10B981", probability: 35 },
-  { id: 3, label: "🔄 Respin", value: 1, type: "RESPIN", color: "#06B6D4", probability: 15 },
-  { id: 4, label: "৳100 Cash", value: 100, type: "CASH", color: "#3B82F6", probability: 15 },
-  { id: 5, label: "💥 Blast", value: 0, type: "BLAST", color: "#EF4444", probability: 12 },
-  { id: 6, label: "20 Free Spins", value: 20, type: "FREE_SPINS", color: "#8B5CF6", probability: 8 },
-  { id: 7, label: "👑 ৳500 JACKPOT", value: 500, type: "CASH", color: "#EAB308", probability: 0.001 }, // 90 days limit
-  { id: 8, label: "🔄 Respin", value: 1, type: "RESPIN", color: "#EC4899", probability: 10 },
+  { id: 1, label: "💥 Blast", value: 0, type: "BLAST", color: "#DC2626", probability: 35 },
+  { id: 2, label: "৳10 Cash", value: 10, type: "CASH", color: "#10B981", probability: 12 },
+  { id: 3, label: "🔄 Respin", value: 1, type: "RESPIN", color: "#06B6D4", probability: 25 },
+  { id: 4, label: "৳20 Cash", value: 20, type: "CASH", color: "#3B82F6", probability: 8 },
+  { id: 5, label: "💥 Blast", value: 0, type: "BLAST", color: "#EF4444", probability: 30 },
+  { id: 6, label: "৳50 Cash", value: 50, type: "CASH", color: "#8B5CF6", probability: 5 },
+  { id: 7, label: "👑 ৳10,000 JACKPOT", value: 10000, type: "CASH", color: "#EAB308", probability: 0.001 }, // 300 days limit
+  { id: 8, label: "🔄 Respin", value: 1, type: "RESPIN", color: "#EC4899", probability: 25 },
 ];
 
 /**
@@ -72,8 +72,9 @@ export async function GET(req: NextRequest) {
         .catch(() => null);
     } else {
       const currentSlices = setting.slices as any[];
-      const hasBlast = currentSlices?.some((s) => s.type === "BLAST" || s.label?.includes("Blast"));
-      if (!hasBlast) {
+      const hasNewJackpot = currentSlices?.some((s) => Number(s.value) === 10000);
+      const hasTenCash = currentSlices?.some((s) => Number(s.value) === 10 && s.type === "CASH");
+      if (!hasNewJackpot || !hasTenCash) {
         setting = await db.luckyWheelSetting.update({
           where: { id: setting.id },
           data: { slices: DEFAULT_SLICES },
@@ -240,34 +241,65 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const slices = (setting.slices as any[]) || DEFAULT_SLICES;
+    // Ensure setting slices are migrated to the new 10/20/50/Blast/Respin/10000 configuration
+    let slices = (setting.slices as any[]) || DEFAULT_SLICES;
+    if (!slices.some((s) => Number(s.value) === 10000)) {
+      slices = DEFAULT_SLICES;
+      await db.luckyWheelSetting
+        .update({ where: { id: setting.id }, data: { slices: DEFAULT_SLICES } })
+        .catch(() => null);
+    }
 
-    // ── STRICT 90-DAY RULE FOR 500 TAKA JACKPOT ──
-    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    const recent500Win = await db.luckyWheelSpin.findFirst({
+    // ── 1. STRICT 300-DAY RULE FOR ৳10,000 JACKPOT (Platform-wide: once every 300 days) ──
+    const threeHundredDaysAgo = new Date(Date.now() - 300 * 24 * 60 * 60 * 1000);
+    const recentJackpotWin = await db.luckyWheelSpin.findFirst({
       where: {
-        prizeValue: { gte: 500 },
-        createdAt: { gte: ninetyDaysAgo },
+        prizeValue: { gte: 10000 },
+        createdAt: { gte: threeHundredDaysAgo },
       },
+      select: { id: true },
     });
+    const isJackpotEligible = !recentJackpotWin;
 
-    // 500 Taka is ONLY allowed if 90 days have fully passed since the last win!
-    const is500Eligible = !recent500Win;
+    // ── 2. STRICT 7-DAY RULE FOR ৳10 / ৳20 / ৳50 CASH PRIZES (Per user: once every 7 days) ──
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentSmallCashWin = await db.luckyWheelSpin.findFirst({
+      where: {
+        userId: sessionUser.id,
+        prizeType: "CASH",
+        prizeValue: { gte: 10, lt: 10000 },
+        createdAt: { gte: sevenDaysAgo },
+      },
+      select: { id: true },
+    });
+    const isSmallCashEligible = !recentSmallCashWin;
 
-    // Build probability weights dynamically:
+    // ── 3. BUILD DYNAMIC WEIGHTS (Blast & Respin land frequently; Cash only after 7d; Jackpot only after 300d) ──
     const weightedSlices = slices.map((s, idx) => {
-      const isJackpot = Number(s.value) >= 500 || s.label?.includes("500");
+      const val = Number(s.value) || 0;
+      const type = String(s.type || "").toUpperCase();
+      const isJackpot = val >= 10000 || String(s.label || "").includes("10,000");
+      const isSmallCash = type === "CASH" && val >= 10 && val < 10000;
+
       if (isJackpot) {
         return {
           ...s,
           originalIndex: idx,
-          activeWeight: is500Eligible ? 0.05 : 0,
+          activeWeight: isJackpotEligible ? 0.01 : 0,
         };
       }
+      if (isSmallCash) {
+        return {
+          ...s,
+          originalIndex: idx,
+          activeWeight: isSmallCashEligible ? (Number(s.probability) || 8) : 0,
+        };
+      }
+      // BLAST and RESPIN always remain active with high weights
       return {
         ...s,
         originalIndex: idx,
-        activeWeight: Number(s.probability) || 10,
+        activeWeight: Number(s.probability) || 25,
       };
     });
 
@@ -362,8 +394,8 @@ export async function POST(req: NextRequest) {
         ? "🔄 FREE RESPIN! You get an extra spin right now!"
         : isBlast
         ? "💥 BOOM! Blast! Better luck next spin!"
-        : prizeValue >= 500
-        ? "👑 JACKPOT! ৳500 Cash credited to your Main Balance (1x Turnover Requirement)!"
+        : prizeValue >= 10000
+        ? "👑 MEGA JACKPOT! ৳10,000 Cash credited to your Main Balance (1x Turnover Requirement)!"
         : `🎉 You won ${wonSlice.label}! Credited to Main Balance with 1x Turnover.`,
     });
   } catch (error: any) {

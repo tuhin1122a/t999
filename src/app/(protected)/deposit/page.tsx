@@ -46,7 +46,7 @@ const DepositPage: React.FC = () => {
     disable: false,
   });
   const [selectedAmountButton, setSelectedAmountButton] = useState<number | null>();
-  const quickAmounts = [400, 500, 800, 1000, 1500, 2000, 5000, 10000, 25000];
+  const quickAmounts = [100, 200, 300, 500, 1000, 2000, 5000, 10000, 25000];
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
