@@ -1,14 +1,23 @@
 "use client";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { MdHistory, MdOutlineSupportAgent } from "react-icons/md";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import LiveChatTrigger from "@/components/LiveChatTrigger";
+import TabNav from "@/components/TabNav";
 import Withdraw from "./withdraw";
 
 const WithdrawPage = () => {
   const router = useRouter();
+  const { status: authStatus } = useSession();
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && authStatus === "unauthenticated") {
+      router.replace("/login?redirect=/withdraw");
+    }
+  }, [authStatus, router]);
 
   return (
     <div className="min-h-screen bg-[#070e17] flex flex-col text-white pb-28">
@@ -44,6 +53,8 @@ const WithdrawPage = () => {
       <main className="w-full max-w-md mx-auto px-4 py-6 space-y-5">
         <Withdraw />
       </main>
+
+      <TabNav />
     </div>
   );
 };

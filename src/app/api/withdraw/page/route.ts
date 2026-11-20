@@ -6,28 +6,48 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const user = await findCurrentUser();
+    const user: any = await findCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
     }
 
-    const [wallet, bettingRecord, siteSettings] = await Promise.all([
-      db.wallet.findUnique({
-        where: { userId: user.id },
+    const userId = user.id || user.sub;
+    if (!userId) {
+      return NextResponse.json({ error: "User ID not found" }, { status: 401 });
+    }
+
+    // Try finding wallet by userId or playerId
+    let [wallet, bettingRecord, siteSettings] = await Promise.all([
+      db.wallet.findFirst({
+        where: {
+          OR: [
+            { userId: userId },
+            ...(user.playerId ? [{ playerId: user.playerId }] : []),
+          ],
+        },
       }),
       db.bettingRecord.findUnique({
-        where: { userId: user.id },
+        where: { userId: userId },
         select: { totalBet: true },
       }),
       db.siteSetting.findFirst(),
     ]);
 
+    // If wallet doesn't exist yet, auto-create one for the user so page doesn't 404
     if (!wallet) {
-      return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
+      wallet = await db.wallet.create({
+        data: {
+          userId: userId,
+          playerId: user.playerId || null,
+          balance: 0,
+          turnOver: 0,
+          currency: "BDT",
+        },
+      });
     }
 
-    const currentBalance = parseFloat(wallet.balance.toString());
-    let currentTurnOver = parseFloat(wallet.turnOver.toString());
+    const currentBalance = parseFloat(wallet.balance?.toString() || "0") || 0;
+    let currentTurnOver = parseFloat(wallet.turnOver?.toString() || "0") || 0;
 
     // Zero-Balance Turnover Reset Protection:
     // If a player's wallet balance is below 1 BDT, clear any leftover turnover automatically
@@ -40,7 +60,9 @@ export async function GET() {
     }
 
     const availableBalance = currentTurnOver > 0 ? 0 : currentBalance;
-    const totalWagered = bettingRecord?.totalBet ? parseFloat(bettingRecord.totalBet.toString()) : 0;
+    const totalWagered = bettingRecord?.totalBet
+      ? parseFloat(bettingRecord.totalBet.toString()) || 0
+      : 0;
 
     const totalTarget = totalWagered + currentTurnOver;
     const turnoverProgressPercent =
@@ -50,8 +72,12 @@ export async function GET() {
         ? Math.min(99, Math.round((totalWagered / totalTarget) * 100))
         : 0;
 
-    const maxWithdraw = siteSettings?.maxWithdraw ? parseFloat(siteSettings.maxWithdraw.toString()) : 50000;
-    const minWithdraw = siteSettings?.minWithdraw ? parseFloat(siteSettings.minWithdraw.toString()) : 100;
+    const maxWithdraw = siteSettings?.maxWithdraw
+      ? parseFloat(siteSettings.maxWithdraw.toString()) || 50000
+      : 50000;
+    const minWithdraw = siteSettings?.minWithdraw
+      ? parseFloat(siteSettings.minWithdraw.toString()) || 100
+      : 100;
     const remainingWithdrawal = 10;
 
     return NextResponse.json({
@@ -61,7 +87,7 @@ export async function GET() {
       turnOver: currentTurnOver,
       totalWagered,
       turnoverProgressPercent,
-      currency: wallet.currency,
+      currency: wallet.currency || "BDT",
       minWithdraw: minWithdraw.toString(),
       maxWithdraw: maxWithdraw.toString(),
     });

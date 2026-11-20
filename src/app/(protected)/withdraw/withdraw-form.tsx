@@ -92,12 +92,17 @@ const WithdrawForm = ({ wallets, availableBalance, turnOver }: WithdrawFormProps
 
     setValidationError("");
 
+    const paymentSystemName =
+      selectedCard?.paymentWallet?.walletName ||
+      selectedCard?.walletName ||
+      "Bkash";
+
     // Submit withdrawal request to backend API
     makeWithdrawApi({
       amount: amount,
       account_number: selectedCard.walletNumber,
       password: password,
-      ps: selectedCard.paymentWallet.walletName,
+      ps: paymentSystemName,
     })
       .unwrap()
       .then((res) => {
@@ -156,18 +161,24 @@ const WithdrawForm = ({ wallets, availableBalance, turnOver }: WithdrawFormProps
                 উত্তোলনের পূর্বে আপনাকে অন্তত একটি বিকাশ বা নগদ অ্যাকাউন্ট ওয়ালেট হিসেবে যুক্ত করতে হবে।
               </p>
             </div>
-            <Link href="/member" className="inline-flex">
-              <button className="bg-[linear-gradient(180deg,_#FFE600,_#FFB800)] text-[#B64100] border border-[#FFB800] px-5 py-2.5 rounded-xl text-xs font-black shadow-md hover:brightness-110 active:scale-[0.97] transition-all flex items-center gap-1.5 cursor-pointer">
-                <FaPlus /> Add Wallet Account
-              </button>
+            <Link
+              href="/my-cards"
+              className="inline-flex items-center gap-1.5 bg-[linear-gradient(180deg,_#FFE600,_#FFB800)] text-[#B64100] border border-[#FFB800] px-5 py-2.5 rounded-xl text-xs font-black shadow-md hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer"
+            >
+              <FaPlus /> Add Wallet Account
             </Link>
           </div>
         ) : (
           /* Cards Grid list */
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {userCards.map((card) => {
-              const isBkash = card.paymentWallet.walletName.toLowerCase() === "bkash";
+              const walletName = String(
+                card?.paymentWallet?.walletName || card?.walletName || "Wallet"
+              );
+              const isBkash = walletName.toLowerCase().includes("bkash");
               const isSelected = selectedCard?.id === card.id;
+              const ownerName =
+                card?.container?.ownerName || card?.ownerName || "Account Holder";
 
               return (
                 <div
@@ -185,20 +196,20 @@ const WithdrawForm = ({ wallets, availableBalance, turnOver }: WithdrawFormProps
                 >
                   {/* Subtle Glowing chip icon effect */}
                   <div className="absolute top-4 right-4 bg-white/10 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
-                    {card.paymentWallet.walletName}
+                    {walletName}
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider">Account Holder</p>
-                      <p className="text-sm font-black text-white">{card.container.ownerName}</p>
+                      <p className="text-sm font-black text-white">{ownerName}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider">Wallet Number</p>
-                      <p className="text-base font-black tracking-wide text-white">{card.walletNumber}</p>
+                      <p className="text-base font-black tracking-wide text-white">{card?.walletNumber || "---"}</p>
                     </div>
                     <div className="flex justify-between items-center text-[9px] text-white/60 font-mono">
-                      <span>{card.cardNumber}</span>
+                      <span>{card?.cardNumber || ""}</span>
                       {isSelected && (
                         <span className="flex items-center gap-1 bg-[#23FFC8] text-[#002626] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
                           <FaCheck size={7} /> Selected

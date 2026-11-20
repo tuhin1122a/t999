@@ -128,10 +128,17 @@ export const GET = async (req: NextRequest) => {
     });
 
     const cardsWithWalletPromise = cards.map(async (card: any) => {
-      const paymentWallet = await db.paymentWallet.findUnique({
+      let paymentWallet = await db.paymentWallet.findUnique({
         where: { id: card.paymentWalletid },
       });
-      card.paymentWallet = paymentWallet;
+      if (!paymentWallet) {
+        paymentWallet = await db.paymentWallet.findFirst();
+      }
+      card.paymentWallet = paymentWallet || {
+        id: "default-pw",
+        walletName: "Bkash",
+        walletLogo: "/wallet/bkash.png",
+      };
       return card;
     });
 
