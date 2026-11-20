@@ -70,4 +70,25 @@ const UserBalance = ({
   );
 };
 
+export const UserAvatar = ({
+  imageUrl = "https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png",
+  size = "w-14 h-14",
+}: {
+  imageUrl?: string;
+  size?: string;
+}) => {
+  return (
+    <div
+      className={`${size} rounded-full overflow-hidden border-2 border-[#23FFC8]/60 bg-[#003e3e] shadow-md flex items-center justify-center shrink-0`}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl}
+        alt="User Avatar"
+        className="w-full h-full object-cover"
+      />
+    </div>
+  );
+};
+
 export default UserBalance;

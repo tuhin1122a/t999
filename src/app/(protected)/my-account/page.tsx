@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
-import MemberSettingsPage from "@/app/(protected)/settings/page";
+import MemberSettingsView from "@/components/MemberSettingsView";
 
 export default function MyAccountPage() {
-  return <MemberSettingsPage defaultView="profile" />;
+  return <MemberSettingsView defaultView="profile" />;
 }

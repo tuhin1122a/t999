@@ -2,15 +2,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-    RiGamepadFill,
-    RiGamepadLine,
-    RiHome5Fill,
-    RiHome5Line,
-    RiTrophyFill,
-    RiTrophyLine,
-    RiUser3Fill,
-    RiUser3Line,
-    RiVipCrownFill,
+  RiFunctionFill,
+  RiFunctionLine,
+  RiGamepadFill,
+  RiGamepadLine,
+  RiHome5Fill,
+  RiHome5Line,
+  RiTrophyFill,
+  RiTrophyLine,
+  RiVipCrownFill,
 } from "react-icons/ri";
 
 const TabNav = () => {
@@ -136,7 +136,7 @@ const TabNav = () => {
             )}
           </Link>
 
-          {/* ── 5. PROFILE ─────────────────────────────────────────────────── */}
+          {/* ── 5. MORE ────────────────────────────────────────────────────── */}
           <Link
             href="/member"
             className={`flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 active:scale-90 ${
@@ -145,13 +145,13 @@ const TabNav = () => {
           >
             <div className="relative flex items-center justify-center">
               {isProfile ? (
-                <RiUser3Fill size={21} className="transition-transform scale-110 drop-shadow-[0_0_8px_rgba(56,136,233,0.5)]" />
+                <RiFunctionFill size={21} className="transition-transform scale-110 drop-shadow-[0_0_8px_rgba(56,136,233,0.5)]" />
               ) : (
-                <RiUser3Line size={21} />
+                <RiFunctionLine size={21} />
               )}
             </div>
             <span className={`text-[10px] font-bold tracking-tight mt-0.5 ${isProfile ? "text-white" : ""}`}>
-              Profile
+              More
             </span>
             {isProfile && (
               <span className="w-1 h-1 rounded-full bg-[#3888e9] shadow-[0_0_6px_#3888e9] mt-0.5" />

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export const DEFAULT_APP_VERSION_CONFIG = {
+const DEFAULT_APP_VERSION_CONFIG = {
   latestVersion: "1.0.6",
   versionCode: 7,
   minVersion: "1.0.0",

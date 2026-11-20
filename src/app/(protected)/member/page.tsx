@@ -29,11 +29,11 @@ import { TiUserAdd } from "react-icons/ti";
 
 const menuItems = [
   { href: "/settings", icon: FaGear, label: "Settings" },
+  { href: "/my-account", icon: FaCircleUser, label: "Profile Edit" },
   { href: "/rewardCenter", icon: FaGift, label: "Reward" },
   { href: "/profitandloss", icon: FaChartLine, label: "Profit/Loss" },
   { href: "/history?type=deposit", icon: FaFileInvoiceDollar, label: "Deposit Record" },
   { href: "/history?type=withdraw", icon: LuNotebookText, label: "Withdraw Record" },
-  { href: "/my-account", icon: FaCircleUser, label: "My Account" },
   { href: "/security", icon: MdSecurity, label: "Security Center" },
   { href: "/invite-friends", icon: TiUserAdd, label: "Invite Friend" },
   { href: "/appp", icon: FiDownload, label: "Download App" },
@@ -131,13 +131,15 @@ const App: React.FC = () => {
 
           <div className="relative flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              <div className="relative">
+              <Link href="/my-account" className="relative" title="Edit Profile">
                 <UserAvatar imageUrl="https://images.51939393.com//TCG_PROD_IMAGES/B2C/01_PROFILE/PROFILE/0.png" />
                 <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#23FFC8] border-2 border-[#002632] rounded-full shadow-md" />
-              </div>
+              </Link>
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-extrabold text-lg text-white leading-tight truncate max-w-[150px] sm:max-w-none">{user?.name}</h2>
+                  <h2 className="font-extrabold text-lg text-white leading-tight truncate max-w-[150px] sm:max-w-none">
+                    {user?.name || "Player"}
+                  </h2>
                   <span className="rounded-full bg-[#FFB800]/10 border border-[#FFB800]/30 px-2.5 py-0.5 text-[9px] uppercase tracking-wider text-[#FFB800] font-bold shadow-sm">
                     Premium
                   </span>
@@ -151,6 +153,12 @@ const App: React.FC = () => {
                     {copied ? <FiCheck className="text-[#23FFC8]" /> : <FaCopy />}
                     Copy
                   </button>
+                  <Link
+                    href="/my-account"
+                    className="inline-flex items-center gap-1 rounded-full border border-[#23FFC8]/40 bg-[#23FFC8]/10 px-2.5 py-0.5 text-[10px] text-[#23FFC8] hover:bg-[#23FFC8]/20 font-bold transition"
+                  >
+                    Profile Edit
+                  </Link>
                 </div>
               </div>
             </div>
