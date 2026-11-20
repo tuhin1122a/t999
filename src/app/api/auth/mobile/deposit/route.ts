@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { tryAutoMatchExistingSmsForDeposit } from "@/lib/agentAutoDeposit";
+import { db } from "@/lib/db";
 import { getScopedDepositWalletsForUser } from "@/lib/depositWallets";
 import { Prisma } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 

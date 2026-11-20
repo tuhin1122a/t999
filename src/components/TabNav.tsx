@@ -1,17 +1,16 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
 import {
-  RiGamepadFill,
-  RiGamepadLine,
-  RiHome5Fill,
-  RiHome5Line,
-  RiTrophyFill,
-  RiTrophyLine,
-  RiUser3Fill,
-  RiUser3Line,
-  RiVipCrownFill,
+    RiGamepadFill,
+    RiGamepadLine,
+    RiHome5Fill,
+    RiHome5Line,
+    RiTrophyFill,
+    RiTrophyLine,
+    RiUser3Fill,
+    RiUser3Line,
+    RiVipCrownFill,
 } from "react-icons/ri";
 
 const TabNav = () => {

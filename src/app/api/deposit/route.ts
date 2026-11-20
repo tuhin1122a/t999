@@ -1,8 +1,8 @@
 // src/app/api/deposit/route.ts
 import { findCurrentUser } from "@/data/user";
 import { INTERNAL_SERVER_ERROR } from "@/error";
-import { db } from "@/lib/db";
 import { tryAutoMatchExistingSmsForDeposit } from "@/lib/agentAutoDeposit";
+import { db } from "@/lib/db";
 import { getScopedDepositWalletsForUser } from "@/lib/depositWallets";
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
